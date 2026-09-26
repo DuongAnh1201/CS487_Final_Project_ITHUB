@@ -1,0 +1,58 @@
+cat > .github/ISSUE_TEMPLATE/design.yml << 'EOF'
+name: Design Task
+description: UML diagrams, class design, design patterns, or documentation
+title: "[Design]: "
+labels: ["design"]
+body:
+  - type: dropdown
+    id: artifact
+    attributes:
+      label: Design Artifact
+      options:
+        - Use Case Diagram
+        - Class Diagram
+        - Sequence Diagram
+        - State Diagram
+        - Activity Diagram
+        - Design Pattern Decision
+        - Requirements / Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: use-case
+    attributes:
+      label: Related Use Case(s)
+      placeholder: "UC-05, UC-06"
+    validations:
+      required: false
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should this artifact show or decide?
+      placeholder: "Sequence diagram for the check-out flow, showing Technician, InventoryService, Asset, Assignment, AuditLog."
+    validations:
+      required: true
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Deliverables
+      value: |
+        - [ ] Diagram source file (.puml / .drawio) in docs/
+        - [ ] Exported image (.png) in docs/
+        - [ ] Linked from docs/README.md
+        - [ ] Decision recorded in docs/design-decisions.md (if applicable)
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Open Questions / Notes
+    validations:
+      required: false
+EOF

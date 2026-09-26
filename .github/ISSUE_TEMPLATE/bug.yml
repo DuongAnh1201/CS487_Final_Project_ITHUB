@@ -1,0 +1,68 @@
+cat > .github/ISSUE_TEMPLATE/bug.yml << 'EOF'
+name: Bug Report
+description: Something is broken or behaves incorrectly
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: Include error messages or stack traces.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Affected Class / File
+      placeholder: "src/inventory_service.py – check_out()"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P1 - Blocks work / crashes
+        - P2 - Wrong result, workaround exists
+        - P3 - Minor / cosmetic
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Python 3.12, Windows 11, branch feature/12-asset-checkout"
+    validations:
+      required: false
+EOF

@@ -1,0 +1,81 @@
+cat > .github/ISSUE_TEMPLATE/feature.yml << 'EOF'
+name: Feature
+description: A new feature or use case implementation
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for implementing a use case or adding new functionality.
+        Keep it small: one issue = one reviewable task (1–2 days of work).
+
+  - type: input
+    id: use-case
+    attributes:
+      label: Related Use Case
+      description: ID from docs/use-cases.md
+      placeholder: "UC-05 Check Out Asset"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What should be built, and why?
+      placeholder: "As an IT Technician, I want to check out an asset to an employee so that assignments are tracked."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Conditions that must be true for this issue to be closed.
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ] Unit tests added and passing
+    validations:
+      required: true
+
+  - type: textarea
+    id: classes
+    attributes:
+      label: Affected Classes / Modules
+      placeholder: "Asset, Assignment, InventoryService"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P1 - Must have
+        - P2 - Should have
+        - P3 - Nice to have
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - S (< 2 hours)
+        - M (half day)
+        - L (1–2 days)
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / Dependencies
+      description: Blocked by other issues? Links, references?
+      placeholder: "Blocked by #3"
+    validations:
+      required: false
+EOF
