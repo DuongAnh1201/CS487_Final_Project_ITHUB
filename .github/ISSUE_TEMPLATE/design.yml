@@ -1,4 +1,3 @@
-cat > .github/ISSUE_TEMPLATE/design.yml << 'EOF'
 name: Design Task
 description: UML diagrams, class design, design patterns, or documentation
 title: "[Design]: "
@@ -55,4 +54,4 @@ body:
       label: Open Questions / Notes
     validations:
       required: false
-EOF
+

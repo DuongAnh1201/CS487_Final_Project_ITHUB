@@ -1,4 +1,3 @@
-cat > .github/ISSUE_TEMPLATE/bug.yml << 'EOF'
 name: Bug Report
 description: Something is broken or behaves incorrectly
 title: "[Bug]: "
@@ -65,4 +64,4 @@ body:
       placeholder: "Python 3.12, Windows 11, branch feature/12-asset-checkout"
     validations:
       required: false
-EOF
+

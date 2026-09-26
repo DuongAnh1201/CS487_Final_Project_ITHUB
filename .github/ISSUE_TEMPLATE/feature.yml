@@ -1,4 +1,3 @@
-cat > .github/ISSUE_TEMPLATE/feature.yml << 'EOF'
 name: Feature
 description: A new feature or use case implementation
 title: "[Feature]: "
@@ -78,4 +77,4 @@ body:
       placeholder: "Blocked by #3"
     validations:
       required: false
-EOF
+

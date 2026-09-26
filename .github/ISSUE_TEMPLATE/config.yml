@@ -1,3 +1,2 @@
-cat > .github/ISSUE_TEMPLATE/config.yml << 'EOF'
 blank_issues_enabled: false
-EOF
+
