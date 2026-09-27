@@ -2,7 +2,7 @@
 
 An object-oriented inventory tracking system for an IT department. It records hardware and software assets, tracks who has them and where they are, and logs their lifecycle from purchase to disposal.
 
-> Course project for **[Course Code] – Object-Oriented Design**, [Semester Year], [School Name].
+> Course project for **CS487 – Object-Oriented Design and Implementation**, Fall 2026, San Francisco Bay University.
 
 ---
 
