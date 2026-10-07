@@ -39,13 +39,14 @@ These requirements are a requirements elicitation baseline, not a claim that unr
 
 | ID | Priority | Requirement |
 |---|---|---|
-| PRJ-FR-01 | Must | The system shall allow an authenticated IT staff user to create a project with a name, description, start date, optional due date, and status. The system shall display the project and its tasks together. **Confirm:** required fields and whether a due date may be omitted. |
+| PRJ-FR-01 | Must | The system shall assign each project a unique project_id and use it to retrieve and update the project. An authenticated IT staff user shall be able to create a project with a name, description, start date, optional due date, and status. |
 | PRJ-FR-02 | Must | The system shall allow an IT staff user to create and maintain a project template containing reusable task definitions, and to create a project from a selected template. Creating from a template shall create a new project and new task records based on the template. **Confirm:** whether template metadata includes default assignees, priorities, or relative due dates. |
-| PRJ-FR-03 | Must | The system shall allow an IT staff user to add and edit tasks on a project. Each task shall have a title, description, status, and optional due date. **Confirm:** final required fields and task priority needs. |
+| PRJ-FR-03 | Must | The system shall allow an IT staff user to create a task either as a standalone task or linked to a project. A standalone task may be linked to a project later. Each task shall have a title, description, status, and optional due date. |
 | PRJ-FR-04 | Must | The system shall allow an IT staff user to assign or reassign a task to one or more IT staff users and show its current assignee(s). **Draft assumption—Confirm:** the proposal says tasks are assigned to team members but does not specify whether multiple assignees are permitted. |
 | PRJ-FR-05 | Must | The system shall allow an IT staff user to update a task's status and shall show task progress within the project. **Draft values—Confirm:** To Do, In Progress, and Complete. Define project completion as all project tasks Complete, unless the team chooses a different rule. |
 | PRJ-FR-06 | Should | The system shall allow an IT staff user to find projects and tasks by text and filter them by status, assignee, and due date. **Confirm:** required filters and whether reports/search share this behavior. |
 | PRJ-FR-07 | Should | The system shall allow an IT staff user to mark a project complete and reopen it when work resumes. **Confirm:** whether project status is derived from task statuses or set independently. |
+| PRJ-FR-08 | Must | The system shall allow an IT staff user to hand off an unfinished task to the staff member taking over the work. The task shall keep its current status and retain its assignment history. |
 
 ### Notifications (`NTF`)
 
@@ -57,6 +58,9 @@ These requirements are a requirements elicitation baseline, not a claim that unr
 | NTF-FR-04 | Must | The system shall provide an in-app list of a user's notifications and indicate which notifications are read and unread. A notification shall identify its creation time and related work item when one exists. |
 | NTF-FR-05 | Should | The system shall allow a user to mark a notification read and unread. **Confirm:** whether users may delete notifications, mark all read, or open the linked work item directly. |
 | NTF-FR-06 | Should | The system shall retain notifications for a team-approved retention period and support viewing retained notification history. **Blocked decision—Confirm:** retention period and whether expiry/deletion is automatic. No duration is assumed here. |
+| NTF-FR-07 | Must | When a project is created, updated, or a user is added to it, the system shall notify the project’s members. Only members of that project shall receive these notifications. |
+| NTF-FR-08 | Must | The system shall send each notification to the recipient’s registered email address as well as show it in the app. It shall record whether the email was delivered; email failure shall not remove the in-app notification. |
+| NTF-FR-09 | Must | The system shall give each notification a unique notification_id and use it to find and update that notification. |
 
 ## 5. Non-functional requirements
 
@@ -72,7 +76,7 @@ These requirements are a requirements elicitation baseline, not a claim that unr
 | ID | Rule | Status / source |
 |---|---|---|
 | BR-01 | A project template is a reusable set of task definitions. Instantiating it creates a distinct project and task records; subsequent edits to the project do not silently edit the template. | Derived from proposal's reusable list of tasks; team should confirm copy behavior. |
-| BR-02 | A task belongs to one project. | Proposed modeling rule; confirm if tasks may be shared across projects. |
+| BR-02 | A task may be standalone or linked to one project. A standalone task may be linked to a project later. | Added from team feedback. |
 | BR-03 | A task is assigned to at least one IT staff member before it is considered assigned. Multiple assignees are permitted in this draft. | Assumption; confirm cardinality. |
 | BR-04 | Draft task statuses are To Do, In Progress, and Complete. | Proposed values; confirm names and transitions. |
 | BR-05 | A project is complete only when all of its tasks are Complete. | Proposed rule; confirm whether a project can be manually completed or reopened. |
@@ -80,6 +84,9 @@ These requirements are a requirements elicitation baseline, not a claim that unr
 | BR-07 | Shift notifications are generated from the current shift roster and work scheduled for that shift. | Shift roster and send timing remain open. |
 | BR-08 | Changes to projects, tasks, templates, notification creation, and notification read state are audit events. | Derived from proposal's complete audit-history objective; confirm read-state auditing. |
 | BR-09 | All authenticated IT staff can use these pages with the same access. | Explicit in proposal. |
+| BR-10 | An unfinished task may be reassigned to the staff member taking over; its status and assignment history are preserved. | Added from team feedback. |
+| BR-11 | Project-activity notifications go only to members of the affected project. | Added from team feedback. |
+| BR-12 | Each notification has a unique ID. Email delivery is in addition to the in-app notification. | Added from team feedback. |
 
 ## 7. Main use cases
 
