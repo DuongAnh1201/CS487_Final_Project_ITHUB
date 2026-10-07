@@ -128,7 +128,6 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | NFR-AST-04 | Reliability | Item and loan records are never hard-deleted; history is kept at least 3 years. | M |
 | NFR-AST-05 | Compatibility | Pages work on current Chrome, Edge, Firefox, Safari at widths ≥ 768 px. | S |
 | NFR-USR-01 | Security | Passwords are stored only as salted hashes (bcrypt or Argon2). | M |
-| NFR-USR-02 | Security | All traffic uses HTTPS. | M |
 | NFR-USR-03 | Security | Sessions expire after 30 minutes of inactivity. | S |
 | NFR-USR-04 | Security | Login errors do not reveal whether the email exists. | S |
 | NFR-USR-05 | Performance | Login completes within 2 seconds under normal load. | S |
@@ -169,6 +168,7 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | UC-AST-07 | Issue / Restock Consumable | SA | Stock quantity updated |
 | UC-AST-08 | Report Lost or Damaged Item | SA | Item status Lost/Damaged with incident record |
 | UC-AST-09 | Retire Item | Admin | Item status Retired, read-only |
+| UC-AST-10 | Keep track the quantity of items| SA | Quantity of items can be updated |
 | UC-USR-01 | Log In | SA / Admin | Authenticated session started |
 | UC-USR-02 | Log Out | SA / Admin | Session ended |
 | UC-USR-03 | Create User Account | Admin | New active account |
