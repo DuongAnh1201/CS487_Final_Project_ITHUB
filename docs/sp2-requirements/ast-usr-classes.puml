@@ -1,0 +1,129 @@
+@startuml ast-usr-classes
+hide methods
+skinparam classAttributeIconSize 0
+
+enum ItemStatus {
+  AVAILABLE
+  ON_LOAN
+  DAMAGED
+  LOST
+  RETIRED
+}
+
+enum Role {
+  ADMIN
+  STUDENT_ASSISTANT
+}
+
+class Item {
+  itemId
+  assetTag
+  serialNumber
+  model
+  manufacturer
+  status : ItemStatus
+  purchaseDate
+  warrantyEndDate
+  notes
+  createdAt
+  updatedAt
+}
+
+class Category {
+  categoryId
+  name
+  isConsumable
+}
+
+class Location {
+  locationId
+  building
+  room
+  description
+}
+
+class Consumable {
+  consumableId
+  name
+  quantityOnHand
+  reorderThreshold
+  unit
+}
+
+class StockTransaction {
+  transactionId
+  type : IN/OUT
+  quantity
+  issuedTo
+  timestamp
+  note
+}
+
+class Borrower {
+  borrowerId
+  schoolId
+  fullName
+  email
+  type : STUDENT/FACULTY/STAFF
+  department
+}
+
+class Loan {
+  loanId
+  checkoutDate
+  dueDate
+  conditionOut
+  returnDate
+  conditionIn
+  extended
+  status : OPEN/RETURNED/LOST
+  notes
+}
+
+class ItemIncident {
+  incidentId
+  type : LOST/DAMAGED/RETIRED
+  description
+  timestamp
+}
+
+class User {
+  userId
+  fullName
+  email
+  schoolId
+  passwordHash
+  role : Role
+  status : ACTIVE/INACTIVE
+  failedLoginCount
+  lockedUntil
+  mustChangePassword
+  accessEndDate
+  lastLoginAt
+  createdAt
+}
+
+class AuditLogEntry {
+  entryId
+  action
+  entityType
+  entityId
+  timestamp
+  details
+}
+
+Category "1" -- "*" Item
+Location "1" -- "*" Item
+Category "1" -- "*" Consumable
+Location "1" -- "*" Consumable
+Consumable "1" -- "*" StockTransaction
+Item "1" -- "*" Loan
+Borrower "1" -- "*" Loan
+Item "1" -- "*" ItemIncident
+
+User "1" -- "*" Loan : checkedOutBy / receivedBy
+User "1" -- "*" StockTransaction : performedBy
+User "1" -- "*" ItemIncident : reportedBy
+User "1" -- "*" AuditLogEntry : performedBy
+User "1" -- "*" User : createdBy
+@enduml
