@@ -67,7 +67,7 @@
 - A-01: Borrowers do not log in; SAs record loans for them.
 - A-02: Two roles this semester: **Admin** (IT Supervisor) and **Student Assistant**.
 - A-03: Default loan length is 7 days for students, 30 days for faculty/staff.
-- A-04: Login uses school email + password (no SSO this semester).
+- A-04: Login uses school email + password (Can do the SSO by using Google Firebase).
 - A-05: The audit log storage is shared with the Reports & Audit page (RPT).
 
 ---
