@@ -99,7 +99,8 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | FR-AST-17 | The system shall generate a printable QR/barcode label for an asset tag. | C |
 | FR-AST-18 | Item reservations in advance. | W |
 | FR-AST-19 | Photo attachments for items. | W |
-
+| FR-AST-20 | The system should be auto updated the quantity when an order is set to received | M |
+| FR-AST-21 | The system should be auto flag and send notification when quantity of an item is under the threshold| M |
 ### Login & Users
 
 | ID | Requirement | Priority |
@@ -108,7 +109,7 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | FR-USR-02 | The system shall let a logged-in user log out. | M |
 | FR-USR-03 | The system shall let the Admin create user accounts with full name, school email, school ID, role, and optional access end date. | M |
 | FR-USR-04 | The system shall let the Admin change a user's role and deactivate or reactivate an account. | M |
-| FR-USR-05 | The system shall restrict actions by role (Admin, Student Assistant). | M |
+| FR-USR-05 | The system shall restrict actions by role (Admin, Student Assistant) (This is created in advanced). | M |
 | FR-USR-06 | The system shall record the logged-in user and timestamp on every create, update, and status change. | M |
 | FR-USR-07 | The system shall lock an account for 15 minutes after 5 consecutive failed login attempts. | S |
 | FR-USR-08 | The system shall let a user change their own password. | S |
