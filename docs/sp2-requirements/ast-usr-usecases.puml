@@ -1,0 +1,49 @@
+@startuml ast-usr-usecases
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Student Assistant" as SA
+actor "IT Supervisor\n(Admin)" as ADM
+ADM -|> SA
+
+rectangle "Assets & Lending (AST)" {
+  usecase "UC-AST-01\nRegister Item" as A1
+  usecase "UC-AST-02\nUpdate Item" as A2
+  usecase "UC-AST-03\nSearch Inventory" as A3
+  usecase "UC-AST-04\nLend Out Item" as A4
+  usecase "UC-AST-05\nReturn Item" as A5
+  usecase "UC-AST-06\nView Overdue Loans" as A6
+  usecase "UC-AST-07\nIssue / Restock Consumable" as A7
+  usecase "UC-AST-08\nReport Lost or Damaged" as A8
+  usecase "UC-AST-09\nRetire Item" as A9
+  usecase "Check Borrower\nEligibility" as A4E
+}
+
+rectangle "Login & Users (USR)" {
+  usecase "UC-USR-01\nLog In" as U1
+  usecase "UC-USR-02\nLog Out" as U2
+  usecase "UC-USR-03\nCreate User Account" as U3
+  usecase "UC-USR-04\nDeactivate User Account" as U4
+  usecase "UC-USR-05\nReset User Password" as U5
+  usecase "UC-USR-06\nChange Own Password" as U6
+}
+
+SA --> A1
+SA --> A2
+SA --> A3
+SA --> A4
+SA --> A5
+SA --> A6
+SA --> A7
+SA --> A8
+SA --> U1
+SA --> U2
+SA --> U6
+
+ADM --> A9
+ADM --> U3
+ADM --> U4
+ADM --> U5
+
+A4 ..> A4E : <<include>>
+@enduml
