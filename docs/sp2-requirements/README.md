@@ -1,11 +1,11 @@
-# SP2 Requirements package
+# Design documentation
 
-This folder contains the Projects & Tasks (`PRJ`) and Notifications (`NTF`) requirements deliverables.
+## SP2 Requirements — Projects & Tasks and Notifications
 
-- [Requirements and traceability](requirements.md)
-- [Editable draw.io diagram](use-case-diagram.drawio)
-- [PlantUML source (alternate)](use-case-diagram.puml)
-- [Exported use-case diagram](use-case-diagram.png)
-- [Design decisions and open questions](../design-decisions.md)
+- [Requirements, use cases, acceptance criteria, classes, and traceability](sp2-requirements/requirements.md)
+- [PRJ / NTF use-case diagram (PNG)](sp2-requirements/use-case-diagram.png)
+- [Editable draw.io diagram](sp2-requirements/use-case-diagram.drawio)
+- [PlantUML source (alternate)](sp2-requirements/use-case-diagram.puml)
+- [Design decisions and open questions](design-decisions.md)
 
-The requirements are a draft for team validation. Open policy decisions are labeled **Confirm** in `requirements.md` and summarized in `design-decisions.md`.
+The requirements are a draft for team validation. See the confirmation notes in the requirements and decision log before treating unresolved policy choices as approved.
