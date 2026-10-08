@@ -106,27 +106,15 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | ID | Requirement | Priority |
 |---|---|---|
 | FR-CLS-01 | The system shall let the Admin add, edit and deactivate classrooms, each linked to a Location, with capacity and room type. | M |
-| FR-CLS-02 | The system shall let an SA install an existing Desktop or Monitor item in a classroom with an optional seat/position label. | M |
 | FR-CLS-03 | The system shall let an SA move installed equipment to another classroom or remove it. | S |
-| FR-CLS-04 | The system shall let an SA or Admin set a PC's condition status (Working, Faulty, Under Repair, Out of Service, Missing). | M |
 | FR-CLS-05 | The system shall let an SA or Admin set a monitor's condition status using the same list. | M |
 | FR-CLS-06 | The system shall require a reason for every condition change and record the user and timestamp in the audit log. | M |
-| FR-CLS-07 | The system shall derive a classroom status (Available, Limited, Unusable) from its equipment and let the Admin set "Closed for Maintenance". | S |
-| FR-CLS-08 | The system shall let an SA record a room check with a result for each installed item. | S |
 | FR-CLS-09 | The system shall show each classroom's last-checked date and flag classrooms not checked within 7 days. | S |
 | FR-CLS-10 | The system shall let the Admin import class schedule entries from a CSV file. | M |
-| FR-CLS-11 | The system shall validate imported rows and list rejected rows with the reason, while saving valid rows. | M |
 | FR-CLS-12 | The system shall let the Admin add, edit and cancel schedule entries manually. | M |
-| FR-CLS-13 | The system shall detect and reject schedule entries that overlap in the same room. | S |
 | FR-CLS-14 | The system shall show a classroom's timetable by day or week. | M |
 | FR-CLS-15 | The system shall let users search and filter classrooms by building, type, capacity, status and free time slot. | S |
-| FR-CLS-16 | The system shall warn when a class is scheduled in an Unusable or Closed classroom. | S |
-| FR-CLS-17 | The system shall show a dashboard of classrooms and equipment counts by status. | C |
-| FR-CLS-18 | The system shall export classroom status and timetables to CSV. | C |
-| FR-CLS-19 | Self-service timetable view for students and faculty. | W |
-| FR-CLS-20 | Automatic hardware health monitoring. | W |
-| FR-CLS-21 | Live integration with the registrar system. | W |
-| FR-CLS-22 | Room booking and reservations. | W |
+| FR-CLS-19 | Self-service timetable view for students and faculty. | S |
 
 ### Issue Logs
 
