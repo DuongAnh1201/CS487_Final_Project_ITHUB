@@ -124,25 +124,15 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | FR-ISS-02 | The system shall reject an issue missing classroom, category, severity, description or reporter name, naming the missing field. | M |
 | FR-ISS-03 | The system shall assign each issue a unique ID and store the logged-in user and timestamp. | M |
 | FR-ISS-04 | The system shall list issues with filters by status, classroom, item, category, severity and date. | M |
-| FR-ISS-05 | The system shall let the Admin assign an issue to an SA or Admin. | M |
 | FR-ISS-06 | The system shall let an SA or Admin change an issue's status following the allowed transitions (BR-ISS-04). | M |
 | FR-ISS-07 | The system shall let users add comments and progress notes to an issue. | S |
 | FR-ISS-08 | The system shall require resolution notes to resolve an issue. | M |
-| FR-ISS-09 | The system shall let an SA or Admin reopen a Resolved issue within 7 days. | S |
-| FR-ISS-10 | The system shall list open issues for the same item, or same classroom and category, before a new issue is saved. | S |
-| FR-ISS-11 | The system shall let an SA or Admin mark an issue as Duplicate and link it to the original. | S |
-| FR-ISS-12 | The system shall set the related item to Faulty when a Hardware issue is recorded for it, unless it is already Faulty, Under Repair or Out of Service. | M |
-| FR-ISS-13 | The system shall set the item to Under Repair when its issue moves to In Progress. | S |
+| FR-ISS-11 | The system shall let an SA or Admin mark an issue as Duplicate and link it to the original and auto flag, send an notification when one issue happens more than the threshold (3). | M |
 | FR-ISS-14 | The system shall set the item to the status chosen at resolution (default Working), only if no other unresolved issue references the item. | M |
-| FR-ISS-15 | The system shall set the classroom to "Closed for Maintenance" when a Critical issue with no item is recorded, and clear it when that issue is resolved and no other Critical room-level issue is open. | S |
 | FR-ISS-16 | The system shall keep a history of every status change and comment on an issue with user and time. | M |
-| FR-ISS-17 | The system shall close a Resolved issue automatically after 7 days without reopening. | C |
-| FR-ISS-18 | The system shall highlight issues past their target resolution time. | C |
 | FR-ISS-19 | The system shall show issue counts by status, severity and classroom. | C |
 | FR-ISS-20 | The system shall export the filtered issue list to CSV. | C |
 | FR-ISS-21 | Photo attachments on issues. | W |
-| FR-ISS-22 | Self-service report form for students and faculty. | W |
-| FR-ISS-23 | Email/SMS notifications (handled by NTF). | W |
 
 ## 5. Non-Functional Requirements
 
