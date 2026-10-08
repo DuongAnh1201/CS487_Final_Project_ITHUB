@@ -76,7 +76,7 @@ These requirements are a requirements elicitation baseline, not a claim that unr
 | ID | Rule | Status / source |
 |---|---|---|
 | BR-01 | A project template is a reusable set of task definitions. Instantiating it creates a distinct project and task records; subsequent edits to the project do not silently edit the template. | Derived from proposal's reusable list of tasks; team should confirm copy behavior. |
-| BR-02 | A task may be standalone or linked to one project. A standalone task may be linked to a project later. | Added from team feedback. |
+| BR-02 | A task may be standalone or linked to one project. A standalone task may be linked to a project later. |Proposed rule to support flexible task and project management.|
 | BR-03 | A task is assigned to at least one IT staff member before it is considered assigned. Multiple assignees are permitted in this draft. | Assumption; confirm cardinality. |
 | BR-04 | Draft task statuses are To Do, In Progress, and Complete. | Proposed values; confirm names and transitions. |
 | BR-05 | A project is complete only when all of its tasks are Complete. | Proposed rule; confirm whether a project can be manually completed or reopened. |
@@ -84,9 +84,9 @@ These requirements are a requirements elicitation baseline, not a claim that unr
 | BR-07 | Shift notifications are generated from the current shift roster and work scheduled for that shift. | Shift roster and send timing remain open. |
 | BR-08 | Changes to projects, tasks, templates, notification creation, and notification read state are audit events. | Derived from proposal's complete audit-history objective; confirm read-state auditing. |
 | BR-09 | All authenticated IT staff can use these pages with the same access. | Explicit in proposal. |
-| BR-10 | An unfinished task may be reassigned to the staff member taking over; its status and assignment history are preserved. | Added from team feedback. |
-| BR-11 | Project-activity notifications go only to members of the affected project. | Added from team feedback. |
-| BR-12 | Each notification has a unique ID. Email delivery is in addition to the in-app notification. | Added from team feedback. |
+| BR-10 | An unfinished task may be reassigned to the staff member taking over; its status and assignment history are preserved. | Derived from task reassignment and workflow continuity requirements. |
+| BR-11 | Project-activity notifications go only to members of the affected project. |Derived from project-specific notification and access requirements. |
+| BR-12 | Each notification has a unique ID. Email delivery is in addition to the in-app notification. | Derived from notification tracking and delivery requirements. |
 
 ## 7. Main use cases
 
