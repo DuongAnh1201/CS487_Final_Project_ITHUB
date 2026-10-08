@@ -1,0 +1,24 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #EEF5FF
+  BorderColor #315A80
+}
+actor "IT staff" as Staff
+actor "Shift scheduler" as Scheduler
+rectangle "IT Inventory Tracker\nProjects & Tasks + Notifications" {
+  usecase "Create project\nfrom template" as UC1
+  usecase "Manage tasks\nand assignments" as UC2
+  usecase "View / mark\nnotifications" as UC3
+  usecase "Create notification\nfor task assignment\nor new issue" as UC4
+  usecase "Deliver shift\nwork summary" as UC5
+}
+Staff -- UC1
+Staff -- UC2
+Staff -- UC3
+UC2 ..> UC4 : triggers
+Scheduler -- UC5
+UC5 ..> UC4 : creates
+@enduml
