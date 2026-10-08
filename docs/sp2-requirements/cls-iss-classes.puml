@@ -1,0 +1,129 @@
+@startuml cls-iss-classes
+hide methods
+skinparam classAttributeIconSize 0
+
+enum EquipmentCondition {
+  WORKING
+  FAULTY
+  UNDER_REPAIR
+  OUT_OF_SERVICE
+  MISSING
+}
+enum IssueCategory {
+  HARDWARE
+  SOFTWARE
+  NETWORK
+  ROOM_FACILITY
+  OTHER
+}
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+enum IssueStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  DUPLICATE
+  REJECTED
+}
+
+package "From AST / USR (reused)" #EEEEEE {
+  class User
+  class Item
+  class Location
+  class AuditLogEntry
+}
+
+class Classroom {
+  classroomId
+  capacity
+  roomType
+  isActive
+  closedForMaintenance
+  closedReason
+  lastCheckedAt
+}
+class RoomEquipment {
+  roomEquipmentId
+  seatLabel
+  condition : EquipmentCondition
+  installedAt
+  removedAt
+  updatedAt
+}
+class RoomCheck {
+  checkId
+  checkedAt
+  notes
+}
+class RoomCheckResult {
+  resultId
+  observedCondition : EquipmentCondition
+  comment
+}
+class ScheduleEntry {
+  entryId
+  courseCode
+  courseTitle
+  instructorName
+  dayOfWeek
+  startTime
+  endTime
+  termStart
+  termEnd
+  status
+  source
+}
+class ScheduleImport {
+  importId
+  fileName
+  importedAt
+  rowsAccepted
+  rowsRejected
+}
+class Issue {
+  issueId
+  category : IssueCategory
+  severity : Severity
+  description
+  status : IssueStatus
+  reporterName
+  reporterType
+  reporterContact
+  createdAt
+  targetDate
+  resolutionNotes
+  resolvedAt
+}
+class IssueUpdate {
+  updateId
+  timestamp
+  oldStatus
+  newStatus
+  comment
+}
+
+Location "1" -- "0..1" Classroom
+Classroom "1" -- "*" RoomEquipment
+Item "1" -- "*" RoomEquipment
+Classroom "1" -- "*" ScheduleEntry
+ScheduleImport "1" -- "*" ScheduleEntry
+Classroom "1" -- "*" RoomCheck
+RoomCheck "1" *-- "*" RoomCheckResult
+RoomCheckResult "*" -- "1" RoomEquipment
+User "1" -- "*" RoomCheck : checkedBy
+User "1" -- "*" ScheduleImport : importedBy
+
+Classroom "1" -- "*" Issue
+RoomEquipment "0..1" -- "*" Issue
+Issue "1" *-- "*" IssueUpdate
+Issue "0..1" <-- "*" Issue : duplicateOf
+User "1" -- "*" Issue : createdBy / assignedTo / resolvedBy
+User "1" -- "*" IssueUpdate
+User "1" -- "*" AuditLogEntry
+@enduml
