@@ -139,10 +139,6 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | ID | Category | Requirement | Priority |
 |---|---|---|---|
 | NFR-CLS-01 | Usability | An SA can change an equipment status in no more than 3 clicks from the classroom page. | S |
-| NFR-CLS-02 | Performance | Timetable and classroom search return within 2 seconds for up to 100 classrooms and 5,000 schedule entries. | S |
-| NFR-CLS-03 | Usability | Invalid input (time range, duplicate seat label, bad CSV row) shows a clear inline error message. | M |
-| NFR-CLS-04 | Reliability | Classrooms, schedule entries and status history are never hard-deleted; history is kept at least 3 years. | M |
-| NFR-CLS-05 | Performance | A 500-row schedule import finishes within 10 seconds. | C |
 | NFR-CLS-06 | Compatibility | Pages work on current Chrome, Edge, Firefox, Safari at widths ≥ 768 px. | S |
 | NFR-CLS-07 | Maintainability | UI, business logic and storage are separate layers; object data is encapsulated. | S |
 | NFR-ISS-01 | Usability | An SA can record an issue in under 1 minute with no more than 6 required fields. | S |
@@ -150,20 +146,12 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | NFR-ISS-03 | Usability | Required fields show clear inline error messages. | M |
 | NFR-ISS-04 | Reliability | Issues and their history are never hard-deleted; kept at least 3 years. | M |
 | NFR-ISS-05 | Integrity | An issue change and the resulting equipment status change are saved together or not at all. | M |
-| NFR-ISS-06 | Security | Only logged-in SA and Admin users can record or change issues; every change is attributed to a user. | M |
-| NFR-ISS-07 | Compatibility | Pages work on current Chrome, Edge, Firefox, Safari at widths ≥ 768 px. | S |
-
 ## 6. Business Rules
 
 | ID | Rule |
 |---|---|
 | BR-CLS-01 | A classroom is one Location (building + room); each Location has at most one classroom record. |
-| BR-CLS-02 | Only items in the Desktop or Monitor category can be installed in a classroom. |
-| BR-CLS-03 | An item is installed in at most one classroom at a time. Retired or Lost items cannot be installed, and an installed item cannot be lent out. |
-| BR-CLS-04 | Equipment condition is one of: Working, Faulty, Under Repair, Out of Service, Missing. It is separate from `ItemStatus`. |
 | BR-CLS-05 | Every condition change records user, timestamp, old value, new value and reason. |
-| BR-CLS-06 | Classroom status is **Available** if every installed PC is Working, **Limited** if at least one but not all are Working, **Unusable** if no PC is Working or the classroom has no PC. |
-| BR-CLS-07 | The Admin can mark a classroom "Closed for Maintenance"; this overrides the derived status. |
 | BR-CLS-08 | Classrooms are deactivated, never deleted. A classroom with installed equipment or future classes cannot be deactivated. |
 | BR-CLS-09 | Two active schedule entries cannot overlap in the same room on the same day within the same term dates. |
 | BR-CLS-10 | A cancelled schedule entry is kept for history and excluded from timetables. |
@@ -174,13 +162,8 @@ Priority: **M** = Must Have · **S** = Should Have · **C** = Could Have · **W*
 | BR-ISS-03 | Severity is Low, Medium, High or Critical. Critical means scheduled classes cannot be held in the room. |
 | BR-ISS-04 | Allowed transitions: Open → Assigned → In Progress → Resolved → Closed; Open or Assigned → Rejected or Duplicate; Resolved → In Progress (reopen). Closed, Rejected and Duplicate are final. |
 | BR-ISS-05 | An issue cannot be Resolved without resolution notes. |
-| BR-ISS-06 | Only the Admin assigns, rejects and closes issues. An SA or Admin can progress and resolve them. |
 | BR-ISS-07 | A Duplicate issue must link to an existing original issue. |
-| BR-ISS-08 | A Resolved issue becomes Closed after 7 days without reopening. A reopened issue keeps its ID and history. |
 | BR-ISS-09 | Issues are never deleted. |
-| BR-ISS-10 | Only a Hardware issue with an item changes equipment status. The classroom status is never set directly except by BR-ISS-12. |
-| BR-ISS-11 | An item returns to Working only if no other unresolved issue references it. |
-| BR-ISS-12 | A Critical issue with no item sets the classroom to "Closed for Maintenance" until it is resolved and no other Critical room-level issue is open. |
 | BR-ISS-13 | Target resolution time: Critical 1 day, High 3 days, Medium 7 days, Low 14 days. |
 | BR-ISS-14 | Every automatic equipment or classroom status change is written to the audit log with the issue ID. |
 
