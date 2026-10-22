@@ -1,0 +1,240 @@
+@startuml class-diagram-domain
+' SP4 – CLS + ISS domain class diagram: attributes, methods, associations, multiplicity
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam class {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+  ArrowColor #555555
+}
+skinparam package {
+  BackgroundColor #FAFAFA
+  BorderColor #BBBBBB
+}
+hide empty members
+
+
+package "Shared – borrowed from AST / USR (not redefined)" as shared #F2F2F2 {
+  class User <<USR>> {
+    +userId : str
+    +fullName : str
+    +role : Role
+    +isAdmin() : bool
+  }
+  class Location <<AST>> {
+    +locationId : str
+    +building : str
+    +room : str
+  }
+  class Item <<AST>> {
+    +itemId : str
+    +assetTag : str
+    +status : ItemStatus
+    +isRetired() : bool
+  }
+}
+
+package "Domain objects – Classrooms & Schedules (CLS)" as clsdom {
+  class Classroom {
+    -classroomId : str
+    -location : Location
+    -capacity : int
+    -roomType : RoomType
+    -isActive : bool
+    -closedForMaintenance : bool
+    -closedReason : str
+    -lastCheckedAt : datetime | None
+    +update(capacity, roomType)
+    +deactivate(hasEquipment, hasFutureClasses)
+    +closeForMaintenance(reason)
+    +reopen()
+    +recordCheck(checkedAt)
+    +isCheckOverdue(today, intervalDays = 7) : bool
+    +displayName() : str
+  }
+  class RoomEquipment {
+    -roomEquipmentId : str
+    -classroomId : str
+    -itemId : str
+    -seatLabel : str
+    -condition : EquipmentCondition
+    -installedAt : datetime
+    -removedAt : datetime | None
+    -updatedBy : str
+    -updatedAt : datetime
+    +isInstalled() : bool
+    +setCondition(newCondition, reason, user) : EquipmentCondition
+    +remove(user, at)
+  }
+  class RoomCheck {
+    -checkId : str
+    -classroomId : str
+    -checkedBy : str
+    -checkedAt : datetime
+    -notes : str
+    -results : list[RoomCheckResult]
+    +addResult(roomEquipmentId, observedCondition, comment)
+  }
+  class RoomCheckResult {
+    -resultId : str
+    -roomEquipmentId : str
+    -observedCondition : EquipmentCondition
+    -comment : str
+  }
+  class ScheduleEntry {
+    -entryId : str
+    -classroomId : str
+    -courseCode : str
+    -courseTitle : str
+    -instructorName : str
+    -dayOfWeek : DayOfWeek
+    -startTime : time
+    -endTime : time
+    -termStart : date
+    -termEnd : date
+    -status : EntryStatus
+    -source : EntrySource
+    -importId : str | None
+    +validate()
+    +overlaps(other : ScheduleEntry) : bool
+    +occursOn(day : date) : bool
+    +update(fields)
+    +cancel()
+  }
+  class ScheduleImport {
+    -importId : str
+    -fileName : str
+    -importedBy : str
+    -importedAt : datetime
+    -rowsAccepted : int
+    -rowsRejected : int
+    -rejectedRows : list[RowError]
+    +accept(entry)
+    +reject(rowNumber, reason)
+  }
+}
+
+package "Domain objects – Issue Logs (ISS)" as issdom {
+  class Issue {
+    -issueId : str
+    -classroomId : str
+    -roomEquipmentId : str | None
+    -category : IssueCategory
+    -severity : Severity
+    -description : str
+    -status : IssueStatus
+    -reporterName : str
+    -reporterType : ReporterType
+    -reporterContact : str
+    -createdBy : str
+    -createdAt : datetime
+    -assignedTo : str | None
+    -targetDate : date
+    -resolutionNotes : str
+    -resolvedBy : str | None
+    -resolvedAt : datetime | None
+    -duplicateOfId : str | None
+    -isRepeatProblem : bool
+    -history : list[IssueUpdate]
+    +{static} create(form, user, now) : Issue
+    +allowedNextStatuses(user) : list[IssueStatus]
+    +changeStatus(newStatus, user, note) : IssueUpdate
+    +assign(assignee, admin)
+    +resolve(notes, user)
+    +markDuplicate(original, user)
+    +addComment(text, user) : IssueUpdate
+    +isFinal() : bool
+    +isUnresolved() : bool
+    +isOverdue(today) : bool
+  }
+  class IssueUpdate <<immutable>> {
+    -updateId : str
+    -issueId : str
+    -userId : str
+    -timestamp : datetime
+    -oldStatus : IssueStatus | None
+    -newStatus : IssueStatus | None
+    -comment : str
+  }
+}
+
+package "Enumerations" as enums {
+  enum RoomType {
+    LECTURE
+    COMPUTER_LAB
+  }
+  enum EquipmentCondition {
+    WORKING
+    FAULTY
+    UNDER_REPAIR
+    OUT_OF_SERVICE
+    MISSING
+  }
+  enum RoomStatus {
+    AVAILABLE
+    LIMITED
+    UNUSABLE
+    CLOSED
+  }
+  enum EntryStatus {
+    ACTIVE
+    CANCELLED
+  }
+  enum EntrySource {
+    IMPORT
+    MANUAL
+  }
+  enum IssueCategory {
+    HARDWARE
+    SOFTWARE
+    NETWORK
+    ROOM_FACILITY
+    OTHER
+  }
+  enum Severity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+    +targetDays() : int
+  }
+  enum IssueStatus {
+    OPEN
+    ASSIGNED
+    IN_PROGRESS
+    RESOLVED
+    CLOSED
+    DUPLICATE
+    REJECTED
+  }
+  enum ReporterType {
+    STUDENT
+    FACULTY
+    STAFF
+  }
+}
+
+' ---- domain associations ----
+Location "1" -- "0..1" Classroom
+Classroom "1" o-- "*" RoomEquipment : has installed >
+Item "1" -- "*" RoomEquipment : install history >
+Classroom "1" -- "*" RoomCheck
+RoomCheck "1" *-- "*" RoomCheckResult
+RoomCheckResult "*" --> "1" RoomEquipment
+Classroom "1" -- "*" ScheduleEntry
+ScheduleImport "0..1" -- "*" ScheduleEntry : created >
+Classroom "1" -- "*" Issue
+RoomEquipment "0..1" -- "*" Issue
+Issue "1" *-- "*" IssueUpdate : history >
+Issue "*" --> "0..1" Issue : duplicateOf
+User "1" -- "*" Issue : createdBy / assignedTo / resolvedBy
+User "1" -- "*" IssueUpdate
+
+
+Classroom ..> RoomType
+RoomEquipment ..> EquipmentCondition
+ScheduleEntry ..> EntryStatus
+Issue ..> IssueStatus
+@enduml

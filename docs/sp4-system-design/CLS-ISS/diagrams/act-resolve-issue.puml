@@ -1,0 +1,52 @@
+@startuml act-resolve-issue
+' SP4 – Activity: Resolve an Issue workflow (US-ISS-05)
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+|Student Assistant|
+start
+:Open the issue;
+:Choose "Resolve";
+:Enter resolution notes;
+:Pick item's new condition\n(default Working);
+:Confirm;
+|System|
+if (Issue status = In Progress?) then (no)
+  :Show "Only an In Progress issue can be resolved";
+  stop
+else (yes)
+endif
+if (Notes entered?) then (no)
+  :Show "Resolution notes are required";
+  stop
+else (yes)
+endif
+:Begin transaction;
+:Set status Resolved, resolvedBy, resolvedAt;
+:Add IssueUpdate (In Progress -> Resolved);
+if (Issue linked to a PC/monitor?) then (yes)
+  if (Other unresolved issue on same item?) then (yes)
+    :Keep current condition;
+  else (no)
+    :Set item to chosen condition;
+    :Audit log entry with issue ID;
+  endif
+else (no)
+endif
+if (Classroom was closed by this Critical issue\nand no other unresolved Critical room issue?) then (yes)
+  :Reopen classroom;
+  :Audit log entry with issue ID;
+else (no)
+endif
+if (All saves OK?) then (yes)
+  :Commit;
+  :Recalculate classroom status;
+  :Show "Issue <ID> resolved" and room status;
+else (no)
+  :Rollback – nothing changed;
+  :Show "Could not save. Please try again.";
+endif
+stop
+@enduml
