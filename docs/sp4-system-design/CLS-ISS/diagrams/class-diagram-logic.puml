@@ -1,0 +1,165 @@
+@startuml class-diagram-logic
+' SP4 – CLS + ISS design classes: controllers, managers, strategies/filters (polymorphism), repositories
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam class {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+  ArrowColor #555555
+}
+skinparam package {
+  BackgroundColor #FAFAFA
+  BorderColor #BBBBBB
+}
+hide empty members
+
+
+package "Borrowed services (AST / USR / RPT / NTF)" #F2F2F2 {
+  class AuthService <<USR>> {
+    +currentUser() : User
+    +requireRole(user, role)
+  }
+  class AssetManager <<AST>> {
+    +findItem(itemId) : Item
+  }
+  class AuditLog <<RPT>> {
+    +record(user, action, entityType, entityId, oldValue, newValue, reason, triggeredBy)
+  }
+  class NotificationService <<NTF>> {
+    +issueReported(issue)
+    +repeatProblemFlagged(issue)
+  }
+}
+package "Business logic layer" as bl {
+  class ClassroomController {
+    +handle(request) : Response
+  }
+  class IssueController {
+    +handle(request) : Response
+  }
+  class ClassroomManager {
+    +addClassroom(data, admin) : Classroom
+    +updateClassroom(id, data, admin)
+    +deactivateClassroom(id, admin)
+    +installEquipment(classroomId, itemId, seatLabel, user)
+    +moveEquipment(roomEquipmentId, toClassroomId, user)
+    +removeEquipment(roomEquipmentId, user)
+    +setCondition(roomEquipmentId, condition, reason, user)
+    +recordRoomCheck(classroomId, results, notes, user)
+    +listClassrooms(today) : list[ClassroomSummary]
+    +search(criteria) : list[ClassroomSummary]
+    +getStatus(classroomId) : RoomStatus
+  }
+  class ScheduleManager {
+    +importCsv(fileName, rows, admin) : ScheduleImport
+    +addEntry(data, admin) : ScheduleEntry
+    +editEntry(entryId, data, admin)
+    +cancelEntry(entryId, admin)
+    +getTimetable(classroomId, day, view) : Timetable
+    +isRoomFree(classroomId, day, start, end) : bool
+    +hasFutureClasses(classroomId, today) : bool
+  }
+  class IssueManager {
+    +findPossibleDuplicates(classroomId, roomEquipmentId, category) : list[Issue]
+    +createIssue(form, user) : Issue
+    +searchIssues(criteria) : list[Issue]
+    +changeStatus(issueId, newStatus, user, note, assigneeId)
+    +addComment(issueId, text, user)
+    +resolveIssue(issueId, notes, newCondition, user)
+    +markDuplicate(issueId, originalId, user)
+    +getHistory(issueId) : list[IssueUpdate]
+  }
+  class RoomStatusCalculator {
+    +calculate(classroom, installedEquipment) : RoomStatus
+  }
+  abstract class ClassroomFilter {
+    +{abstract} matches(summary) : bool
+  }
+  class BuildingFilter
+  class RoomTypeFilter
+  class MinCapacityFilter
+  class StatusFilter
+  class FreeSlotFilter
+  abstract class IssueEffect {
+    +{abstract} onReported(issue, ctx)
+    +{abstract} onStarted(issue, ctx)
+    +{abstract} onResolved(issue, newCondition, ctx)
+  }
+  class HardwareItemEffect
+  class CriticalRoomEffect
+  class NoEquipmentEffect
+  class IssueEffectFactory {
+    +effectsFor(issue) : list[IssueEffect]
+  }
+}
+
+package "Data storage layer" as ds {
+  class UnitOfWork {
+    +begin()
+    +commit()
+    +rollback()
+  }
+  interface Repository<T> {
+    +findById(id) : T | None
+    +save(entity)
+  }
+  class ClassroomRepository
+  class RoomEquipmentRepository {
+    +findInstalledByItem(itemId)
+    +findInstalledByClassroom(classroomId)
+  }
+  class RoomCheckRepository
+  class ScheduleRepository {
+    +findActiveByClassroom(classroomId)
+  }
+  class IssueRepository {
+    +search(criteria)
+    +countUnresolvedForEquipment(roomEquipmentId, excludeIssueId) : int
+    +countDuplicatesOf(issueId) : int
+  }
+}
+
+' ---- logic dependencies ----
+ClassroomController ..> ClassroomManager
+ClassroomController ..> AuthService
+IssueController ..> AuthService
+ClassroomManager ..> AssetManager
+ClassroomController ..> ScheduleManager
+IssueController ..> IssueManager
+ClassroomManager ..> RoomStatusCalculator
+ClassroomManager ..> ClassroomFilter
+ClassroomManager ..> ScheduleManager
+IssueManager ..> IssueEffectFactory
+IssueEffectFactory ..> IssueEffect
+IssueManager ..> AuditLog
+ClassroomManager ..> AuditLog
+ScheduleManager ..> AuditLog
+IssueManager ..> NotificationService
+
+ClassroomFilter <|-- BuildingFilter
+ClassroomFilter <|-- RoomTypeFilter
+ClassroomFilter <|-- MinCapacityFilter
+ClassroomFilter <|-- StatusFilter
+ClassroomFilter <|-- FreeSlotFilter
+IssueEffect <|-- HardwareItemEffect
+IssueEffect <|-- CriticalRoomEffect
+IssueEffect <|-- NoEquipmentEffect
+
+Repository <|.. ClassroomRepository
+Repository <|.. RoomEquipmentRepository
+Repository <|.. RoomCheckRepository
+Repository <|.. ScheduleRepository
+Repository <|.. IssueRepository
+ClassroomManager ..> ClassroomRepository
+ClassroomManager ..> RoomEquipmentRepository
+ClassroomManager ..> RoomCheckRepository
+ScheduleManager ..> ScheduleRepository
+IssueManager ..> IssueRepository
+IssueManager ..> UnitOfWork
+ClassroomManager ..> UnitOfWork
+HardwareItemEffect -[hidden]down- Repository
+CriticalRoomEffect -[hidden]down- UnitOfWork
+AuthService -[hidden]down- Repository
+@enduml

@@ -1,0 +1,65 @@
+@startuml seq-resolve-issue
+' SP4 – Sequence: Resolve an Issue (US-ISS-05, UC-ISS-03)
+skinparam shadowing false
+skinparam sequenceMessageAlign left
+skinparam participant {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+autonumber
+actor "Student Assistant" as SA
+participant "Issue detail page" as UI
+participant IssueController as IC
+participant IssueManager as IM
+participant IssueRepository as IR
+participant "issue : Issue" as ISS
+participant "IssueEffect\n(strategy)" as EFF
+participant "equipment :\nRoomEquipment" as RE
+participant RoomStatusCalculator as RSC
+participant UnitOfWork as UOW
+participant "AuditLog\n(RPT)" as AL
+
+SA -> UI : Resolve; enter notes,\npick new condition (default WORKING)
+UI -> IC : resolveIssue(issueId, notes, newCondition)
+IC -> IM : resolveIssue(issueId, notes, newCondition, user)
+IM -> IR : findById(issueId)
+IR --> IM : issue
+alt issue not found
+  IM --> IC : NotFoundError("Issue not found.")
+end
+IM -> ISS : resolve(notes, user)
+alt status is not IN_PROGRESS
+  ISS --> IM : BusinessRuleError("Only an In Progress issue can be resolved.")
+else notes empty
+  ISS --> IM : ValidationError("Resolution notes are required.")
+else ok
+  ISS -> ISS : status = RESOLVED, resolvedBy, resolvedAt\nadd IssueUpdate(IN_PROGRESS -> RESOLVED)
+end
+IM -> UOW : begin()
+IM -> IR : save(issue)
+IM -> EFF : onResolved(issue, newCondition, ctx)
+opt issue linked to a PC/monitor
+  EFF -> IR : countUnresolvedForEquipment(reId, excludeIssueId)
+  IR --> EFF : n
+  alt n == 0
+    EFF -> RE : setCondition(newCondition,\n"Resolved by issue <ID>", user)
+    EFF -> AL : record(old, new, triggeredBy = issueId)
+  else n > 0
+    EFF -> EFF : leave condition unchanged
+  end
+end
+opt Critical room issue closed the classroom
+  EFF -> EFF : reopen classroom if no other unresolved\nCritical room-level issue
+end
+IM -> AL : record(user, "ISSUE_RESOLVED", "Issue", issueId)
+alt any save fails
+  IM -> UOW : rollback()
+  IC --> UI : "Could not save. Nothing was changed."
+else
+  IM -> UOW : commit()
+  IM -> RSC : calculate(classroom, installedEquipment)
+  RSC --> IM : roomStatus
+  IM --> IC : issue, roomStatus
+  IC --> UI : "Issue <ID> resolved." + new room status
+end
+@enduml

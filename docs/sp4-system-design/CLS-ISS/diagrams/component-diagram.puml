@@ -1,0 +1,80 @@
+@startuml component-diagram
+' SP4 – CLS + ISS package / component diagram (three-layer architecture)
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam component {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+skinparam package {
+  BackgroundColor #FAFAFA
+  BorderColor #BBBBBB
+}
+skinparam database {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+
+actor "Student Assistant" as SA
+actor "Admin" as AD
+
+package "Presentation layer (web pages)" {
+  component "Classrooms page\n(list, detail, equipment)" as P1
+  component "Schedule pages\n(import, entry form, timetable)" as P2
+  component "Issue pages\n(report form, list, detail)" as P3
+}
+
+package "Business logic layer" {
+  package "CLS / ISS own components" {
+    component ClassroomController as CC
+    component IssueController as IC
+    component ClassroomManager as CM
+    component ScheduleManager as SM
+    component IssueManager as IM
+    component RoomStatusCalculator as RSC
+    component "ClassroomFilter\nhierarchy" as CF
+    component "IssueEffect\nstrategies" as IE
+  }
+  package "Borrowed from other pages" {
+    component "AuthService (USR)" as AUTH
+    component "AssetManager (AST)" as AM
+    component "AuditLog (RPT)" as AL
+    component "NotificationService (NTF)" as NS
+  }
+}
+
+package "Data storage layer" {
+  component "Repositories +\nUnitOfWork" as REPO
+  database "SQLite: classrooms, room_equipment,\nroom_checks, room_check_results,\nschedule_entries, schedule_imports,\nissues, issue_updates" as DB
+  database "Shared: items, locations,\nusers, audit_records" as SDB
+}
+
+SA --> P1
+SA --> P3
+AD --> P2
+AD --> P1
+AD --> P3
+P1 --> CC : validated requests\nand results
+P2 --> CC
+P3 --> IC
+CC --> CM
+CC --> SM
+IC --> IM
+CM --> RSC
+CM --> CF
+CM --> SM
+IM --> IE
+IE --> CM
+CC --> AUTH
+IC --> AUTH
+CM --> AM
+CM --> AL
+SM --> AL
+IM --> AL
+IM --> NS
+CM --> REPO
+SM --> REPO
+IM --> REPO
+REPO --> DB
+REPO --> SDB
+@enduml

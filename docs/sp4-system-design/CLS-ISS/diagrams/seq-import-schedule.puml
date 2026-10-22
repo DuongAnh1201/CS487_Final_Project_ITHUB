@@ -1,0 +1,54 @@
+@startuml seq-import-schedule
+' SP4 – Sequence: Import the Class Schedule (US-CLS-06, UC-CLS-04)
+skinparam shadowing false
+skinparam sequenceMessageAlign left
+skinparam participant {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+autonumber
+actor Admin as AD
+participant "Schedule import page" as UI
+participant ClassroomController as CC
+participant "AuthService\n(USR)" as AUTH
+participant ScheduleManager as SM
+participant "imp : ScheduleImport" as IMP
+participant ClassroomRepository as CR
+participant ScheduleRepository as SR
+participant UnitOfWork as UOW
+participant "AuditLog\n(RPT)" as AL
+
+AD -> UI : upload registrar CSV
+UI -> CC : importSchedule(file)
+CC -> AUTH : requireRole(user, ADMIN)
+alt not Admin
+  AUTH --> CC : PermissionDeniedError
+  CC --> UI : "Not allowed."
+end
+CC -> CC : check file type and header row
+alt wrong file or header
+  CC --> UI : "File must be a CSV with the expected columns."
+end
+CC -> SM : importCsv(fileName, rows, admin)
+SM -> IMP ** : new ScheduleImport(fileName, admin, now)
+loop each row
+  SM -> CR : findByBuildingAndRoom(building, room)
+  CR --> SM : classroom or none
+  SM -> SM : build ScheduleEntry(source = IMPORT)\nentry.validate()
+  SM -> SR : findActiveByClassroom(classroomId)
+  SR --> SM : existing entries
+  SM -> SM : entry.overlaps(existing + rows\naccepted earlier in this file)
+  alt unknown room / bad field / end <= start / overlap
+    SM -> IMP : reject(rowNumber, reason)
+  else valid
+    SM -> IMP : accept(entry)
+  end
+end
+SM -> UOW : begin()
+SM -> SR : save(accepted entries)
+SM -> SR : save(imp)
+SM -> AL : record(admin, "SCHEDULE_IMPORTED", "ScheduleImport", importId)
+SM -> UOW : commit()
+SM --> CC : imp
+CC --> UI : "<n> rows accepted, <m> rejected" + rejected row list with reasons
+@enduml

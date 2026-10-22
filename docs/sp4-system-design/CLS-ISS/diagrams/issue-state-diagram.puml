@@ -1,0 +1,24 @@
+@startuml issue-state-diagram
+' SP4 – Issue status transitions (BR-23); enforced by Issue.changeStatus()
+skinparam shadowing false
+skinparam state {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+[*] --> Open : SA records issue
+Open --> Assigned : assign(assignee)\n[Admin only]
+Assigned --> InProgress : start work
+InProgress --> Resolved : resolve(notes)\n[notes not empty]
+Resolved --> InProgress : reopen
+Resolved --> Closed : close\n[Admin only]
+Open --> Rejected : reject\n[Admin only]
+Assigned --> Rejected : reject\n[Admin only]
+Open --> Duplicate : markDuplicate(original)\n[original exists]
+Assigned --> Duplicate : markDuplicate(original)\n[original exists]
+Closed --> [*]
+Rejected --> [*]
+Duplicate --> [*]
+state "In Progress" as InProgress
+note right of Closed : Closed, Rejected and Duplicate\nare final – no further changes
+note left of InProgress : entering In Progress sets a linked\nPC/monitor to Under Repair (DD-ISS-01)
+@enduml

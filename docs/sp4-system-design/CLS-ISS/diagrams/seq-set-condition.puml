@@ -1,0 +1,44 @@
+@startuml seq-set-condition
+' SP4 – Sequence: Set Equipment Condition (US-CLS-03, UC-CLS-02)
+skinparam shadowing false
+skinparam sequenceMessageAlign left
+skinparam participant {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+autonumber
+actor "Student Assistant" as SA
+participant "Classroom detail page" as UI
+participant ClassroomController as CC
+participant ClassroomManager as CM
+participant RoomEquipmentRepository as RER
+participant "equipment :\nRoomEquipment" as RE
+participant RoomStatusCalculator as RSC
+participant UnitOfWork as UOW
+participant "AuditLog\n(RPT)" as AL
+
+SA -> UI : click PC/monitor (1), choose condition (2),\nenter reason and Save (3)
+UI -> CC : setCondition(roomEquipmentId, condition, reason)
+CC -> CM : setCondition(roomEquipmentId, condition, reason, user)
+CM -> RER : findById(roomEquipmentId)
+RER --> CM : equipment
+alt not installed
+  CM --> CC : NotFoundError("Equipment is not installed in a classroom.")
+end
+CM -> RE : setCondition(condition, reason, user)
+alt reason empty
+  RE --> CM : ValidationError("Reason is required.")
+else same as current
+  RE --> CM : NoChange("No change.")
+else ok
+  RE --> CM : oldCondition
+end
+CM -> UOW : begin()
+CM -> RER : save(equipment)
+CM -> AL : record(user, "CONDITION_CHANGED", "RoomEquipment",\nid, old, new, reason)
+CM -> UOW : commit()
+CM -> RSC : calculate(classroom, installedEquipment)
+RSC --> CM : roomStatus
+CM --> CC : equipment, roomStatus
+CC --> UI : updated condition + new classroom status
+@enduml

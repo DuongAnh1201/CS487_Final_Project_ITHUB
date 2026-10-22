@@ -1,0 +1,81 @@
+@startuml seq-record-issue
+' SP4 – Sequence: Record an Issue (US-ISS-01, UC-ISS-01)
+skinparam shadowing false
+skinparam sequenceMessageAlign left
+skinparam participant {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+autonumber
+actor "Student Assistant" as SA
+participant "Issue form page" as UI
+participant IssueController as IC
+participant "AuthService\n(USR)" as AUTH
+participant IssueManager as IM
+participant ClassroomRepository as CR
+participant RoomEquipmentRepository as RER
+participant IssueRepository as IR
+participant "Issue" as ISS
+participant "IssueEffect\n(strategy)" as EFF
+participant UnitOfWork as UOW
+participant "AuditLog\n(RPT)" as AL
+participant "NotificationService\n(NTF)" as NS
+
+SA -> UI : choose classroom, optional PC/monitor,\ncategory, severity
+UI -> IC : findPossibleDuplicates(classroomId, itemId, category)
+IC -> IM : findPossibleDuplicates(...)
+IM -> IR : search(open issues on same item\nor same room + category)
+IR --> IM : matches
+IM --> UI : matches
+alt matches found
+  UI --> SA : show open issues (SA may comment on one instead)
+end
+SA -> UI : description, reporter name/type/contact; Submit
+UI -> IC : createIssue(form)
+IC -> AUTH : currentUser()
+AUTH --> IC : user (SA or Admin)
+IC -> IM : createIssue(form, user)
+IM -> CR : findById(classroomId)
+CR --> IM : classroom
+alt classroom missing or inactive
+  IM --> IC : NotFoundError("Classroom not found or inactive.")
+end
+opt item selected
+  IM -> RER : findInstalledByItem(itemId)
+  RER --> IM : roomEquipment
+  alt not installed in this classroom
+    IM --> IC : ValidationError(item, "Item is not installed in this classroom.")
+  end
+end
+IM -> ISS ** : Issue.create(form, user, now)
+note right of ISS
+  validates required fields, sets
+  status = OPEN, createdBy, createdAt,
+  targetDate = today + severity.targetDays()
+end note
+alt required field missing
+  ISS --> IM : ValidationError(field, "<Field> is required.")
+  IM --> IC : ValidationError
+  IC --> UI : show message next to field, keep typed values
+end
+IM -> UOW : begin()
+IM -> IR : save(issue)  /' assigns unique issueId '/
+IM -> EFF : onReported(issue, ctx)
+note right of EFF
+  HardwareItemEffect: Working PC/monitor -> FAULTY
+  CriticalRoomEffect: Critical + no item -> classroom closed
+  NoEquipmentEffect: nothing
+end note
+EFF -> AL : record(..., triggeredBy = issueId)
+IM -> AL : record(user, "ISSUE_CREATED", "Issue", issueId)
+alt any save fails
+  IM -> UOW : rollback()
+  IM --> IC : StorageError
+  IC --> UI : "Issue could not be saved. Please try again."
+else all saved
+  IM -> UOW : commit()
+  IM -> NS : issueReported(issue)
+  IM --> IC : issue
+  IC --> UI : confirmation "Issue <ID> recorded."
+end
+@enduml

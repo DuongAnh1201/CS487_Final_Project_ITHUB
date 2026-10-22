@@ -1,0 +1,50 @@
+@startuml seq-search-classrooms
+' SP4 – Sequence: Search and Filter Classrooms (US-CLS-05, UC-CLS-05)
+skinparam shadowing false
+skinparam sequenceMessageAlign left
+skinparam participant {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+autonumber
+actor "Student Assistant" as SA
+participant "Classrooms page" as UI
+participant ClassroomController as CC
+participant ClassroomManager as CM
+participant ClassroomRepository as CR
+participant RoomEquipmentRepository as RER
+participant RoomStatusCalculator as RSC
+participant "filters :\nClassroomFilter[*]" as F
+participant ScheduleManager as SM
+
+SA -> UI : set building, type, min capacity,\nstatus, free slot (any combination)
+UI -> CC : search(criteria)
+CC -> CC : validate criteria\n(capacity >= 0, slot end > start)
+alt invalid criteria
+  CC --> UI : ValidationError("End time must be after start time.")
+end
+CC -> CM : search(criteria)
+CM -> CM : build list of ClassroomFilter objects\n(only for criteria that were given)
+CM -> CR : findActive()
+CR --> CM : active classrooms
+loop each classroom
+  CM -> RER : findInstalledByClassroom(id)
+  RER --> CM : equipment
+  CM -> RSC : calculate(classroom, equipment)
+  RSC --> CM : roomStatus
+  loop each filter (polymorphic call)
+    CM -> F : matches(summary)
+    opt FreeSlotFilter
+      F -> SM : isRoomFree(id, day, start, end)
+      SM --> F : true / false
+    end
+    F --> CM : true / false
+  end
+end
+CM --> CC : matching summaries\n(name, capacity, status, last checked)
+alt no matches
+  CC --> UI : "No classrooms match your filters."
+else
+  CC --> UI : result table
+end
+@enduml
