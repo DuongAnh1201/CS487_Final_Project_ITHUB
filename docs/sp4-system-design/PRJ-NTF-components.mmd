@@ -1,0 +1,54 @@
+flowchart TB
+  A[Admin / IT Supervisor] --> PUI
+  SA[Student Assistant] --> PUI
+  A --> NUI
+  SA --> NUI
+  SCH[Shift-start scheduler] --> AC
+  subgraph PL[Presentation Layer]
+    PUI[Projects & Tasks UI]
+    NUI[Notifications UI]
+  end
+  subgraph BL[Business Logic Layer]
+    AC[App Controller]
+    PM[Project Manager]
+    TM[Task Manager]
+    TPL[Template Manager]
+    NM[Notification Manager]
+    SS[Shift Summary Service]
+    PM --> TM
+    SS --> TM
+    SS --> NM
+  end
+  subgraph DO[Domain Objects]
+    PR[Project]
+    TASK[Task / TaskAssignment]
+    T[ProjectTemplate / TemplateTask]
+    N[Notification]
+  end
+  subgraph DS[Data Storage Layer]
+    R[Repository / Storage Manager]
+    DB[(SQLite database)]
+    R --> DB
+  end
+  PUI --> AC
+  NUI --> AC
+  AC --> PM
+  AC --> TM
+  AC --> TPL
+  AC --> NM
+  AC --> SS
+  PM --> PR
+  TM --> TASK
+  TPL --> T
+  NM --> N
+  PR --> R
+  TASK --> R
+  T --> R
+  N --> R
+  PM -. "verify member accounts" .-> UM[User Manager - USR page]
+  TM -. "verify assignees" .-> UM
+  NM -. "receive issue events" .-> IM[Issue Manager - ISS page]
+  NM -. "log notification events" .-> RM[Report & Audit Manager - RPT page]
+  PM -. "log project changes" .-> RM
+  TM -. "log task changes" .-> RM
+  SS -. "obtain shift roster; source TBD" .-> SM[Shift roster provider - TBD]
