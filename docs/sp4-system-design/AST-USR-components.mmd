@@ -1,0 +1,96 @@
+%%{init: {"layout": "elk", "flowchart": {"curve": "basis", "nodeSpacing": 40, "rankSpacing": 70}, "themeVariables": {"fontFamily": "Helvetica", "fontSize": "14px"}}}%%
+flowchart TB
+    SA([Student Assistant]):::actor
+    ADM([Admin / IT Supervisor]):::actor
+
+    subgraph PL["Presentation Layer"]
+        UI["Web UI (console menu for first prototype)<br/>Login · Inventory · Lending · Stock · Users · Account"]:::comp
+    end
+
+    SA --> UI
+    ADM --> UI
+    UI -- "validated requests and results" --> AC
+
+    subgraph BLL["Business Logic Layer"]
+        subgraph OWN["AST / USR own components"]
+            AC["App Controller"]:::comp
+            ACL["Access Control"]:::comp
+            AUTH["Auth Service"]:::comp
+            UM["User Manager"]:::comp
+            AM["Asset Manager"]:::comp
+            LM["Lending Manager"]:::comp
+            SM["Stock Manager"]:::comp
+        end
+        subgraph BOR["Other pages' components"]
+            AUD["Audit Log (RPT)"]:::comp
+            CLM["Classroom Manager (CLS)"]:::comp
+            ORD["Order Manager / Stock Monitor (ORD)"]:::comp
+            PRJ["Project / Task Manager (PRJ)"]:::comp
+        end
+    end
+
+    AC --> ACL
+    AC --> AUTH
+    AC --> UM
+    AC --> AM
+    AC --> LM
+    AC --> SM
+    LM --> AM
+    AM --> SM
+
+    AM -. "audit item changes" .-> AUD
+    LM -. "audit loans" .-> AUD
+    SM -. "audit stock moves" .-> AUD
+    UM -. "audit account changes" .-> AUD
+    AUTH -. "audit login / logout / lockout" .-> AUD
+    AM -. "retired item: remove from classroom" .-> CLM
+    ORD -. "read quantity; add received quantity" .-> AM
+    CLM -. "item / location lookup" .-> AM
+    PRJ -. "verify staff accounts" .-> UM
+
+    subgraph DSL["Data Storage Layer"]
+        REPO["Repository / Storage Manager"]:::comp
+        DB[("SQLite database")]:::db
+    end
+
+    AUTH --> REPO
+    UM --> REPO
+    AM --> REPO
+    LM --> REPO
+    SM --> REPO
+    REPO --> DB
+
+    subgraph DO["Domain Objects"]
+        subgraph DOWN["AST / USR own"]
+            D1["Item · ItemStatus"]:::comp
+            D2["Category · Location"]:::comp
+            D3["Consumable · StockTransaction"]:::comp
+            D4["Borrower · Loan"]:::comp
+            D5["ItemIncident"]:::comp
+            D6["User · Role"]:::comp
+        end
+        subgraph DBOR["Other pages'"]
+            D7["AuditRecord (RPT)"]:::comp
+        end
+    end
+
+    AM --> D1
+    AM --> D2
+    AM --> D5
+    LM --> D4
+    SM --> D3
+    UM --> D6
+    AUTH --> D6
+    AUD --> D7
+
+    classDef actor fill:#1ba1e2,stroke:#006EAF,color:#fff
+    classDef comp fill:#1ba1e2,stroke:#006EAF,color:#fff
+    classDef db fill:#bac8d3,stroke:#23445d,color:#000
+    style PL fill:#647687,stroke:#314354,color:#fff
+    style BLL fill:#647687,stroke:#314354,color:#fff
+    style DO fill:#647687,stroke:#314354,color:#fff
+    style OWN fill:#b1ddf0,stroke:#10739e,color:#000
+    style BOR fill:#b1ddf0,stroke:#10739e,color:#000
+    style DSL fill:#b1ddf0,stroke:#10739e,color:#000
+    style DOWN fill:#b1ddf0,stroke:#10739e,color:#000
+    style DBOR fill:#b1ddf0,stroke:#10739e,color:#000
