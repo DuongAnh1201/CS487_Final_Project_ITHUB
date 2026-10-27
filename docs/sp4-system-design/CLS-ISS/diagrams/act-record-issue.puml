@@ -1,0 +1,62 @@
+@startuml act-record-issue
+' SP4 – Activity: Record an Issue workflow (US-ISS-01)
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+|Student Assistant|
+start
+:Open "Report Issue";
+:Select building and classroom;
+if (PC or monitor known?) then (yes)
+  :Select an item installed\nin that classroom;
+else (no)
+endif
+:Select category and severity;
+|System|
+:Look for open issues on same item\nor same classroom + category;
+if (Possible duplicates found?) then (yes)
+  |Student Assistant|
+  if (Same problem?) then (yes)
+    :Add comment to existing issue;
+    stop
+  else (no, new problem)
+  endif
+else (no)
+endif
+|Student Assistant|
+:Enter description and reporter\nname, type, contact;
+:Submit;
+|System|
+if (Required fields present?) then (no)
+  :Show error next to each missing field\nand keep typed values;
+  |Student Assistant|
+  :Fix the form;
+  detach
+else (yes)
+endif
+:Create Issue (unique ID, status Open,\nuser, timestamp, target date);
+:Begin transaction;
+if (Category = Hardware and item selected?) then (yes)
+  if (Item condition = Working?) then (yes)
+    :Set item to Faulty;
+    :Audit log entry with issue ID;
+  else (already Faulty / Under Repair / Out of Service)
+  endif
+elseif (Severity = Critical and no item?) then (yes)
+  :Close classroom for maintenance;
+  :Audit log entry with issue ID;
+else (other)
+endif
+if (All saves OK?) then (yes)
+  :Commit;
+  :Notify via NTF (issue reported);
+  :Recalculate classroom status;
+  :Show "Issue <ID> recorded";
+else (no)
+  :Rollback – nothing saved;
+  :Show "Could not save. Please try again.";
+endif
+stop
+@enduml

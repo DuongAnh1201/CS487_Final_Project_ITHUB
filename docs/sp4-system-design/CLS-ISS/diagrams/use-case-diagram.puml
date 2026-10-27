@@ -1,0 +1,62 @@
+@startuml use-case-diagram
+' SP4 – CLS + ISS use-case diagram (IDs from SP2_Requirements_Collection.md §9)
+left to right direction
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #EAF4FF
+  BorderColor #6C9BD2
+}
+skinparam rectangle {
+  BackgroundColor #FAFAFA
+  BorderColor #BBBBBB
+}
+actor "Student Assistant" as SA
+actor "Admin\n(IT Supervisor)" as AD
+actor "Notifications\n(NTF page)" as NTF <<system>>
+AD -|> SA
+
+rectangle "IT Inventory Tracker – Classrooms & Schedules (CLS) and Issue Logs (ISS)" {
+  package "Classrooms & Schedules" {
+    usecase "UC-CLS-01\nManage Classroom\n(add / edit / deactivate)" as C1
+    usecase "UC-CLS-02\nManage Classroom Equipment\n(move / remove / set condition)" as C2
+    usecase "UC-CLS-03\nRecord Room Check" as C3
+    usecase "UC-CLS-04\nManage Class Schedule\n(import CSV / add / edit / cancel)" as C4
+    usecase "UC-CLS-05\nView Classrooms\n(search / timetable / overdue checks)" as C5
+    usecase "Recalculate Room Status" as RS
+  }
+  package "Issue Logs" {
+    usecase "UC-ISS-01\nReport Issue" as I1
+    usecase "UC-ISS-02\nView Issues\n(filter / overdue)" as I2
+    usecase "UC-ISS-03\nHandle Issue\n(assign / update / comment / resolve / reopen)" as I3
+    usecase "UC-ISS-04\nClose Issue\n(duplicate / reject / close)" as I4
+    usecase "Check for Duplicates" as DUP
+    usecase "Update Equipment Status\nfrom Issue" as EQ
+  }
+}
+
+SA --> C2
+SA --> C3
+SA --> C5
+SA --> I1
+SA --> I2
+SA --> I3
+SA --> I4
+AD --> C1
+AD --> C4
+
+C2 ..> RS : <<include>>
+I1 ..> DUP : <<include>>
+I1 ..> EQ : <<include>>
+I3 ..> EQ : <<include>>
+EQ ..> RS : <<include>>
+C2 ..> C3 : <<extend>>\n(observed condition differs)
+
+I1 --> NTF
+I4 --> NTF
+note bottom of AD
+  Admin inherits every SA use case.
+  Only the Admin assigns, rejects and closes issues (A-12).
+  Every create/change is written to the shared
+  Audit Log (RPT page) – not drawn to keep it readable.
+end note
+@enduml
