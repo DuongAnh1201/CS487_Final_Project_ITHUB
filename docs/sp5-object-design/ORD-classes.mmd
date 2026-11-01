@@ -1,0 +1,88 @@
+classDiagram
+    direction LR
+
+    class Order {
+        -orderId : int
+        -item : Item
+        -quantityOrdered : int
+        -quantityReceived : int
+        -vendor : str
+        -requestedBy : User
+        -receivedBy : User
+        -requestedAt : datetime
+        -orderedAt : datetime
+        -arrivedAt : datetime
+        -status : OrderStatus
+        +markOrdered() void
+        +receive(quantity: int, user: User) void
+        +cancel() void
+        +isOpen() bool
+        +remainingQuantity() int
+        +getStatus() OrderStatus
+    }
+
+    class OrderStatus {
+        <<enumeration>>
+        REQUESTED
+        ORDERED
+        PARTIALLY_ARRIVED
+        ARRIVED
+        CANCELLED
+    }
+
+    class OrderManager {
+        -orders : List~Order~
+        -assetManager : AssetManager
+        -notificationService : NotificationService
+        -auditLog : AuditLog
+        +createOrder(item: Item, quantity: int, vendor: str, user: User) Order
+        +placeOrder(orderId: int, user: User) void
+        +receiveOrder(orderId: int, quantity: int, user: User) void
+        +cancelOrder(orderId: int, user: User) void
+        +findOrder(orderId: int) Order
+        +searchOrders(status: OrderStatus, item: Item, dateFrom: date, dateTo: date) List~Order~
+        +hasOpenOrder(item: Item) bool
+        +onLowStock(item: Item) void
+    }
+
+    class StockObserver {
+        <<interface>>
+        +onLowStock(item: Item) void
+    }
+
+    class StockMonitor {
+        -observers : List~StockObserver~
+        +attach(observer: StockObserver) void
+        +detach(observer: StockObserver) void
+        +checkStock(item: Item) void
+        -notifyLowStock(item: Item) void
+    }
+
+    class Item {
+        <<from Assets page>>
+    }
+    class User {
+        <<from Login and Users page>>
+    }
+    class AssetManager {
+        <<from Assets page>>
+        +addStock(item: Item, quantity: int) void
+    }
+    class NotificationService {
+        <<from Notifications page>>
+    }
+    class AuditLog {
+        <<from Reports and Audit page>>
+    }
+
+    Order "*" --> "1" Item : orders
+    Order "*" --> "1" User : requestedBy
+    Order "*" --> "0..1" User : receivedBy
+    Order --> OrderStatus : has
+    OrderManager "1" o-- "*" Order : manages
+    OrderManager ..|> StockObserver : implements
+    StockMonitor "1" o-- "*" StockObserver : notifies
+    StockMonitor ..> Item : watches quantity
+    OrderManager ..> AssetManager : adds received stock
+    OrderManager ..> NotificationService : order arrived
+    OrderManager ..> AuditLog : logs changes

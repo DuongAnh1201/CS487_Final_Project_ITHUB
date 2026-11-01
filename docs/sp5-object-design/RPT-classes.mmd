@@ -1,0 +1,125 @@
+classDiagram
+    direction TB
+
+    class Report {
+        <<abstract>>
+        #reportId : int
+        #title : str
+        #author : User
+        #project : Project
+        #reviewers : List~User~
+        #status : ReportStatus
+        #createdAt : datetime
+        +submit() void
+        +review(newStatus: ReportStatus, reviewer: User, comment: str) void
+        +canBeReviewed() bool
+        +generateContent()* str
+    }
+
+    class DailyReport {
+        -template : ReportTemplate
+        -shift : str
+        -checklistAnswers : dict
+        +answer(itemName: str, value: str) void
+        +generateContent() str
+    }
+
+    class MonthlySummaryReport {
+        -month : int
+        -year : int
+        -reports : List~Report~
+        -orders : List~Order~
+        +generateContent() str
+    }
+
+    class ReportTemplate {
+        -templateId : int
+        -name : str
+        -checklistItems : List~str~
+        +createReport(author: User, shift: str) DailyReport
+    }
+
+    class ReportStatus {
+        <<enumeration>>
+        SUBMITTED
+        REVIEWED
+        REJECTED
+        PASSED
+    }
+
+    class ReportManager {
+        -reports : List~Report~
+        -templates : List~ReportTemplate~
+        -notificationService : NotificationService
+        -auditLog : AuditLog
+        +createReport(template: ReportTemplate, author: User, project: Project) Report
+        +submitReport(reportId: int, reviewers: List~User~) void
+        +reviewReport(reportId: int, status: ReportStatus, reviewer: User, comment: str) void
+        +findReport(reportId: int) Report
+        +searchReports(status: ReportStatus, project: Project, author: User, dateFrom: date, dateTo: date) List~Report~
+        +groupByProject(project: Project) List~Report~
+        +getReportsForMonth(month: int, year: int) List~Report~
+    }
+
+    class SummaryGenerator {
+        -reportManager : ReportManager
+        -orderManager : OrderManager
+        -notificationService : NotificationService
+        +isMonthEnd(day: date) bool
+        +generateMonthlySummary(month: int, year: int) MonthlySummaryReport
+    }
+
+    class AuditRecord {
+        -recordId : int
+        -user : User
+        -action : str
+        -entityType : str
+        -entityId : int
+        -oldValue : str
+        -newValue : str
+        -timestamp : datetime
+        -status : str
+        +describe() str
+    }
+
+    class AuditLog {
+        -records : List~AuditRecord~
+        +record(user: User, action: str, entityType: str, entityId: int, oldValue: str, newValue: str) AuditRecord
+        +search(user: User, entityType: str, action: str, dateFrom: date, dateTo: date) List~AuditRecord~
+    }
+
+    class User {
+        <<from Login and Users page>>
+    }
+    class Project {
+        <<from Projects page>>
+    }
+    class Order {
+        <<from Orders page>>
+    }
+    class OrderManager {
+        <<from Orders page>>
+    }
+    class NotificationService {
+        <<from Notifications page>>
+    }
+
+    Report <|-- DailyReport
+    Report <|-- MonthlySummaryReport
+    Report --> ReportStatus : has
+    Report "*" --> "1" User : author
+    Report "*" --> "1..*" User : reviewers
+    Report "*" --> "0..1" Project : belongs to
+    ReportTemplate "1" ..> "*" DailyReport : creates
+    MonthlySummaryReport "1" o-- "*" Report : summarizes
+    MonthlySummaryReport "1" o-- "*" Order : summarizes
+    ReportManager "1" o-- "*" Report : manages
+    ReportManager "1" o-- "*" ReportTemplate : manages
+    SummaryGenerator ..> MonthlySummaryReport : creates
+    SummaryGenerator ..> ReportManager : reads reports
+    SummaryGenerator ..> OrderManager : reads orders
+    ReportManager ..> NotificationService : notifies reviewers
+    SummaryGenerator ..> NotificationService : sends summary
+    ReportManager ..> AuditLog : logs changes
+    AuditLog "1" *-- "*" AuditRecord : contains
+    AuditRecord "*" --> "1" User : madeBy
