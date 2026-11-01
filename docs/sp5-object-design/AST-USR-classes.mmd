@@ -1,0 +1,327 @@
+classDiagram
+    direction TB
+
+    class User {
+        -userId : int
+        -fullName : str
+        -schoolEmail : str
+        -schoolId : str
+        -passwordHash : str
+        -role : Role
+        -status : AccountStatus
+        -failedAttempts : int
+        -lockedUntil : datetime
+        -mustChangePassword : bool
+        -accessEndDate : date
+        -lastLoginAt : datetime
+        +getRole() Role
+        +isAdmin() bool
+        +isActive() bool
+        +isLocked(now: datetime) bool
+        +recordFailedLogin(now: datetime) void
+        +recordSuccessfulLogin(now: datetime) void
+        +setPasswordHash(hash: str, temporary: bool) void
+        +changeRole(role: Role) void
+        +deactivate() void
+        +reactivate() void
+    }
+
+    class Role {
+        <<enumeration>>
+        ADMIN
+        STUDENT_ASSISTANT
+    }
+
+    class AccountStatus {
+        <<enumeration>>
+        ACTIVE
+        LOCKED
+        DEACTIVATED
+    }
+
+    class Session {
+        -sessionId : str
+        -user : User
+        -startedAt : datetime
+        -lastActivityAt : datetime
+        +isExpired(now: datetime) bool
+        +touch(now: datetime) void
+    }
+
+    class PasswordHasher {
+        <<interface>>
+        +hash(plain: str) str
+        +verify(plain: str, hashed: str) bool
+    }
+
+    class BcryptHasher {
+        -rounds : int
+        +hash(plain: str) str
+        +verify(plain: str, hashed: str) bool
+    }
+
+    class AuthService {
+        -userManager : UserManager
+        -hasher : PasswordHasher
+        -sessions : List~Session~
+        -auditLog : AuditLog
+        +login(email: str, password: str) Session
+        +logout(session: Session) void
+        +getCurrentUser(session: Session) User
+        +changePassword(user: User, current: str, newPassword: str) void
+    }
+
+    class UserManager {
+        -users : List~User~
+        -hasher : PasswordHasher
+        -auditLog : AuditLog
+        +createUser(fullName: str, email: str, schoolId: str, role: Role, accessEndDate: date, admin: User) User
+        +changeRole(userId: int, role: Role, admin: User) void
+        +setActive(userId: int, active: bool, admin: User) void
+        +resetPassword(userId: int, tempPassword: str, admin: User) void
+        +findById(userId: int) User
+        +findByEmail(email: str) User
+        -validatePassword(password: str) void
+        -countActiveAdmins() int
+    }
+
+    class AccessControl {
+        -permissions : dict
+        +canPerform(user: User, action: str) bool
+        +requireAdmin(user: User) void
+    }
+
+    class Location {
+        -locationId : int
+        -building : str
+        -room : str
+        -area : str
+        +displayName() str
+    }
+
+    class Category {
+        -categoryId : int
+        -name : str
+        -isConsumable : bool
+        +getName() str
+    }
+
+    class Item {
+        #itemId : int
+        #assetTag : str
+        #model : str
+        #category : Category
+        #location : Location
+        #status : ItemStatus
+        #notes : str
+        -serialNumber : str
+        -manufacturer : str
+        -purchaseDate : date
+        -warrantyEndDate : date
+        +getStatus() ItemStatus
+        +isAvailable() bool
+        +isRetired() bool
+        +canBeLent() bool
+        +updateDetails(details: dict) void
+        +markOnLoan() void
+        +markReturned(condition: ItemCondition) void
+        +markLost() void
+        +markDamaged() void
+        +retire() void
+    }
+
+    class Consumable {
+        -quantityOnHand : int
+        -reorderThreshold : int
+        -transactions : List~StockTransaction~
+        +canBeLent() bool
+        +getQuantity() int
+        +stockIn(quantity: int, user: User, orderId: int) StockTransaction
+        +stockOut(quantity: int, recipient: str, user: User) StockTransaction
+        +isBelowThreshold() bool
+    }
+
+    class StockTransaction {
+        -transactionId : int
+        -type : TransactionType
+        -quantity : int
+        -recipient : str
+        -orderId : int
+        -performedBy : User
+        -timestamp : datetime
+    }
+
+    class Borrower {
+        -borrowerId : int
+        -schoolId : str
+        -name : str
+        -email : str
+        -type : BorrowerType
+        -loans : List~Loan~
+        +defaultLoanDays() int
+        +getActiveLoans() List~Loan~
+        +hasOverdueLoan(today: date) bool
+        +canBorrow(today: date) bool
+    }
+
+    class Loan {
+        -loanId : int
+        -item : Item
+        -borrower : Borrower
+        -checkoutDate : date
+        -dueDate : date
+        -returnDate : date
+        -conditionOut : ItemCondition
+        -conditionIn : ItemCondition
+        -notes : str
+        -processedBy : User
+        -receivedBy : User
+        -extended : bool
+        -status : LoanStatus
+        +isOverdue(today: date) bool
+        +daysOverdue(today: date) int
+        +extend(newDueDate: date) void
+        +close(returnDate: date, condition: ItemCondition, user: User, notes: str) void
+    }
+
+    class ItemIncident {
+        -incidentId : int
+        -item : Item
+        -type : IncidentType
+        -description : str
+        -incidentDate : date
+        -reportedBy : User
+    }
+
+    class AssetManager {
+        -items : List~Item~
+        -stockMonitor : StockMonitor
+        -classroomManager : ClassroomManager
+        -auditLog : AuditLog
+        +registerItem(details: dict, user: User) Item
+        +editItem(itemId: int, details: dict, user: User) Item
+        +findItem(itemId: int) Item
+        +findByTag(assetTag: str) Item
+        +searchItems(text: str, category: Category, location: Location, status: ItemStatus) List~Item~
+        +addStock(item: Item, quantity: int) void
+        +issueStock(item: Item, quantity: int, recipient: str, user: User) void
+        +reportIncident(itemId: int, type: IncidentType, description: str, user: User) ItemIncident
+        +retireItem(itemId: int, reason: str, admin: User) void
+    }
+
+    class LendingManager {
+        -loans : List~Loan~
+        -borrowers : List~Borrower~
+        -assetManager : AssetManager
+        -auditLog : AuditLog
+        +findOrCreateBorrower(schoolId: str, name: str, email: str, type: BorrowerType) Borrower
+        +lendItem(assetTag: str, borrower: Borrower, dueDate: date, conditionOut: ItemCondition, user: User) Loan
+        +returnItem(assetTag: str, returnDate: date, conditionIn: ItemCondition, notes: str, user: User) Loan
+        +extendLoan(loanId: int, newDueDate: date, user: User) void
+        +getOverdueLoans(today: date) List~Loan~
+        +getLoanHistory(item: Item) List~Loan~
+        +getBorrowerHistory(borrower: Borrower) List~Loan~
+    }
+
+    class ItemStatus {
+        <<enumeration>>
+        AVAILABLE
+        ON_LOAN
+        DAMAGED
+        LOST
+        RETIRED
+    }
+
+    class ItemCondition {
+        <<enumeration>>
+        GOOD
+        FAIR
+        POOR
+        DAMAGED
+    }
+
+    class BorrowerType {
+        <<enumeration>>
+        STUDENT
+        FACULTY
+        STAFF
+    }
+
+    class LoanStatus {
+        <<enumeration>>
+        OPEN
+        CLOSED
+    }
+
+    class IncidentType {
+        <<enumeration>>
+        LOST
+        DAMAGED
+        RETIRED
+    }
+
+    class TransactionType {
+        <<enumeration>>
+        STOCK_IN
+        STOCK_OUT
+    }
+
+    class StockMonitor {
+        <<from Orders page>>
+        +checkStock(item: Item) void
+    }
+    class OrderManager {
+        <<from Orders page>>
+    }
+    class ClassroomManager {
+        <<from Classrooms page>>
+        +removeEquipment(item: Item) void
+    }
+    class AuditLog {
+        <<from Reports and Audit page>>
+        +record(user: User, action: str, entityType: str, entityId: int, oldValue: str, newValue: str) AuditRecord
+    }
+
+    User --> Role : has
+    User --> AccountStatus : has
+    Session "*" --> "1" User : belongs to
+    AuthService "1" o-- "*" Session : manages
+    AuthService --> UserManager : looks up users
+    AuthService --> PasswordHasher : verifies with
+    UserManager "1" o-- "*" User : manages
+    UserManager --> PasswordHasher : hashes with
+    PasswordHasher <|.. BcryptHasher : implements
+    AccessControl ..> User : checks role
+
+    Item <|-- Consumable
+    Item "*" --> "1" Category : belongs to
+    Item "*" --> "1" Location : stored at
+    Item --> ItemStatus : has
+    Item "1" *-- "*" ItemIncident : incidents
+    Consumable "1" *-- "*" StockTransaction : movements
+    StockTransaction --> TransactionType : has
+    StockTransaction "*" --> "1" User : performedBy
+    ItemIncident --> IncidentType : has
+    ItemIncident "*" --> "1" User : reportedBy
+
+    Loan "*" --> "1" Item : lends
+    Loan "*" --> "1" Borrower : borrowedBy
+    Borrower "1" o-- "*" Loan : history
+    Loan "*" --> "1" User : processedBy
+    Loan "*" --> "0..1" User : receivedBy
+    Loan --> LoanStatus : has
+    Loan ..> ItemCondition : uses
+    Borrower --> BorrowerType : has
+
+    AssetManager "1" o-- "*" Item : manages
+    LendingManager "1" o-- "*" Loan : manages
+    LendingManager "1" o-- "*" Borrower : manages
+    LendingManager --> AssetManager : finds items
+
+    AssetManager ..> StockMonitor : checkStock() after stock-out
+    AssetManager ..> ClassroomManager : removeEquipment() on retire
+    OrderManager ..> AssetManager : addStock() on arrival
+    AssetManager ..> AuditLog : logs changes
+    LendingManager ..> AuditLog : logs changes
+    UserManager ..> AuditLog : logs changes
+    AuthService ..> AuditLog : logs login and logout
