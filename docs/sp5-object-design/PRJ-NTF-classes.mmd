@@ -1,0 +1,129 @@
+classDiagram
+ direction LR
+ class Project {
+  -String projectId
+  -String name
+  -String description
+  -ProjectStatus status
+  -DateTime createdAt
+  -Date dueDate
+  +updateDetails(String name, String description) void
+  +addTask(Task task) void
+  +getProgress() decimal
+  +changeStatus(ProjectStatus status) void
+ }
+ class Task {
+  -String taskId
+  -String title
+  -String description
+  -TaskStatus status
+  -TaskPriority priority
+  -Date dueDate
+  -DateTime createdAt
+  +assignTo(User user) void
+  +updateStatus(TaskStatus status) void
+  +isOverdue() boolean
+ }
+ class ProjectManager {
+  -NotificationService notificationService
+  +createProject(String name, String description) Project
+  +createTask(String projectId, String title) Task
+  +assignTask(String taskId, String userId) void
+  +updateTaskStatus(String taskId, TaskStatus status) void
+  +createFromTemplate(ProjectTemplate template) Project
+ }
+ class ProjectTemplate {
+  -String templateId
+  -String name
+  -String description
+  +createProject() Project
+ }
+ class Notification {
+  -String notificationId
+  -String message
+  -NotificationType type
+  -NotificationStatus status
+  -DateTime createdAt
+  -DateTime readAt
+  +markAsRead() void
+  +markAsUnread() void
+  +isRead() boolean
+ }
+ class NotificationService {
+  +notify(User recipient, String message, NotificationType type) Notification
+  +notifyTaskAssignment(Task task) void
+  +notifyTaskStatusChange(Task task) void
+  +onLowStock(String assetId, int availableQuantity) void
+ }
+ class StockObserver {
+  <<interface>>
+  +onLowStock(String assetId, int availableQuantity) void
+ }
+ class User {
+  <<from Login & Users page>>
+ }
+ class OrderManager {
+  <<from Orders page>>
+ }
+ class StockMonitor {
+  <<from Orders page>>
+ }
+ class ReportManager {
+  <<from Reports page>>
+ }
+ class IssueManager {
+  <<from Issues page>>
+ }
+ class ProjectStatus {
+  <<enumeration>>
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+ }
+ class TaskStatus {
+  <<enumeration>>
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+ }
+ class TaskPriority {
+  <<enumeration>>
+  LOW
+  MEDIUM
+  HIGH
+ }
+ class NotificationType {
+  <<enumeration>>
+  TASK_ASSIGNED
+  TASK_UPDATED
+  PROJECT_UPDATED
+  LOW_STOCK
+  GENERAL
+ }
+ class NotificationStatus {
+  <<enumeration>>
+  UNREAD
+  READ
+ }
+ Project "1" *-- "0..*" Task : contains
+ User "0..1" <-- "0..*" Task : assigned to
+ User "1" <-- "0..*" Notification : recipient
+ Task "0..1" <-- "0..*" Notification : about
+ ProjectManager ..> Project : manages
+ ProjectManager ..> Task : manages
+ ProjectManager ..> NotificationService : calls notify
+ ProjectManager ..> ProjectTemplate : uses
+ ProjectTemplate ..> Project : creates
+ NotificationService ..|> StockObserver : implements
+ NotificationService ..> Notification : creates
+ OrderManager ..> NotificationService : notify
+ ReportManager ..> NotificationService : notify
+ IssueManager ..> NotificationService : notify
+ StockMonitor ..> StockObserver : low stock event
+ Project --> ProjectStatus : status
+ Task --> TaskStatus : status
+ Task --> TaskPriority : priority
+ Notification --> NotificationType : type
+ Notification --> NotificationStatus : status
