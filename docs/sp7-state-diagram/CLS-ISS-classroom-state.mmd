@@ -1,0 +1,38 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF4FF','primaryBorderColor':'#6C9BD2','primaryTextColor':'#1F2937','lineColor':'#7A7A7A','fontFamily':'Arial'}}}%%
+stateDiagram-v2
+    %% SP7 - Classroom lifecycle and derived room status (DD-CLS-02, BR-18, RoomStatusCalculator)
+    state "Closed for Maintenance" as ClosedForMaintenance
+
+    [*] --> Active : addClassroom(location, capacity, type)<br/>[one classroom per Location, capacity > 0]
+
+    state Active {
+        state "In Use" as InUse
+        [*] --> InUse
+
+        state InUse {
+            state calc <<choice>>
+            [*] --> calc : recalculate status
+            calc --> Available : [no PCs, or every PC Working]
+            calc --> Limited : [some PCs Working, some not]
+            calc --> Unusable : [PCs installed, none Working]
+
+            Available --> Limited : a PC stops Working<br/>[another PC still Working]
+            Available --> Unusable : last Working PC stops Working
+            Limited --> Available : every PC Working again<br/>(repaired or non-working PC removed)
+            Limited --> Unusable : last Working PC stops Working
+            Unusable --> Limited : a PC goes back to Working<br/>[some PCs still not Working]
+            Unusable --> Available : every PC Working again
+        }
+
+        InUse --> ClosedForMaintenance : closeForMaintenance(reason) [Admin, reason given]<br/>or Critical room issue reported (auto)
+        ClosedForMaintenance --> InUse : reopen() [Admin]<br/>or last Critical room issue resolved (auto)
+    }
+
+    Active --> Deactivated : deactivate()<br/>[Admin, no installed equipment, no future classes]
+    Deactivated --> [*]
+
+    note right of Deactivated
+        Never deleted (BR-02): the record and its
+        history stay. Deactivated rooms are hidden
+        from search and cannot get new issues.
+    end note
