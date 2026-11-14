@@ -1,0 +1,30 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF4FF','primaryBorderColor':'#6C9BD2','primaryTextColor':'#1F2937','lineColor':'#7A7A7A','fontFamily':'Arial'}}}%%
+stateDiagram-v2
+    %% SP7 - Condition of an installed PC or monitor (RoomEquipment.condition, A-07, DD-CLS-01, DD-ISS-01)
+    state "Under Repair" as UnderRepair
+    state "Out of Service" as OutOfService
+
+    [*] --> Installed : item installed in room<br/>[Desktop or Monitor, not installed elsewhere]
+
+    state Installed {
+        [*] --> Working
+        Working --> Faulty : Hardware issue reported (auto)<br/>or setCondition(Faulty)
+        Faulty --> UnderRepair : linked issue → In Progress (auto)
+        UnderRepair --> Working : linked issue resolved<br/>[no other unresolved issue on item]
+        UnderRepair --> OutOfService : linked issue resolved with "Out of Service"<br/>[no other unresolved issue on item]
+        Faulty --> OutOfService : setCondition(Out of Service)
+        OutOfService --> UnderRepair : setCondition(Under Repair)
+        Working --> Missing : room check: item missing
+        Missing --> Working : item found
+    }
+
+    Installed --> Removed : removeEquipment() or moveEquipment(target)<br/>or item retired on Assets page<br/>/ removedAt = now
+    Removed --> [*]
+
+    note right of Installed
+        Any manual change uses setCondition(new, reason):
+        reason is required, same value gives "No change".
+        Every change is audit-logged (old, new, reason, user).
+        A move closes this record and opens a new one
+        in the target room with the same condition.
+    end note

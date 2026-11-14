@@ -1,0 +1,28 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF4FF','primaryBorderColor':'#6C9BD2','primaryTextColor':'#1F2937','lineColor':'#7A7A7A','fontFamily':'Arial'}}}%%
+stateDiagram-v2
+    %% SP7 - Issue lifecycle (BR-23). Enforced by Issue.changeStatus(); menu built from Issue.allowedNextStatuses(user)
+    state "In Progress" as InProgress
+
+    [*] --> Open : createIssue(form)<br/>[required fields filled, room active]<br/>/ set targetDate, run onReported()
+    Open --> Assigned : assign(assignee)<br/>[Admin only]
+    Assigned --> InProgress : start work<br/>/ linked item → Under Repair
+    InProgress --> Resolved : resolve(notes, newCondition)<br/>[notes not empty]<br/>/ run onResolved()
+    Resolved --> InProgress : reopen
+    Resolved --> Closed : close<br/>[Admin only]
+    Open --> Rejected : reject(reason)<br/>[Admin only, reason given]
+    Assigned --> Rejected : reject(reason)<br/>[Admin only, reason given]
+    Open --> Duplicate : markDuplicate(original)<br/>[original exists, not itself]
+    Assigned --> Duplicate : markDuplicate(original)<br/>[original exists, not itself]
+    Closed --> [*]
+    Rejected --> [*]
+    Duplicate --> [*]
+
+    note right of Open
+        Open, Assigned and In Progress = unresolved.
+        isOverdue() is true when unresolved
+        and today is past targetDate.
+    end note
+    note right of Closed
+        Closed, Rejected and Duplicate are final:
+        no status change and no new comments.
+    end note
