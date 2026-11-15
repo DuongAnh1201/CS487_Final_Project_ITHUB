@@ -1,0 +1,13 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF4FF','primaryBorderColor':'#6C9BD2','primaryTextColor':'#1F2937','lineColor':'#7A7A7A','fontFamily':'Arial'}}}%%
+stateDiagram-v2
+    %% SP7 - Weekly class meeting (ScheduleEntry.status, BR-19)
+    [*] --> Active : importCsv() row accepted or addEntry(form)<br/>[valid fields, end > start, no overlap]
+    Active --> Active : editEntry(fields)<br/>[valid, no overlap with other entries]
+    Active --> Cancelled : cancelEntry()<br/>/ occursOn() is false from now on
+    Cancelled --> [*]
+
+    note right of Cancelled
+        Kept for history (BR-02).
+        Not shown in timetables
+        and not counted in overlap checks.
+    end note
