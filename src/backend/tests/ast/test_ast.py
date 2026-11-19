@@ -709,3 +709,72 @@ def test_status_cannot_be_edited(client, sa_headers, item_factory):
         client.get("/ast/items/99999", headers=sa_headers).json()["detail"]
         == "Item not found."
     )
+
+
+class FakeLendingGuard:
+    """AST test policy emulating installed equipment without importing CLS."""
+
+    def __init__(self, blocked: bool = False) -> None:
+        self.blocked = blocked
+        self.checked: list[int] = []
+
+    def check_can_lend(self, item_id: int) -> None:
+        """DD-CLS-01: reject installed equipment with the specified conflict."""
+        from app.core.exceptions import ConflictError
+
+        self.checked.append(item_id)
+        if self.blocked:
+            raise ConflictError("Item is installed in a classroom and cannot be lent.")
+
+
+@pytest.mark.parametrize("blocked", [False, True])
+def test_lending_guard_policy(blocked, app, item_factory, borrower_factory, lend, db):
+    """DD-CLS-01, US-AST-05, BR-03: guard failure cannot create checkout state."""
+    from app.modules.ast.router import get_lending_guards
+
+    item, borrower = item_factory(), borrower_factory()
+    guard = FakeLendingGuard(blocked)
+    audit_count = db.scalar(select(func.count()).select_from(AuditRecord))
+    app.dependency_overrides[get_lending_guards] = lambda: (guard,)
+    try:
+        response = lend(item, borrower)
+    finally:
+        del app.dependency_overrides[get_lending_guards]
+    assert guard.checked == [item["id"]]
+    db.expire_all()
+    if blocked:
+        assert response.status_code == 409
+        assert (
+            response.json()["detail"]
+            == "Item is installed in a classroom and cannot be lent."
+        )
+        assert db.get(Item, item["id"]).status.value == "Available"
+        assert db.scalar(select(func.count()).select_from(Loan)) == 0
+        assert db.scalar(select(func.count()).select_from(AuditRecord)) == audit_count
+    else:
+        assert response.status_code == 201
+        assert db.get(Item, item["id"]).status.value == "On Loan"
+        assert db.scalar(select(func.count()).select_from(Loan)) == 1
+
+
+def test_lending_guards_run_in_order_until_rejection(
+    app, item_factory, borrower_factory, lend
+):
+    """DD-CLS-01, US-AST-05: all configured policies must allow checkout."""
+    from app.modules.ast.router import get_lending_guards
+
+    item, borrower = item_factory(), borrower_factory()
+    allowed, denied, later = (
+        FakeLendingGuard(),
+        FakeLendingGuard(True),
+        FakeLendingGuard(),
+    )
+    app.dependency_overrides[get_lending_guards] = lambda: (allowed, denied, later)
+    try:
+        assert lend(item, borrower).status_code == 409
+    finally:
+        del app.dependency_overrides[get_lending_guards]
+    assert allowed.checked == denied.checked == [item["id"]]
+    assert later.checked == []
+    # The default is optional: removing the guard leaves ordinary AST checkout working.
+    assert lend(item, borrower).status_code == 201

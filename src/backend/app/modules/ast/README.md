@@ -68,3 +68,16 @@ Tests in `tests/ast/test_ast.py` cover US-AST-01–11, BR-01/03/05/07–11/18,
 retired tag reuse, conjunctive search, dates, return conditions, overdue boundaries,
 borrower limits, stock quantities, transactional audit rollback and observer
 isolation. Cross-page wiring belongs to the integration suite.
+
+Lending guard (DD-CLS-01, US-AST-05)
+----------------------------------
+
+`LendingGuard.check_can_lend(item_id: int) -> None` is the AST-owned checkout
+port in `app.modules.ast.service`. Supply implementations through the
+`get_lending_guards` dependency in `app.modules.ast.router`, or pass
+`lending_guards=(guard, ...)` to `LendingManager`. Both default to an empty tuple.
+All guards must pass before any checkout mutation; DomainError propagates through
+the existing HTTP handler. The CLS adapter should raise
+`ConflictError("Item is installed in a classroom and cannot be lent.")` (409).
+AST imports no CLS code. `app/integration.py` owns the CLS adapter and dependency
+override; guards apply only to checkout, leaving returns and extensions unchanged.
