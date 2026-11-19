@@ -1,0 +1,1 @@
+"""Assets and lending module."""

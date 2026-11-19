@@ -10,6 +10,7 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.core.exceptions import register_exception_handlers
 from app.core.security import PasswordHasher
+from app.modules.ast.router import router as ast_router
 from app.modules.ntf.channels import LoggingEmailChannel
 from app.modules.ntf.router import router as notifications_router
 from app.modules.usr.repository import SessionRepository, UserRepository
@@ -19,6 +20,7 @@ from app.shared.audit import AuditLog
 
 # Each page adds its router(s) to this list (one per line keeps merges clean).
 ROUTERS = [
+    ast_router,
     auth_router,
     users_router,
     notifications_router,
