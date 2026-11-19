@@ -19,6 +19,7 @@ from app.modules.ord.router import router as orders_router
 from app.modules.rpt.repository import ReportRepository, ReportTemplateRepository
 from app.modules.rpt.router import audit_router, reports_router, templates_router as report_templates_router
 from app.modules.rpt.service import ReportManager
+from app.modules.prj.router import projects_router, tasks_router, templates_router
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
@@ -34,6 +35,9 @@ ROUTERS = [
     reports_router,
     report_templates_router,
     audit_router,
+    templates_router,
+    projects_router,
+    tasks_router,
 ]
 
 
