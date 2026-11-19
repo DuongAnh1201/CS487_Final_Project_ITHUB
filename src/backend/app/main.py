@@ -5,9 +5,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.core.clock import utc_now
 from app.core.config import Settings
 from app.core.database import Database
-from app.core.deps import utc_now
 from app.core.exceptions import register_exception_handlers
 from app.core.security import PasswordHasher
 from app.modules.usr.repository import SessionRepository, UserRepository
@@ -33,7 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         with database.SessionLocal() as session:
             manager = UserManager(
                 UserRepository(session), SessionRepository(session),
-                PasswordHasher(settings.bcrypt_rounds), AuditLog(session), app.state.clock,
+                PasswordHasher(settings.bcrypt_rounds), AuditLog(session, app.state.clock), app.state.clock,
             )
             manager.seed_admin(settings.admin_full_name, settings.admin_email,
                                settings.admin_school_id, settings.admin_password)

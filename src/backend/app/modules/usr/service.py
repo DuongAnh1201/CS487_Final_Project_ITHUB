@@ -1,10 +1,10 @@
 """USR business rules: AccessControl, AuthService and UserManager (SP4 §9.3, §11)."""
 
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from app.core.clock import Clock
 from app.core.config import Settings
 from app.core.exceptions import (
     AuthenticationError,
@@ -17,8 +17,6 @@ from app.modules.usr.models import Role, User, UserSession, UserStatus
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.schemas import UserCreate
 from app.shared.audit import AuditLog
-
-Clock = Callable[[], datetime]
 
 MSG_INVALID = "Invalid email or password."
 MSG_LOCKED = "Account locked. Try again in 15 minutes."

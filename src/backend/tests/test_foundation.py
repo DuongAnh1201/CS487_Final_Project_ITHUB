@@ -38,3 +38,12 @@ def test_audit_log_records_entry(db: Session) -> None:
     assert (row.entity_type, row.entity_id, row.old_value, row.new_value) == (
         "Thing", "5", {"a": 1}, {"a": 2})
     assert row.actor_id is None
+
+
+def test_audit_entry_uses_app_clock(client: TestClient, db: Session, clock) -> None:
+    """Audit timestamps follow the app clock so RPT date filters line up."""
+    clock.advance(days=40)
+    client.post("/auth/login", json={"email": "admin@sfbu.edu", "password": "TempAdmin123"})
+    login = db.query(AuditRecord).filter_by(action="LOGIN").one()
+    assert login.timestamp == clock.now
+    assert AuditLog(db).clock is not None  # AuditLog(session) still works (default clock)

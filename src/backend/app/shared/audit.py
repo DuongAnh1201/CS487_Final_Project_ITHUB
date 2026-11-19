@@ -1,11 +1,12 @@
 """Shared audit log (FR-USR-06). RPT adds querying and reports on top of this."""
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, Protocol
 
 from sqlalchemy import JSON, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
+from app.core.clock import Clock, utc_now
 from app.core.database import Base
 
 
@@ -33,8 +34,9 @@ class AuditRecord(Base):
 class AuditLog:
     """Writes audit records in the caller's transaction (same commit as the change)."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, clock: Clock = utc_now) -> None:
         self.session = session
+        self.clock = clock
 
     def record(
         self,
@@ -47,7 +49,7 @@ class AuditLog:
     ) -> AuditRecord:
         """Add an entry; ``actor`` is the acting user, or None for system actions."""
         entry = AuditRecord(
-            timestamp=datetime.now(UTC).replace(tzinfo=None),
+            timestamp=self.clock(),
             actor_id=actor.id if actor is not None else None,
             action=action,
             entity_type=entity_type,

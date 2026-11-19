@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.clock import Clock
 from app.core.database import get_db
 from app.core.deps import (
     get_audit_log,
@@ -26,7 +27,7 @@ from app.modules.usr.schemas import (
     UserRead,
     UserUpdate,
 )
-from app.modules.usr.service import AuthService, Clock, UserManager
+from app.modules.usr.service import AuthService, UserManager
 from app.shared.audit import AuditLog
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])

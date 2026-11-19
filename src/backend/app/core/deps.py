@@ -1,12 +1,12 @@
 """Shared FastAPI dependencies: settings, services, current user, role guard."""
 
 from collections.abc import Callable
-from datetime import UTC, datetime
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from app.core.clock import Clock
 from app.core.config import Settings
 from app.core.database import get_db
 from app.core.exceptions import PermissionDeniedError
@@ -17,16 +17,10 @@ from app.modules.usr.service import (
     MSG_PASSWORD_CHANGE_REQUIRED,
     AccessControl,
     AuthService,
-    Clock,
 )
 from app.shared.audit import AuditLog
 
 _bearer = HTTPBearer(auto_error=False)
-
-
-def utc_now() -> datetime:
-    """Current UTC time as a naive datetime (the storage convention)."""
-    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def get_settings(request: Request) -> Settings:
@@ -44,9 +38,9 @@ def get_hasher(settings: Settings = Depends(get_settings)) -> PasswordHasher:
     return PasswordHasher(settings.bcrypt_rounds)
 
 
-def get_audit_log(db: Session = Depends(get_db)) -> AuditLog:
-    """Audit log bound to the request's transaction."""
-    return AuditLog(db)
+def get_audit_log(db: Session = Depends(get_db), clock: Clock = Depends(get_clock)) -> AuditLog:
+    """Audit log bound to the request's transaction and the app clock."""
+    return AuditLog(db, clock)
 
 
 def get_auth_service(
