@@ -2,7 +2,6 @@
 
 from typing import Protocol
 
-from app.core.exceptions import NotFoundError
 from app.modules.usr.models import User
 
 
@@ -24,12 +23,3 @@ class StockGateway(Protocol):
     def add_stock(self, item_id: int, quantity: int, actor: User) -> int:
         """Add received stock; returns the new quantity on hand."""
 
-
-class UnavailableStockGateway:
-    """Default until the Assets page is wired in: no item can be found."""
-
-    def get_consumable(self, item_id: int) -> StockItem:
-        raise NotFoundError("Item not found.")
-
-    def add_stock(self, item_id: int, quantity: int, actor: User) -> int:
-        raise NotFoundError("Item not found.")

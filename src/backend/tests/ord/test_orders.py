@@ -198,9 +198,10 @@ def test_search_filter_and_summary(client, sa_headers, stock):
     assert summary == {"total": 2, "by_status": {"REQUESTED": 1, "ORDERED": 1}}
 
 
-def test_without_the_assets_page_wired_items_are_not_found(client, sa_headers):
+def test_orders_use_the_assets_page_by_default(client, sa_headers):
+    """Without a test double, ORD reads consumables through AST's AssetManager."""
     r = client.post("/orders", headers=sa_headers, json={"item_id": 1, "quantity": 1})
-    assert (r.status_code, r.json()["detail"]) == (404, "Item not found.")
+    assert (r.status_code, r.json()["detail"]) == (404, "Consumable not found.")
 
 
 def test_for_session_builds_a_manager_on_an_existing_gateway(app, client, admin_headers, stock, db):
