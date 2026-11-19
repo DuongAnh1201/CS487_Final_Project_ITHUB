@@ -25,12 +25,16 @@ from app.modules.usr.google import GoogleIdTokenVerifier
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
+from app.modules.cls.router import router as cls_router
+from app.modules.iss.router import router as iss_router
 from app.shared.audit import AuditLog
 from app.shared.events import EventPublisher
 
 # Each page adds its router(s) to this list (one per line keeps merges clean).
 ROUTERS = [
     ast_router,
+    cls_router,
+    iss_router,
     auth_router,
     users_router,
     notifications_router,
