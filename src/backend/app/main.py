@@ -10,6 +10,7 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.core.exceptions import register_exception_handlers
 from app.core.security import PasswordHasher
+from app.modules.usr.google import GoogleIdTokenVerifier
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
@@ -44,6 +45,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.database = database
     app.state.clock = utc_now
+    app.state.google_verifier = (
+        GoogleIdTokenVerifier(settings.google_client_ids) if settings.google_enabled else None
+    )
     register_exception_handlers(app)
     for router in ROUTERS:
         app.include_router(router)

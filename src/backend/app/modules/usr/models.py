@@ -40,6 +40,7 @@ class User(Base):
     locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     access_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    google_sub: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime)
 
 
@@ -54,3 +55,4 @@ class UserSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime)
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    auth_method: Mapped[str] = mapped_column(String(20), default="password")

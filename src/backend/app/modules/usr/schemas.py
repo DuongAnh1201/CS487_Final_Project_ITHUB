@@ -14,6 +14,19 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1)
 
 
+class GoogleLoginRequest(BaseModel):
+    """Google ID token from Google Identity Services."""
+
+    id_token: str = Field(min_length=1)
+
+
+class AuthConfig(BaseModel):
+    """What the frontend needs to decide whether to show the Google button."""
+
+    google_enabled: bool
+    google_client_id: str | None
+
+
 class ChangePasswordRequest(BaseModel):
     """Current and new password (US-USR-02)."""
 
