@@ -22,18 +22,45 @@ class Settings(BaseSettings):
     # Browser origins allowed to call the API (CORS). ITHUB_CORS_ORIGINS: comma-separated or JSON list.
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
 
+    # Google sign-in stays disabled until at least one client id is set.
+    # ITHUB_GOOGLE_CLIENT_IDS accepts a comma-separated list or a JSON list.
+    google_client_ids: Annotated[list[str], NoDecode] = []
+    google_hosted_domain: str | None = None  # e.g. "sfbu.edu"; None accepts any Google account
+
     # First-start Admin account (seeded only when no user exists).
     admin_full_name: str = "System Administrator"
     admin_email: str = "admin@sfbu.edu"
     admin_school_id: str = "ADMIN-0001"
-    admin_password: str = "ChangeMe12345"
+    # None => a random temporary password is generated and logged once at first start.
+    admin_password: str | None = None
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def _split_origins(cls, value: object) -> object:
+    @staticmethod
+    def _split_list(value: object, strip_slash: bool = False) -> object:
+        """Accept a comma-separated string or a JSON list."""
         if isinstance(value, str):
             text = value.strip()
             if text.startswith("["):
                 return json.loads(text)
-            return [part.strip().rstrip("/") for part in text.split(",") if part.strip()]
+            parts = [part.strip() for part in text.split(",") if part.strip()]
+            return [p.rstrip("/") for p in parts] if strip_slash else parts
         return value
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        return cls._split_list(value, strip_slash=True)
+
+    @field_validator("google_client_ids", mode="before")
+    @classmethod
+    def _split_client_ids(cls, value: object) -> object:
+        return cls._split_list(value)
+
+    @field_validator("google_hosted_domain", mode="before")
+    @classmethod
+    def _blank_domain_is_none(cls, value: object) -> object:
+        return value or None
+
+    @property
+    def google_enabled(self) -> bool:
+        """True when at least one Google client id is configured."""
+        return bool(self.google_client_ids)

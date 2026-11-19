@@ -44,6 +44,12 @@ class ValidationRuleError(DomainError):
     status_code = 422
 
 
+class ServiceUnavailableError(DomainError):
+    """A feature is not configured or not available (503)."""
+
+    status_code = 503
+
+
 async def domain_error_handler(_: Request, exc: DomainError) -> JSONResponse:
     """Return ``{"detail": message}`` with the error's status code."""
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})

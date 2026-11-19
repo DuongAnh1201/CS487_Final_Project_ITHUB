@@ -257,7 +257,8 @@ def test_changes_are_audited_without_secrets(client, admin_headers, sa_headers, 
     update = db.query(AuditRecord).filter_by(action="UPDATE").one()
     assert update.old_value["role"] == "STUDENT_ASSISTANT" and update.new_value["role"] == "ADMIN"
     assert update.actor_id is not None and update.entity_id == str(sa_id)
-    assert all("password" not in str(a.new_value).lower() for a in db.query(AuditRecord))
+    assert all("hash" not in str(a.new_value).lower() and SA_PASSWORD not in str(a.new_value)
+               for a in db.query(AuditRecord))
 
 
 def test_failed_login_is_not_audited(client, sa_headers, db: Session):

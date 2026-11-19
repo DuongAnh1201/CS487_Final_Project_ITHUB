@@ -1,6 +1,8 @@
 """USR business rules: AccessControl, AuthService and UserManager (SP4 §9.3, §11)."""
 
+import logging
 import re
+import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -10,9 +12,11 @@ from app.core.exceptions import (
     AuthenticationError,
     ConflictError,
     PermissionDeniedError,
+    ServiceUnavailableError,
     ValidationRuleError,
 )
 from app.core.security import PasswordHasher, TokenService
+from app.modules.usr.google import GoogleTokenError, GoogleTokenVerifier
 from app.modules.usr.models import Role, User, UserSession, UserStatus
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.schemas import UserCreate
@@ -22,12 +26,15 @@ MSG_INVALID = "Invalid email or password."
 MSG_LOCKED = "Account locked. Try again in 15 minutes."
 MSG_EXPIRED = "Session expired. Please log in again."
 MSG_LOGIN_REQUIRED = "Please log in to continue."
+logger = logging.getLogger(__name__)
+
 MSG_DENIED = "Access denied."
 MSG_DUPLICATE = "An account with this email or school ID already exists."
 MSG_PASSWORD_RULE = "Password must be at least 10 characters and include letters and digits."
 MSG_LAST_ADMIN = "At least one active Admin is required."
 MSG_PASSWORD_CHANGE_REQUIRED = "Password change required."
 MSG_WRONG_CURRENT = "Current password is incorrect."
+MSG_GOOGLE_OFF = "Google sign-in is not configured."
 
 
 class AccessControl:
@@ -46,6 +53,7 @@ class LoginResult:
 
     token: str
     user: User
+    must_change_password: bool = False
 
 
 def check_password_rule(password: str) -> None:
@@ -70,6 +78,7 @@ class AuthService:
         audit: AuditLog,
         settings: Settings,
         clock: Clock,
+        google: GoogleTokenVerifier | None = None,
     ) -> None:
         self.users = users
         self.sessions = sessions
@@ -78,6 +87,7 @@ class AuthService:
         self.audit = audit
         self.settings = settings
         self.clock = clock
+        self.google = google
 
     def login(self, email: str, password: str) -> LoginResult:
         """Authenticate and start a session, or raise AuthenticationError."""
@@ -86,33 +96,40 @@ class AuthService:
         if user is None:
             self.hasher.verify_dummy(password)
             raise AuthenticationError(MSG_INVALID)
-        if user.locked_until is not None and user.locked_until > now:
-            raise AuthenticationError(MSG_LOCKED)
-        if user.status == UserStatus.ACTIVE and self._access_ended(user, now):
-            user.status = UserStatus.INACTIVE  # FR-USR-11
-            self.audit.record(None, "DEACTIVATE", "User", user.id,
-                              {"status": "ACTIVE"}, {"status": "INACTIVE"})
-            self.users.commit()
-        if user.status != UserStatus.ACTIVE:
-            self.hasher.verify_dummy(password)
-            raise AuthenticationError(MSG_INVALID)
+        self._guard_account(user, now, password)
         if not self.hasher.verify(password, user.password_hash):
             self._register_failure(user, now)
             raise AuthenticationError(MSG_INVALID)
-
         user.failed_attempts = 0
         user.locked_until = None
-        user.last_login_at = now
-        token = self.tokens.new_token()
-        self.sessions.add(UserSession(
-            token_hash=self.tokens.digest(token), user_id=user.id,
-            created_at=now, last_seen_at=now,
-        ))
-        self.audit.record(user, "LOGIN", "User", user.id)
-        return LoginResult(token=token, user=user)
+        return self._start_session(user, now, "password", user.must_change_password)
+
+    def login_with_google(self, id_token: str) -> LoginResult:
+        """Sign in an existing user with a Google ID token; never creates accounts."""
+        if self.google is None or not self.settings.google_enabled:
+            raise ServiceUnavailableError(MSG_GOOGLE_OFF)
+        try:
+            identity = self.google.verify(id_token)
+        except GoogleTokenError:
+            raise AuthenticationError(MSG_INVALID) from None
+        if not identity.is_acceptable(self.settings.google_hosted_domain):
+            raise AuthenticationError(MSG_INVALID)
+        user = self.users.get_by_email(identity.email)
+        if user is None:
+            raise AuthenticationError(MSG_INVALID)
+        now = self.clock()
+        self._guard_account(user, now)
+        if user.google_sub is not None and user.google_sub != identity.sub:
+            raise AuthenticationError(MSG_INVALID)
+        user.google_sub = identity.sub
+        return self._start_session(user, now, "google", False)
 
     def authenticate(self, token: str | None) -> User:
         """Return the user for a live session and refresh its idle timer."""
+        return self.authenticate_session(token)[0]
+
+    def authenticate_session(self, token: str | None) -> tuple[User, UserSession]:
+        """Like ``authenticate`` but also returns the session (to know how it was started)."""
         if not token:
             raise AuthenticationError(MSG_LOGIN_REQUIRED)
         session = self.sessions.get_by_digest(self.tokens.digest(token))
@@ -128,7 +145,7 @@ class AuthService:
         if user.status != UserStatus.ACTIVE:
             raise AuthenticationError(MSG_LOGIN_REQUIRED)
         session.last_seen_at = now
-        return user
+        return user, session
 
     def logout(self, token: str, user: User) -> None:
         """End the session behind this token."""
@@ -136,6 +153,32 @@ class AuthService:
         if session is not None:
             session.revoked = True
         self.audit.record(user, "LOGOUT", "User", user.id)
+
+    def _guard_account(self, user: User, now: datetime, password: str | None = None) -> None:
+        """Refuse locked, ended-access and deactivated accounts (BR-USR-07, FR-USR-11)."""
+        if user.locked_until is not None and user.locked_until > now:
+            raise AuthenticationError(MSG_LOCKED)
+        if user.status == UserStatus.ACTIVE and self._access_ended(user, now):
+            user.status = UserStatus.INACTIVE
+            self.audit.record(None, "DEACTIVATE", "User", user.id,
+                              {"status": "ACTIVE"}, {"status": "INACTIVE"})
+            self.users.commit()
+        if user.status != UserStatus.ACTIVE:
+            if password is not None:
+                self.hasher.verify_dummy(password)
+            raise AuthenticationError(MSG_INVALID)
+
+    def _start_session(self, user: User, now: datetime, method: str,
+                       must_change_password: bool) -> LoginResult:
+        """Create the session and the LOGIN audit entry (shared by every login method)."""
+        user.last_login_at = now
+        token = self.tokens.new_token()
+        self.sessions.add(UserSession(
+            token_hash=self.tokens.digest(token), user_id=user.id,
+            created_at=now, last_seen_at=now, auth_method=method,
+        ))
+        self.audit.record(user, "LOGIN", "User", user.id, None, {"method": method})
+        return LoginResult(token=token, user=user, must_change_password=must_change_password)
 
     def _register_failure(self, user: User, now: datetime) -> None:
         """Count a failed attempt; lock on the 5th (FR-USR-07). Saved even though the request fails."""
@@ -174,10 +217,18 @@ class UserManager:
         return self._create(actor, data.full_name, str(data.email), data.school_id,
                             data.role, data.access_end_date, data.temporary_password)
 
-    def seed_admin(self, full_name: str, email: str, school_id: str, password: str) -> User | None:
-        """Create the first Admin when no user exists yet; otherwise do nothing."""
+    def seed_admin(self, full_name: str, email: str, school_id: str,
+                   password: str | None = None) -> User | None:
+        """Create the first Admin when no user exists yet; otherwise do nothing.
+
+        Without a configured password a random temporary one is generated and logged once.
+        Either way it must be changed at first password login.
+        """
         if self.users.list():
             return None
+        if password is None:
+            password = self._random_password()
+            logger.warning("Initial admin password: %s", password)
         user = self._create(None, full_name, email, school_id, Role.ADMIN, None, password)
         user.must_change_password = True
         return user
@@ -237,6 +288,14 @@ class UserManager:
         user.must_change_password = False
         self.users.flush()
         self.audit.record(user, "CHANGE_PASSWORD", "User", user.id)
+
+    @staticmethod
+    def _random_password() -> str:
+        """A random temporary password that satisfies the password rule (BR-USR-03)."""
+        while True:
+            candidate = secrets.token_urlsafe(16)
+            if re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate):
+                return candidate
 
     def _create(self, actor: User | None, full_name: str, email: str, school_id: str,
                 role: Role, access_end_date, password: str) -> User:

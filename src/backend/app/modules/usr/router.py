@@ -5,12 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.core.clock import Clock
 from app.core.database import get_db
+from app.core.config import Settings
 from app.core.deps import (
     get_audit_log,
     get_auth_service,
     get_clock,
     get_current_user_allow_temp,
     get_hasher,
+    get_settings,
     get_token,
     require_role,
 )
@@ -18,7 +20,9 @@ from app.core.security import PasswordHasher
 from app.modules.usr.models import Role, User, UserStatus
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.schemas import (
+    AuthConfig,
     ChangePasswordRequest,
+    GoogleLoginRequest,
     LoginRequest,
     LoginResponse,
     MessageResponse,
@@ -27,7 +31,7 @@ from app.modules.usr.schemas import (
     UserRead,
     UserUpdate,
 )
-from app.modules.usr.service import AuthService, UserManager
+from app.modules.usr.service import AuthService, LoginResult, UserManager
 from app.shared.audit import AuditLog
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -44,14 +48,33 @@ def get_user_manager(
     return UserManager(UserRepository(db), SessionRepository(db), hasher, audit, clock)
 
 
+def _login_response(result: LoginResult) -> LoginResponse:
+    return LoginResponse(
+        access_token=result.token,
+        must_change_password=result.must_change_password,
+        user=UserRead.model_validate(result.user),
+    )
+
+
 @auth_router.post("/login", response_model=LoginResponse)
 def login(body: LoginRequest, auth: AuthService = Depends(get_auth_service)) -> LoginResponse:
     """Log in with school email and password (FR-USR-01)."""
-    result = auth.login(body.email, body.password)
-    return LoginResponse(
-        access_token=result.token,
-        must_change_password=result.user.must_change_password,
-        user=UserRead.model_validate(result.user),
+    return _login_response(auth.login(body.email, body.password))
+
+
+@auth_router.post("/google", response_model=LoginResponse)
+def login_with_google(body: GoogleLoginRequest,
+                      auth: AuthService = Depends(get_auth_service)) -> LoginResponse:
+    """Sign in an existing user with a Google ID token (503 until configured)."""
+    return _login_response(auth.login_with_google(body.id_token))
+
+
+@auth_router.get("/config", response_model=AuthConfig)
+def auth_config(settings: Settings = Depends(get_settings)) -> AuthConfig:
+    """Tell the frontend whether Google sign-in is available."""
+    return AuthConfig(
+        google_enabled=settings.google_enabled,
+        google_client_id=settings.google_client_ids[0] if settings.google_client_ids else None,
     )
 
 
