@@ -140,14 +140,25 @@ def test_retiring_an_item_removes_it_from_its_classroom(client, admin_headers, s
     assert ok(client.get(f"/ast/items/{item['id']}", headers=sa_headers))["status"] == "Retired"
 
 
-@pytest.mark.xfail(strict=True, reason="AST lending does not call ClassroomManager.is_item_installed yet (DD-CLS-01); needs a guard hook in LendingManager")
 def test_equipment_installed_in_a_classroom_cannot_be_lent(client, admin_headers, sa_headers):
     _, _, item = install_desktop(client, admin_headers, sa_headers)
     borrower = ok(client.post("/ast/borrowers", headers=sa_headers, json={
         "school_id": "S-1", "full_name": "Alex", "email": "alex@sfbu.edu", "type": "STUDENT"}), 201)
     lend = client.post("/ast/loans", headers=sa_headers, json={
         "item_id": item["id"], "borrower_id": borrower["id"], "condition_out": "Good"})
-    assert lend.status_code == 409
+    assert (lend.status_code, lend.json()["detail"]) == (
+        409, "Item is installed in a classroom and cannot be lent.")
+
+
+def test_equipment_can_be_lent_again_once_removed_from_the_classroom(client, admin_headers, sa_headers):
+    room, equipment, item = install_desktop(client, admin_headers, sa_headers)
+    borrower = ok(client.post("/ast/borrowers", headers=sa_headers, json={
+        "school_id": "S-2", "full_name": "Sam", "email": "sam@sfbu.edu", "type": "STUDENT"}), 201)
+    ok(client.post(f"/classroom-equipment/{equipment['id']}/remove", headers=sa_headers,
+                   json={"version": equipment["version"]}))
+    loan = client.post("/ast/loans", headers=sa_headers, json={
+        "item_id": item["id"], "borrower_id": borrower["id"], "condition_out": "Good"})
+    assert loan.status_code == 201, loan.text
 
 
 def test_classroom_equipment_must_exist_in_assets(client, admin_headers, sa_headers):
