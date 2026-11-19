@@ -22,7 +22,7 @@ from app.shared.events import DomainEvent, EventType
 
 PROJECT_EVENTS = {EventType.PROJECT_CREATED, EventType.PROJECT_UPDATED, EventType.PROJECT_MEMBER_ADDED}
 ADMIN_EVENTS = {EventType.ISSUE_REPORTED, EventType.REPEAT_PROBLEM, EventType.LOW_STOCK,
-                EventType.ORDER_ARRIVED}
+                EventType.ORDER_ARRIVED, EventType.MONTHLY_SUMMARY}
 MSG_NO_RECIPIENTS = "At least one staff member is required."
 
 
