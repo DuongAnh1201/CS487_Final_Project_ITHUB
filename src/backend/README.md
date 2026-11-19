@@ -9,8 +9,12 @@ cp .env.example .env        # then edit
 .venv/bin/pytest            # tests
 ```
 
-The first start creates the tables and one Admin from the `ITHUB_ADMIN_*` settings. The Admin's password is
-temporary and must be changed at first login (`POST /auth/change-password`).
+The first start creates the tables and one Admin from the `ITHUB_ADMIN_*` settings. There is **no default
+password**: if `ITHUB_ADMIN_PASSWORD` is unset, a random temporary password is generated and logged once at
+WARNING level (`Initial admin password: ...`), so copy it from the first start-up log. If you set
+`ITHUB_ADMIN_PASSWORD` it is used instead. Either way the password is temporary and must be changed at the
+first password login (`POST /auth/change-password`). An Admin who only signs in with Google never uses it,
+so keep it secret or reset it later (`POST /users/{id}/reset-password`).
 There are no migrations yet: after a model change, delete the local `ithub.db` and restart.
 
 ## Enabling Google sign-in

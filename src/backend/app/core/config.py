@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     admin_full_name: str = "System Administrator"
     admin_email: str = "admin@sfbu.edu"
     admin_school_id: str = "ADMIN-0001"
-    admin_password: str = "ChangeMe12345"
+    # None => a random temporary password is generated and logged once at first start.
+    admin_password: str | None = None
 
     @field_validator("google_client_ids", mode="before")
     @classmethod

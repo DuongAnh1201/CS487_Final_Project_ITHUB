@@ -1,6 +1,8 @@
 """USR business rules: AccessControl, AuthService and UserManager (SP4 §9.3, §11)."""
 
+import logging
 import re
+import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -24,6 +26,8 @@ MSG_INVALID = "Invalid email or password."
 MSG_LOCKED = "Account locked. Try again in 15 minutes."
 MSG_EXPIRED = "Session expired. Please log in again."
 MSG_LOGIN_REQUIRED = "Please log in to continue."
+logger = logging.getLogger(__name__)
+
 MSG_DENIED = "Access denied."
 MSG_DUPLICATE = "An account with this email or school ID already exists."
 MSG_PASSWORD_RULE = "Password must be at least 10 characters and include letters and digits."
@@ -213,10 +217,18 @@ class UserManager:
         return self._create(actor, data.full_name, str(data.email), data.school_id,
                             data.role, data.access_end_date, data.temporary_password)
 
-    def seed_admin(self, full_name: str, email: str, school_id: str, password: str) -> User | None:
-        """Create the first Admin when no user exists yet; otherwise do nothing."""
+    def seed_admin(self, full_name: str, email: str, school_id: str,
+                   password: str | None = None) -> User | None:
+        """Create the first Admin when no user exists yet; otherwise do nothing.
+
+        Without a configured password a random temporary one is generated and logged once.
+        Either way it must be changed at first password login.
+        """
         if self.users.list():
             return None
+        if password is None:
+            password = self._random_password()
+            logger.warning("Initial admin password: %s", password)
         user = self._create(None, full_name, email, school_id, Role.ADMIN, None, password)
         user.must_change_password = True
         return user
@@ -276,6 +288,14 @@ class UserManager:
         user.must_change_password = False
         self.users.flush()
         self.audit.record(user, "CHANGE_PASSWORD", "User", user.id)
+
+    @staticmethod
+    def _random_password() -> str:
+        """A random temporary password that satisfies the password rule (BR-USR-03)."""
+        while True:
+            candidate = secrets.token_urlsafe(16)
+            if re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate):
+                return candidate
 
     def _create(self, actor: User | None, full_name: str, email: str, school_id: str,
                 role: Role, access_end_date, password: str) -> User:
