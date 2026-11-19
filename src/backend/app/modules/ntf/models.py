@@ -1,0 +1,42 @@
+"""NTF entity: Notification."""
+
+import enum
+from datetime import datetime
+
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.database import Base
+from app.shared.events import EventType
+
+
+class EmailStatus(str, enum.Enum):
+    """Result of the email copy (FR-NTF-07)."""
+
+    PENDING = "PENDING"
+    SENT = "SENT"
+    FAILED = "FAILED"
+
+
+class Notification(Base):
+    """One in-app message for one recipient, linked to one triggering event (BR-16)."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    recipient_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    event_type: Mapped[EventType] = mapped_column(Enum(EventType))
+    message: Mapped[str] = mapped_column(Text)
+    related_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    related_id: Mapped[int | None] = mapped_column(nullable=True)
+    project_id: Mapped[int | None] = mapped_column(nullable=True)
+    triggered_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    email_status: Mapped[EmailStatus] = mapped_column(Enum(EmailStatus), default=EmailStatus.PENDING)
+    email_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    @property
+    def is_read(self) -> bool:
+        """Read when ``read_at`` is set."""
+        return self.read_at is not None
