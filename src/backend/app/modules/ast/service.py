@@ -362,6 +362,17 @@ class AssetManager(ChangeRecorder):
         return item
 
 
+class LendingGuard(Protocol):
+    """Cross-page checkout policy, e.g. installed equipment (DD-CLS-01, US-AST-05)."""
+
+    def check_can_lend(self, item_id: int) -> None:
+        """Raise DomainError to block checkout before mutation.
+
+        Installed equipment raises ConflictError with:
+        "Item is installed in a classroom and cannot be lent."
+        """
+
+
 class LendingManager(ChangeRecorder):
     """Checkout/return/extension policies (US-AST-05–09, BR-07–11)."""
 
@@ -373,9 +384,11 @@ class LendingManager(ChangeRecorder):
         audit: AuditLog,
         clock: Clock,
         publisher: EventPublisher,
+        lending_guards: tuple[LendingGuard, ...] = (),
     ) -> None:
         super().__init__(audit, clock, publisher)
         self.loans, self.borrowers, self.assets = loans, borrowers, assets
+        self.lending_guards = lending_guards
 
     def list_borrowers(self) -> list[Borrower]:
         """Known borrower identities."""
@@ -415,6 +428,8 @@ class LendingManager(ChangeRecorder):
             raise ValidationRuleError(
                 f"Due date must be within {maximum} days of checkout."
             )
+        for guard in self.lending_guards:
+            guard.check_can_lend(item.id)
         loan = Loan(
             **{
                 **data.model_dump(exclude={"checkout_date", "due_date"}),

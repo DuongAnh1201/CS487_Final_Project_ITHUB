@@ -29,6 +29,7 @@ from app.modules.ast.repository import (
 )
 from app.modules.ast.service import (
     AssetManager,
+    LendingGuard,
     LendingManager,
     RetirementObserver,
     StockManager,
@@ -99,16 +100,28 @@ def get_asset_manager(
     )
 
 
+def get_lending_guards() -> tuple[LendingGuard, ...]:
+    """Optional checkout policies; integration supplies CLS checks (DD-CLS-01)."""
+    return ()
+
+
 def get_lending_manager(
     db: Session = Depends(get_db),
     audit: AuditLog = Depends(get_audit_log),
     clock: Clock = Depends(get_clock),
     publisher: EventPublisher = Depends(get_event_publisher),
     assets: AssetManager = Depends(get_asset_manager),
+    guards: tuple[LendingGuard, ...] = Depends(get_lending_guards),
 ) -> LendingManager:
     """Lending and assets use the same request transaction."""
     return LendingManager(
-        LoanRepository(db), BorrowerRepository(db), assets, audit, clock, publisher
+        LoanRepository(db),
+        BorrowerRepository(db),
+        assets,
+        audit,
+        clock,
+        publisher,
+        guards,
     )
 
 
