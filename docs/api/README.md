@@ -3,9 +3,9 @@
 A JSON REST API (FastAPI). Everything below is also available interactively: start the backend and open
 **`/docs`** (Swagger UI) or **`/redoc`**. The OpenAPI file is `/openapi.json`.
 
-> **Status of this guide.** It covers the pages merged when it was written: USR (auth and users), NTF, ORD and RPT.
-> Sections marked *pending* describe pull requests that are open but not merged yet; Assets (AST), Classrooms (CLS)
-> and Issues (ISS) are added when they merge. The `/docs` page is always the source of truth for what is running.
+> **Status of this guide.** It covers the pages merged when it was written: USR (auth, users, Google sign-in), PRJ, NTF,
+> ORD and RPT. Assets (AST), Classrooms (CLS) and Issues (ISS) are added when they merge. The `/docs` page is always
+> the source of truth for what is running.
 
 ## 1. Run it, open the docs, export the spec
 
@@ -24,7 +24,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 - Tests: `.venv/bin/pytest`.
 
 The first start creates the database and one Admin (`ITHUB_ADMIN_EMAIL`, default `admin@sfbu.edu`) with a
-temporary password that must be changed at first login. Once #63 merges there is no default password: if
+temporary password that must be changed at first login. There is no default password: if
 `ITHUB_ADMIN_PASSWORD` is unset, a random one is generated and logged once at WARNING (`Initial admin password: ...`),
 so copy it from the first start-up log; if it is set, that value is used.
 
@@ -76,11 +76,11 @@ Rules the UI should know:
 
 Accounts are created by an Admin only (`POST /users`); there is no self-registration.
 
-*Pending (#63), Google sign-in:* `POST /auth/google` with `{"id_token": "<Google ID token>"}` returns the same response
+**Google sign-in:** `POST /auth/google` with `{"id_token": "<Google ID token>"}` returns the same response
 as `/auth/login`. `GET /auth/config` returns `{"google_enabled": bool, "google_client_id": string|null}`: show the
 "Sign in with Google" button only when `google_enabled` is true, and initialise Google Identity Services with
 `google_client_id`. Only existing accounts can sign in this way. Until it is configured, `/auth/google` answers `503`
-`"Google sign-in is not configured."`.
+`"Google sign-in is not configured."`. Setup steps for whoever configures it are in the backend `README.md`.
 
 ## 3. Roles
 
@@ -129,14 +129,16 @@ wrong method gives `405`.
 
 ## 6. Endpoints
 
-All routes need the bearer token except `GET /health`, `POST /auth/login` (and `/auth/google`, `/auth/config` when
-Google sign-in merges). "Any" means Admin or Student Assistant.
+All routes need the bearer token except `GET /health`, `POST /auth/login`, `POST /auth/google` and
+`GET /auth/config`. "Any" means Admin or Student Assistant.
 
 ### Auth and users (USR)
 
 | Route | Who | Purpose |
 |---|---|---|
 | `POST /auth/login` | public | Log in with school email and password. |
+| `POST /auth/google` | public | Sign in with a Google ID token `{id_token}`; existing accounts only. `503` until configured. |
+| `GET /auth/config` | public | `{google_enabled, google_client_id}` for the login screen. |
 | `POST /auth/logout` | any | End the session. |
 | `GET /auth/me` | any | The logged-in user. |
 | `POST /auth/change-password` | any | `{current_password, new_password}`. Clears `must_change_password`. |
@@ -206,11 +208,29 @@ a `REVIEWED` report can be edited and submitted again. `report_type` is `DAILY` 
 
 Read-only: audit records can never be changed or deleted. Examples: `entity_type=Order`, `action=RECEIVE`.
 
-### Projects and tasks (PRJ), *pending (#61)*
+### Projects and tasks (PRJ)
 
-`/templates` (project templates), `/projects` (create, search, update, complete/reopen, members, `POST /projects/from-template`)
-and `/tasks` (create, search, status, `PUT /tasks/{id}/assignees`, `POST /tasks/{id}/handoff`, assignment history).
-Task statuses: `TODO`, `IN_PROGRESS`, `COMPLETE`. A project can be completed only when all its tasks are complete.
+Any logged-in user can use these routes (same access for Admin and SA).
+
+| Route | Purpose |
+|---|---|
+| `GET /templates` · `POST /templates` · `GET/PUT /templates/{id}` | Project templates: `{name, description, tasks: [{title, description?, relative_due_days?, default_priority?}]}`, at least one task. |
+| `POST /projects` | `{name, description?, start_date, due_date?, status?, member_ids?}`. The creator is a member automatically. |
+| `POST /projects/from-template` | `{template_id, name, description?, start_date, due_date?, status?, member_ids?}`: creates the project and its tasks in one step; a task's `due_date` is `start_date + relative_due_days`. The copies are independent of the template. |
+| `GET /projects?q=&status=&assignee_id=&due_before=&due_after=` | Search and filter. Every project has `total_tasks`, `completed_tasks`, `progress` (percent). |
+| `GET /projects/{id}` | The project with its tasks. |
+| `PATCH /projects/{id}` | Edit; `status: COMPLETED` is allowed only when every task is `COMPLETE` (`422`); a completed project goes back to `ACTIVE` if a task is reopened or added. |
+| `GET /projects/{id}/members` · `POST /projects/{id}/members` | Member ids; add `{user_id}` (members are notified). |
+| `POST /tasks` | `{title, description?, status?, priority?, due_date?, project_id?, assignee_ids?}`. Without `project_id` it is a standalone task. |
+| `GET /tasks?q=&status=&assignee_id=&project_id=&due_before=&due_after=` | Search and filter. |
+| `GET /tasks/{id}` · `PATCH /tasks/{id}` | One task; edit it, or link a standalone task to a project once with `project_id`. |
+| `PUT /tasks/{id}/status` | `{status: TODO|IN_PROGRESS|COMPLETE}`. |
+| `PUT /tasks/{id}/assignees` | `{user_ids: [...]}` (at least one): the full set of assignees. Newly added users are notified. |
+| `POST /tasks/{id}/handoff` | `{to_user_id}`: hand an unfinished task to someone else; status unchanged. |
+| `GET /tasks/{id}/assignments` | Assignment history, oldest first (`active` is false once ended). |
+
+Task statuses: `TODO`, `IN_PROGRESS`, `COMPLETE`; priorities `LOW`, `MEDIUM`, `HIGH`; project statuses `PLANNED`, `ACTIVE`,
+`ON_HOLD`, `COMPLETED`.
 
 ### Assets, Classrooms, Issues (AST, CLS, ISS), *pending*
 

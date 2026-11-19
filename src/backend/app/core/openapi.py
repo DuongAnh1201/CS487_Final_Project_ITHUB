@@ -19,6 +19,9 @@ JSON REST API for the IT Inventory Tracker. Log in with `POST /auth/login`, then
 TAGS = [
     {"name": "auth", "description": "Log in, log out, change own password (USR)."},
     {"name": "users", "description": "Account administration, Admin only (USR)."},
+    {"name": "projects", "description": "Projects, members and projects from templates (PRJ)."},
+    {"name": "tasks", "description": "Tasks, assignment, hand-off and progress (PRJ)."},
+    {"name": "templates", "description": "Project templates (PRJ). Daily-report checklists are `report-templates`."},
     {"name": "notifications", "description": "In-app notifications, read state, shift summaries (NTF)."},
     {"name": "orders", "description": "Consumable orders and low-stock ordering (ORD)."},
     {"name": "reports", "description": "Daily reports, review workflow, monthly summary (RPT)."},
