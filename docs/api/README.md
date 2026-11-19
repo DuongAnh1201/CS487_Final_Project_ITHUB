@@ -23,8 +23,10 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
   (generate a TypeScript client from it with any OpenAPI generator, for example `openapi-typescript`).
 - Tests: `.venv/bin/pytest`.
 
-The first start creates the database and one Admin (`ITHUB_ADMIN_EMAIL`, default `admin@sfbu.edu`) with the
-temporary password `ITHUB_ADMIN_PASSWORD`, which must be changed at first login.
+The first start creates the database and one Admin (`ITHUB_ADMIN_EMAIL`, default `admin@sfbu.edu`) with a
+temporary password that must be changed at first login. Once #63 merges there is no default password: if
+`ITHUB_ADMIN_PASSWORD` is unset, a random one is generated and logged once at WARNING (`Initial admin password: ...`),
+so copy it from the first start-up log; if it is set, that value is used.
 
 ### Settings (environment variables, all prefixed `ITHUB_`)
 

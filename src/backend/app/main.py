@@ -4,11 +4,10 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.clock import utc_now
 from app.core.config import Settings
-from fastapi.middleware.cors import CORSMiddleware
-
 from app.core.database import Database
 from app.core.exceptions import register_exception_handlers
 from app.core.openapi import API_DESCRIPTION, TAGS, install_openapi
