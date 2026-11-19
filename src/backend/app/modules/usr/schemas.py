@@ -19,6 +19,8 @@ class LoginRequest(BaseModel):
 class GoogleLoginRequest(BaseModel):
     """Google ID token from Google Identity Services."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij..."}]})
+
     id_token: str = Field(min_length=1)
 
 
