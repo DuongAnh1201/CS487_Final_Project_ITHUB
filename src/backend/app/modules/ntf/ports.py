@@ -1,0 +1,45 @@
+"""Small interfaces NTF needs from other pages, so it never imports them.
+
+PRJ supplies the real implementations; until then the ``No*`` defaults apply.
+"""
+
+from dataclasses import dataclass
+from datetime import date
+from typing import Protocol
+
+
+class ProjectMembership(Protocol):
+    """Who belongs to a project (BR-16: project events go to members only)."""
+
+    def member_ids(self, project_id: int) -> list[int]:
+        """User ids of the project's members."""
+
+
+class NoProjectMembership:
+    """Default: no project has members."""
+
+    def member_ids(self, project_id: int) -> list[int]:
+        return []
+
+
+@dataclass(frozen=True)
+class ScheduledWork:
+    """One piece of work for a shift summary."""
+
+    id: int
+    title: str
+    due_date: date
+
+
+class ScheduledWorkSource(Protocol):
+    """Where a shift summary finds a user's unfinished work (FR-NTF-03)."""
+
+    def open_work_for_user(self, user_id: int, due_on_or_before: date) -> list[ScheduledWork]:
+        """Unfinished work assigned to the user and due on or before the date."""
+
+
+class NoScheduledWork:
+    """Default: no scheduled work."""
+
+    def open_work_for_user(self, user_id: int, due_on_or_before: date) -> list[ScheduledWork]:
+        return []
