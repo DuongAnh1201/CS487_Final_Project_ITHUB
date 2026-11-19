@@ -3,9 +3,8 @@
 A JSON REST API (FastAPI). Everything below is also available interactively: start the backend and open
 **`/docs`** (Swagger UI) or **`/redoc`**. The OpenAPI file is `/openapi.json`.
 
-> **Status of this guide.** It covers the pages merged when it was written: USR (auth, users, Google sign-in), PRJ, NTF,
-> ORD and RPT. Assets (AST), Classrooms (CLS) and Issues (ISS) are added when they merge. The `/docs` page is always
-> the source of truth for what is running.
+> **Status of this guide.** It covers every page: USR (auth, users, Google sign-in), AST, CLS, ISS, PRJ, NTF, ORD and
+> RPT. The `/docs` page is always the source of truth for what is running.
 
 ## 1. Run it, open the docs, export the spec
 
@@ -94,6 +93,9 @@ There are two roles: `ADMIN` (IT supervisor) and `STUDENT_ASSISTANT`. An Admin c
 | Notifications (own), shift summary | yes | yes |
 | View the audit log | yes | yes |
 | Create accounts, change role/status, reset passwords, list users | **no (`403`)** | yes |
+| Retire equipment, create asset categories (AST) | **no (`403`)** | yes |
+| Create/edit/deactivate classrooms, set a closure, import or edit the schedule (CLS) | **no (`403`)** | yes |
+| Assign, reject or close an issue (ISS) | **no (`403`)** | yes |
 
 A report can only be **reviewed by a user who was assigned as a reviewer** on it (any role), not by every Admin.
 Hide Admin-only screens for SAs, but do not rely on that: the API enforces it and answers `403` `"Access denied."`.
@@ -232,9 +234,68 @@ Any logged-in user can use these routes (same access for Admin and SA).
 Task statuses: `TODO`, `IN_PROGRESS`, `COMPLETE`; priorities `LOW`, `MEDIUM`, `HIGH`; project statuses `PLANNED`, `ACTIVE`,
 `ON_HOLD`, `COMPLETED`.
 
-### Assets, Classrooms, Issues (AST, CLS, ISS), *pending*
+### Assets and lending (AST), under `/ast`
 
-Added when these pages merge.
+Dates are `YYYY-MM-DD`. Equipment and consumables share one id space: the same `item_id` is used by lending, classrooms,
+orders and stock routes. Borrower types: `STUDENT`, `FACULTY`, `STAFF`. Item conditions: `Good`, `Fair`, `Poor`, `Damaged`.
+Item statuses: `Available`, `On Loan`, `Lost`, `Damaged`, `Retired` (a retired item is read-only and its asset tag is never reused).
+
+| Route | Who | Purpose |
+|---|---|---|
+| `GET /ast/categories` · `POST /ast/categories` | any · Admin | Category lookup; `{name, is_consumable}`. |
+| `GET /ast/locations` · `POST /ast/locations` | any | Locations: `{building, room, description?}`. |
+| `POST /ast/items` | any | Register equipment (starts `Available`): `{asset_tag, serial_number, model, manufacturer, category_id, location_id, purchase_date?, warranty_end_date?, notes?}`. The asset tag must be unique, retired items included. |
+| `GET /ast/items?asset_tag=&serial_number=&model=&category_id=&location_id=&status=` | any | Search; filters combine with AND. |
+| `GET /ast/items/{id}` · `PATCH /ast/items/{id}` | any | One item; edit descriptive fields (not `status`). |
+| `POST /ast/items/{id}/incidents` | any | Report `Lost` or `Damaged`: `{type, description, date?}`. |
+| `POST /ast/items/{id}/retire` | Admin | `{reason, date?}`; also removes it from its classroom. |
+| `GET /ast/consumables` · `POST /ast/consumables` | any | Supplies; create with `{name, category_id, location_id, reorder_threshold, unit}` (stock starts at 0). |
+| `GET /ast/consumables/{id}` · `.../transactions` | any | Quantity (`quantity_on_hand`, `reorder_threshold`) and movement history. |
+| `POST /ast/consumables/{id}/stock-in` · `.../stock-out` | any | `{quantity, note?}`; stock-out also needs `issued_to` and cannot exceed what is on hand. When stock falls below the threshold an order is created automatically and Admins are notified (see Orders). |
+| `GET /ast/borrowers` · `POST /ast/borrowers` | any | Borrower lookup; `{school_id, full_name, email, type, department?}`. |
+| `POST /ast/loans` | any | Lend: `{item_id, borrower_id, condition_out, checkout_date?, due_date?, notes?}`. Students: at most 2 items, 7 days; faculty/staff: 30 days. |
+| `GET /ast/loans?item_id=&borrower_id=` | any | Loan history. |
+| `POST /ast/items/{id}/return` | any | `{condition_in, return_date?, notes?}`. |
+| `POST /ast/loans/{id}/extend` | any | `{due_date}`; once per loan, at most 7 days. |
+| `GET /ast/overdue` | any | Overdue loans with borrower contact and days overdue. |
+
+### Classrooms and schedules (CLS)
+
+Edits to installed equipment and rooms use **optimistic locking**: send back the `version` you last read. A stale
+`version` returns `409`; reload and retry. Room status (`AVAILABLE`, `LIMITED`, `UNUSABLE`, `CLOSED`) is derived from
+the installed desktops and any closure or unresolved critical issue. Room types: `LECTURE`, `COMPUTER_LAB`.
+
+| Route | Who | Purpose |
+|---|---|---|
+| `POST /classrooms` · `PATCH /classrooms/{id}` | Admin | `{location_id, capacity, room_type}`; edit `{capacity, room_type}`. |
+| `GET /classrooms` | any | Search by building, room type, minimum capacity, status and a free slot (`slot_date`, `start_time`, `end_time`). |
+| `GET /classrooms/{id}` · `GET /classrooms/{id}/equipment` | any | The room with its derived status; current installations. |
+| `POST /classrooms/{id}/deactivate` · `POST /classrooms/{id}/closure` | Admin | Deactivate an unused room; `{closed, reason?}` maintenance override. |
+| `POST /classrooms/{id}/equipment` | any | Install a Desktop or Monitor: `{item_id, seat_label?}`. |
+| `POST /classroom-equipment/{id}/condition` | any | `{condition, reason, version}`: `WORKING`, `FAULTY`, `UNDER_REPAIR`, `OUT_OF_SERVICE`, `MISSING`. |
+| `POST /classroom-equipment/{id}/move` · `.../remove` | any | `{to_classroom_id, version}`; `{version}`. History is kept. |
+| `POST /classrooms/{id}/checks` | any | Record every installed item's observed condition: `{notes?, results: [{room_equipment_id, observed_condition, comment?, version}]}`. |
+| `POST /schedule/imports` · `GET /schedule/imports/{id}` | Admin · any | Registrar CSV as JSON `{file_name, content}`: good rows are stored, rejected rows come back with row number and reason. |
+| `POST /schedule/entries` · `PUT /schedule/entries/{id}` · `POST /schedule/entries/{id}/cancel` | Admin | Meetings: `{classroom_id, course_code, course_title, instructor_name, day_of_week, start_time, end_time, term_start, term_end}`; cancelling keeps the record. |
+| `GET /classrooms/{id}/timetable?day=YYYY-MM-DD&view=day|week` | any | Ordered meetings. |
+
+### Issues (ISS)
+
+Every change sends the issue's current `version` (`409` when stale). Statuses: `OPEN`, `ASSIGNED`, `IN_PROGRESS`,
+`RESOLVED`, `CLOSED`, `DUPLICATE`, `REJECTED`. `GET /issues/{id}` lists the transitions allowed for the current user, so
+the UI can offer only valid buttons; the target statuses `ASSIGNED`, `REJECTED` and `CLOSED` are Admin-only (`403 "Not allowed for your role."`).
+Severities: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`; categories: `HARDWARE`, `SOFTWARE`, `NETWORK`, `ROOM_FACILITY`, `OTHER`.
+
+| Route | Purpose |
+|---|---|
+| `POST /issues` | `{classroom_id, room_equipment_id?, category, severity, description, reporter_name, reporter_type, reporter_contact?}`. Automatic effects: a hardware issue on a working item marks it `FAULTY`; a critical issue without an item closes the room. Admins are notified (`ISSUE_REPORTED`). |
+| `GET /issues` | Filter and page (50 rows). |
+| `GET /issues/possible-duplicates` | Existing reports that look like the one being entered, to show before saving. |
+| `GET /issues/{id}` · `GET /issues/{id}/history` | Detail with legal transitions; chronological timeline. |
+| `POST /issues/{id}/status` | `{status, version, note?, assignee_id?, original_id?, new_condition?}`. |
+| `POST /issues/{id}/resolve` | `{notes, new_condition?, version}`. |
+| `POST /issues/{id}/duplicate` | `{original_id, version}`; a fourth report of the same problem flags it as a repeat problem (Admins notified: `REPEAT_PROBLEM`). |
+| `POST /issues/{id}/comments` | `{text, version}`. |
 
 ### Health
 

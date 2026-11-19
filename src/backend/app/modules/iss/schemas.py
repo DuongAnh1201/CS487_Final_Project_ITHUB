@@ -1,7 +1,7 @@
 """ISS request/response contracts (US-ISS-01–07)."""
 
 from datetime import date, datetime
-from pydantic import BaseModel, Field, field_validator, model_validator, ValidationInfo
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator, ValidationInfo
 from typing import Self
 from app.modules.cls.schemas import ReadModel
 from app.modules.cls.models import EquipmentCondition
@@ -10,6 +10,8 @@ from app.modules.iss.models import IssueCategory, IssueStatus, ReporterType, Sev
 
 class IssueCreate(BaseModel):
     """IssueCreate JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"classroom_id": 1, "room_equipment_id": 1, "category": "HARDWARE", "severity": "HIGH", "description": "Monitor flickers", "reporter_name": "Dr. Lee", "reporter_type": "FACULTY", "reporter_contact": "lee@sfbu.edu"}]})
 
     classroom_id: int = Field(gt=0)
     room_equipment_id: int | None = Field(default=None, gt=0)
@@ -79,6 +81,8 @@ class IssueUpdateRead(ReadModel):
 class StatusChange(BaseModel):
     """StatusChange JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"status": "ASSIGNED", "version": 1, "note": "", "assignee_id": 2}]})
+
     status: IssueStatus
     version: int = Field(gt=0)
     note: str = Field(default="", max_length=10000)
@@ -90,6 +94,8 @@ class StatusChange(BaseModel):
 class IssueResolve(BaseModel):
     """IssueResolve JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"notes": "Replaced the monitor cable", "new_condition": "WORKING", "version": 2}]})
+
     notes: str = Field(max_length=10000)
     new_condition: EquipmentCondition = EquipmentCondition.WORKING
     version: int = Field(gt=0)
@@ -98,12 +104,16 @@ class IssueResolve(BaseModel):
 class IssueDuplicate(BaseModel):
     """IssueDuplicate JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"original_id": 5, "version": 1}]})
+
     original_id: int = Field(gt=0)
     version: int = Field(gt=0)
 
 
 class IssueComment(BaseModel):
     """IssueComment JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"text": "Technician visits tomorrow", "version": 1}]})
 
     text: str = Field(max_length=10000)
     version: int = Field(gt=0)

@@ -24,6 +24,8 @@ class ReadModel(BaseModel):
 class ClassroomCreate(BaseModel):
     """ClassroomCreate JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"location_id": 1, "capacity": 30, "room_type": "COMPUTER_LAB"}]})
+
     location_id: int = Field(gt=0)
     capacity: int = Field(gt=0)
     room_type: RoomType
@@ -31,6 +33,8 @@ class ClassroomCreate(BaseModel):
 
 class ClassroomUpdate(BaseModel):
     """ClassroomUpdate JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"capacity": 32, "room_type": "COMPUTER_LAB"}]})
 
     capacity: int = Field(gt=0)
     room_type: RoomType
@@ -62,12 +66,16 @@ class ClassroomSummary(ClassroomRead):
 class ClosureUpdate(BaseModel):
     """ClosureUpdate JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"closed": True, "reason": "Water leak"}]})
+
     closed: bool
     reason: str = Field(default="", max_length=2000)
 
 
 class EquipmentCreate(BaseModel):
     """EquipmentCreate JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"item_id": 3, "seat_label": "A1"}]})
 
     item_id: int = Field(gt=0)
     seat_label: str = Field(default="", max_length=80)
@@ -91,6 +99,8 @@ class EquipmentRead(ReadModel):
 class ConditionUpdate(BaseModel):
     """ConditionUpdate JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"condition": "FAULTY", "reason": "Will not boot", "version": 1}]})
+
     condition: EquipmentCondition
     reason: str = Field(max_length=2000)
     version: int = Field(gt=0)
@@ -99,12 +109,16 @@ class ConditionUpdate(BaseModel):
 class EquipmentMove(BaseModel):
     """EquipmentMove JSON contract or domain enumeration."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"to_classroom_id": 2, "version": 1}]})
+
     to_classroom_id: int = Field(gt=0)
     version: int = Field(gt=0)
 
 
 class VersionRequest(BaseModel):
     """VersionRequest JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"version": 1}]})
 
     version: int = Field(gt=0)
 
@@ -120,6 +134,8 @@ class CheckResultCreate(BaseModel):
 
 class RoomCheckCreate(BaseModel):
     """RoomCheckCreate JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"notes": "Morning check", "results": [{"room_equipment_id": 1, "observed_condition": "WORKING", "comment": "", "version": 1}]}]})
 
     notes: str = Field(default="", max_length=4000)
     results: list[CheckResultCreate]
@@ -147,6 +163,8 @@ class RoomCheckRead(ReadModel):
 
 class ScheduleCreate(BaseModel):
     """ScheduleCreate JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"classroom_id": 1, "course_code": "CS101", "course_title": "Intro to CS", "instructor_name": "Dr. Lee", "day_of_week": "MON", "start_time": "09:00:00", "end_time": "10:30:00", "term_start": "2026-01-12", "term_end": "2026-05-15"}]})
 
     classroom_id: int = Field(gt=0)
     course_code: str = Field(min_length=1, max_length=80)
@@ -204,6 +222,8 @@ class ScheduleRead(ScheduleCreate, ReadModel):
 
 class CsvImportCreate(BaseModel):
     """CsvImportCreate JSON contract or domain enumeration."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"file_name": "fall-schedule.csv", "content": "classroom_id,course_code,course_title,instructor_name,day_of_week,start_time,end_time,term_start,term_end\n1,CS101,Intro to CS,Dr. Lee,MON,09:00,10:30,2026-01-12,2026-05-15"}]})
 
     file_name: str = Field(min_length=1, max_length=255)
     content: str = Field(max_length=5_000_000)

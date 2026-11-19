@@ -60,6 +60,8 @@ class Read(BaseModel):
 class CategoryCreate(Input):
     """Category lookup creation."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"name": "Laptops", "is_consumable": False}]})
+
     name: str = Field(min_length=1, max_length=120)
     is_consumable: bool = False
 
@@ -72,6 +74,8 @@ class CategoryRead(Read, CategoryCreate):
 
 class LocationCreate(Input):
     """Location shared with CLS."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"building": "Main", "room": "101", "description": "IT storage"}]})
 
     building: str = Field(min_length=1, max_length=120)
     room: str = Field(min_length=1, max_length=120)
@@ -87,6 +91,8 @@ class LocationRead(Read, LocationCreate):
 class ItemCreate(Input):
     """Register equipment as Available (FR-AST-01/02)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"asset_tag": "LT-0001", "serial_number": "SN123456", "model": "ThinkPad T14", "manufacturer": "Lenovo", "category_id": 1, "location_id": 1, "purchase_date": "2025-08-15", "warranty_end_date": "2028-08-15", "notes": ""}]})
+
     asset_tag: str = Field(min_length=1, max_length=100)
     serial_number: str = Field(min_length=1, max_length=120)
     model: str = Field(min_length=1, max_length=120)
@@ -100,6 +106,8 @@ class ItemCreate(Input):
 
 class ItemUpdate(Input):
     """Descriptive edits only; status follows lifecycle operations (US-AST-02)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"location_id": 2, "notes": "Moved to the loan cabinet"}]})
 
     asset_tag: str | None = Field(default=None, min_length=1, max_length=100)
     serial_number: str | None = Field(default=None, min_length=1, max_length=120)
@@ -128,6 +136,8 @@ class ItemRead(Read, ItemCreate):
 class ConsumableCreate(Input):
     """Create supplies with zero opening stock; stock-in records additions."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"name": "HDMI cable", "category_id": 2, "location_id": 1, "reorder_threshold": 5, "unit": "each"}]})
+
     name: str = Field(min_length=1, max_length=120)
     category_id: int = Field(gt=0)
     location_id: int = Field(gt=0)
@@ -147,6 +157,8 @@ class ConsumableRead(ItemRead):
 
 class StockChange(Input):
     """Positive whole quantity (BR-11)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"quantity": 10, "issued_to": "Room 101 (only for stock-out)", "note": "Delivery from Acme"}]})
 
     quantity: int
     issued_to: str | None = Field(default=None, max_length=255)
@@ -179,6 +191,8 @@ class StockTransactionRead(Read):
 class BorrowerCreate(Input):
     """Borrower identity; borrowers never authenticate."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"school_id": "S-1001", "full_name": "Alex Student", "email": "alex@sfbu.edu", "type": "STUDENT", "department": "Computer Science"}]})
+
     school_id: str = Field(min_length=1, max_length=50)
     full_name: str = Field(min_length=1, max_length=120)
     email: EmailStr
@@ -195,6 +209,8 @@ class BorrowerRead(Read, BorrowerCreate):
 class LoanCreate(Input):
     """Checkout request (US-AST-05)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"item_id": 1, "borrower_id": 1, "checkout_date": "2026-01-05", "due_date": "2026-01-12", "condition_out": "Good", "notes": ""}]})
+
     item_id: int = Field(gt=0)
     borrower_id: int = Field(gt=0)
     checkout_date: Date | None = None
@@ -206,6 +222,8 @@ class LoanCreate(Input):
 class LoanReturn(Input):
     """Return request (US-AST-06)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"return_date": "2026-01-10", "condition_in": "Good", "notes": ""}]})
+
     return_date: Date | None = None
     condition_in: ItemCondition
     notes: str = Field(default="", max_length=4000)
@@ -213,6 +231,8 @@ class LoanReturn(Input):
 
 class LoanExtend(Input):
     """One extension of at most seven days (BR-08)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"due_date": "2026-01-19"}]})
 
     due_date: Date
 
@@ -248,6 +268,8 @@ class OverdueRead(Read):
 class IncidentCreate(Input):
     """Lost or damaged incident (US-AST-10)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"type": "Damaged", "description": "Cracked screen", "date": "2026-01-05"}]})
+
     type: IncidentType
     description: str = Field(min_length=1, max_length=4000)
     date: Date | None = None
@@ -255,6 +277,8 @@ class IncidentCreate(Input):
 
 class RetireRequest(Input):
     """Admin retirement reason (US-AST-11)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"reason": "End of life", "date": "2026-01-05"}]})
 
     reason: str = Field(min_length=1, max_length=4000)
     date: Date | None = None

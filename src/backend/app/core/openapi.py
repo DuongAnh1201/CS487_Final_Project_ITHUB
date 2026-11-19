@@ -22,6 +22,9 @@ TAGS = [
     {"name": "projects", "description": "Projects, members and projects from templates (PRJ)."},
     {"name": "tasks", "description": "Tasks, assignment, hand-off and progress (PRJ)."},
     {"name": "templates", "description": "Project templates (PRJ). Daily-report checklists are `report-templates`."},
+    {"name": "assets", "description": "Equipment, consumable stock, borrowers and lending (AST), under `/ast`."},
+    {"name": "classrooms and schedules", "description": "Classrooms, installed equipment, room checks, timetables (CLS)."},
+    {"name": "issues", "description": "Classroom issues, status workflow, duplicates (ISS)."},
     {"name": "notifications", "description": "In-app notifications, read state, shift summaries (NTF)."},
     {"name": "orders", "description": "Consumable orders and low-stock ordering (ORD)."},
     {"name": "reports", "description": "Daily reports, review workflow, monthly summary (RPT)."},
@@ -40,6 +43,7 @@ LOGIN_ROUTES = {"/auth/login", "/auth/google"}
 # POST routes that cannot conflict with existing data.
 NO_CONFLICT_ROUTES = LOGIN_ROUTES | {"/auth/logout", "/notifications/shift-summary", "/reports/monthly-summary"}
 _REQUIREMENT_SUFFIX = re.compile(r"\s*\((?:[A-Z]{2,}-[A-Z0-9-]+)(?:, ?[A-Z]{2,}-[A-Z0-9-]+)*\)\.?$")
+_ID_PREFIX = re.compile(r"^(?:[A-Z]{2,}-[A-Z]*-?[0-9]+(?:[/,] ?[0-9]+)*(?:\s*[-–]\s*[0-9]+)?:\s*)+")
 _ERROR_REF = {"$ref": "#/components/schemas/ErrorResponse"}
 
 
@@ -54,7 +58,8 @@ class ErrorResponse(BaseModel):
 def _summary(operation: dict[str, Any]) -> str:
     """First docstring line without the trailing period and requirement ids."""
     first = (operation.get("description") or operation["summary"]).strip().splitlines()[0]
-    return _REQUIREMENT_SUFFIX.sub("", first).rstrip(".")
+    text = _REQUIREMENT_SUFFIX.sub("", _ID_PREFIX.sub("", first)).rstrip(".")
+    return text[:1].upper() + text[1:]
 
 
 def document_schema(schema: dict[str, Any]) -> dict[str, Any]:
