@@ -11,6 +11,8 @@ from app.modules.rpt.models import ReportStatus, ReviewOutcome
 class ReportCreate(BaseModel):
     """New report (US-RPT-01); ``template_id`` pre-fills a daily checklist (US-RPT-05)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"template_id": 1, "shift": "MORNING", "project_id": None, "task_id": None}]})
+
     title: str | None = Field(default=None, max_length=200)
     description: str = ""
     template_id: int | None = None
@@ -22,6 +24,8 @@ class ReportCreate(BaseModel):
 class ReportUpdate(BaseModel):
     """Edit a draft."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"title": "Morning check, Room 101", "description": "All machines on."}]})
+
     title: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
     project_id: int | None = None
@@ -31,11 +35,15 @@ class ReportUpdate(BaseModel):
 class AnswersUpdate(BaseModel):
     """Checklist answers for a daily report."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"answers": {"Classroom computers powered on": "yes"}}]})
+
     answers: dict[str, str]
 
 
 class SubmitRequest(BaseModel):
     """Reviewers for a submission; may be empty when resubmitting."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"reviewer_ids": [1]}]})
 
     reviewer_ids: list[int] = []
 
@@ -43,12 +51,16 @@ class SubmitRequest(BaseModel):
 class ReviewRequest(BaseModel):
     """A reviewer's decision (US-RPT-04)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"status": "REVIEWED", "comment": "Please add the printer count."}]})
+
     status: ReviewOutcome
     comment: str = ""
 
 
 class MonthlySummaryRequest(BaseModel):
     """Month to summarise (BR-RPT-01)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"month": 1, "year": 2026}]})
 
     month: int = Field(ge=1, le=12)
     year: int = Field(ge=2000, le=2100)
@@ -101,6 +113,8 @@ class StatusChangeRead(BaseModel):
 
 class TemplateWrite(BaseModel):
     """Create or replace a report template."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"name": "Evening checklist", "description": "Closing checks", "checklist_items": ["Doors locked", "Lights off"]}]})
 
     name: str = Field(min_length=1, max_length=150)
     description: str = ""

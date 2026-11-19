@@ -10,6 +10,8 @@ from app.modules.ord.models import OrderStatus
 class OrderCreate(BaseModel):
     """New order for a consumable (US-ORD-01 manual path)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"item_id": 1, "quantity": 10, "vendor": "Acme Supplies"}]})
+
     item_id: int
     quantity: int = Field(gt=0, description="Quantity must be a positive whole number.")
     vendor: str = Field(default="", max_length=150)
@@ -17,6 +19,8 @@ class OrderCreate(BaseModel):
 
 class ReceiveRequest(BaseModel):
     """Quantity that arrived (UC-ORD-03)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"quantity": 4}]})
 
     quantity: int = Field(gt=0, description="Quantity must be a positive whole number.")
 

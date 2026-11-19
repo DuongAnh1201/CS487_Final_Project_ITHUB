@@ -1,6 +1,10 @@
 """Application settings (pydantic-settings). Override any field with an env var."""
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import json
+from typing import Annotated
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -15,8 +19,21 @@ class Settings(BaseSettings):
     lockout_minutes: int = 15  # FR-USR-07
     bcrypt_rounds: int = 12
 
+    # Browser origins allowed to call the API (CORS). ITHUB_CORS_ORIGINS: comma-separated or JSON list.
+    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
+
     # First-start Admin account (seeded only when no user exists).
     admin_full_name: str = "System Administrator"
     admin_email: str = "admin@sfbu.edu"
     admin_school_id: str = "ADMIN-0001"
     admin_password: str = "ChangeMe12345"
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            text = value.strip()
+            if text.startswith("["):
+                return json.loads(text)
+            return [part.strip().rstrip("/") for part in text.split(",") if part.strip()]
+        return value
