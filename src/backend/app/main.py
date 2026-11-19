@@ -4,11 +4,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.clock import utc_now
 from app.core.config import Settings
 from app.core.database import Database
 from app.core.exceptions import register_exception_handlers
+from app.core.openapi import API_DESCRIPTION, TAGS, install_openapi
 from app.core.security import PasswordHasher
 from app.modules.ntf.channels import LoggingEmailChannel
 from app.modules.ntf.router import router as notifications_router
@@ -57,7 +59,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             session.commit()
         yield
 
-    app = FastAPI(title="IT Inventory Tracker API", lifespan=lifespan)
+    app = FastAPI(title="IT Inventory Tracker API", version="1.0.0", description=API_DESCRIPTION,
+                  openapi_tags=TAGS, lifespan=lifespan)
+    app.add_middleware(
+        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"],
+        allow_headers=["*"], allow_credentials=False,  # bearer tokens, no cookies
+    )
     app.state.settings = settings
     app.state.database = database
     app.state.clock = utc_now
@@ -72,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Liveness check."""
         return {"status": "ok"}
 
+    install_openapi(app)
     return app
 
 

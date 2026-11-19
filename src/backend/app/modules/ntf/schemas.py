@@ -30,11 +30,15 @@ class NotificationRead(BaseModel):
 class ReadStateUpdate(BaseModel):
     """Read or unread (FR-NTF-05)."""
 
+    model_config = ConfigDict(json_schema_extra={"examples": [{"read": True}]})
+
     read: bool
 
 
 class ShiftSummaryRequest(BaseModel):
     """Roster and shift to summarise (FR-NTF-03)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"shift": "MORNING", "shift_date": "2026-01-05", "user_ids": [2, 3]}]})
 
     shift: ShiftName
     shift_date: date
