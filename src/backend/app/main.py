@@ -12,16 +12,26 @@ from app.core.exceptions import register_exception_handlers
 from app.core.security import PasswordHasher
 from app.modules.ntf.channels import LoggingEmailChannel
 from app.modules.ntf.router import router as notifications_router
+from app.modules.ord.ports import UnavailableStockGateway
+from app.modules.ord.router import router as orders_router
+from app.modules.rpt.repository import ReportRepository, ReportTemplateRepository
+from app.modules.rpt.router import audit_router, reports_router, templates_router as report_templates_router
+from app.modules.rpt.service import ReportManager
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
 from app.shared.audit import AuditLog
+from app.shared.events import EventPublisher
 
 # Each page adds its router(s) to this list (one per line keeps merges clean).
 ROUTERS = [
     auth_router,
     users_router,
     notifications_router,
+    orders_router,
+    reports_router,
+    report_templates_router,
+    audit_router,
 ]
 
 
@@ -40,6 +50,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
             manager.seed_admin(settings.admin_full_name, settings.admin_email,
                                settings.admin_school_id, settings.admin_password)
+            ReportManager(
+                ReportRepository(session), ReportTemplateRepository(session), UserRepository(session),
+                AuditLog(session, app.state.clock), EventPublisher(session), app.state.clock,
+            ).seed_default_templates()
             session.commit()
         yield
 
@@ -48,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.database = database
     app.state.clock = utc_now
     app.state.email_channel = LoggingEmailChannel()
+    app.state.stock_gateway = UnavailableStockGateway()  # replaced when the Assets page is wired in
     register_exception_handlers(app)
     for router in ROUTERS:
         app.include_router(router)
