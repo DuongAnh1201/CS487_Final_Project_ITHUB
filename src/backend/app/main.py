@@ -10,12 +10,12 @@ from app.core.clock import utc_now
 from app.core.config import Settings
 from app.core.database import Database
 from app.core.exceptions import register_exception_handlers
+from app.integration import wire_pages
 from app.core.openapi import API_DESCRIPTION, TAGS, install_openapi
 from app.core.security import PasswordHasher
 from app.modules.ast.router import router as ast_router
 from app.modules.ntf.channels import LoggingEmailChannel
 from app.modules.ntf.router import router as notifications_router
-from app.modules.ord.ports import UnavailableStockGateway
 from app.modules.ord.router import router as orders_router
 from app.modules.rpt.repository import ReportRepository, ReportTemplateRepository
 from app.modules.rpt.router import audit_router, reports_router, templates_router as report_templates_router
@@ -80,7 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.database = database
     app.state.clock = utc_now
     app.state.email_channel = LoggingEmailChannel()
-    app.state.stock_gateway = UnavailableStockGateway()  # replaced when the Assets page is wired in
+    app.state.stock_gateway = None  # None: ORD uses the AssetManager (see app.integration)
     app.state.google_verifier = (
         GoogleIdTokenVerifier(settings.google_client_ids) if settings.google_enabled else None
     )
@@ -93,6 +93,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Liveness check."""
         return {"status": "ok"}
 
+    wire_pages(app)
     install_openapi(app)
     return app
 
