@@ -10,6 +10,8 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.core.exceptions import register_exception_handlers
 from app.core.security import PasswordHasher
+from app.modules.ntf.channels import LoggingEmailChannel
+from app.modules.ntf.router import router as notifications_router
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
@@ -19,6 +21,7 @@ from app.shared.audit import AuditLog
 ROUTERS = [
     auth_router,
     users_router,
+    notifications_router,
 ]
 
 
@@ -44,6 +47,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.database = database
     app.state.clock = utc_now
+    app.state.email_channel = LoggingEmailChannel()
     register_exception_handlers(app)
     for router in ROUTERS:
         app.include_router(router)

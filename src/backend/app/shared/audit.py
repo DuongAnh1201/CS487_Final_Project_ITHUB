@@ -40,17 +40,17 @@ class AuditLog:
 
     def record(
         self,
-        actor: HasId | None,
+        actor: HasId | int | None,
         action: str,
         entity_type: str,
         entity_id: int | str,
         old_value: dict[str, Any] | None = None,
         new_value: dict[str, Any] | None = None,
     ) -> AuditRecord:
-        """Add an entry; ``actor`` is the acting user, or None for system actions."""
+        """Add an entry; ``actor`` is the acting user (or user id), or None for system actions."""
         entry = AuditRecord(
             timestamp=self.clock(),
-            actor_id=actor.id if actor is not None else None,
+            actor_id=actor if isinstance(actor, int) or actor is None else actor.id,
             action=action,
             entity_type=entity_type,
             entity_id=str(entity_id),

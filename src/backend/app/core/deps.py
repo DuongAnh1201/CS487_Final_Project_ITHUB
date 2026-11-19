@@ -11,6 +11,9 @@ from app.core.config import Settings
 from app.core.database import get_db
 from app.core.exceptions import PermissionDeniedError
 from app.core.security import PasswordHasher, TokenService
+from app.modules.ntf.channels import EmailChannel
+from app.modules.ntf.repository import NotificationRepository
+from app.modules.ntf.service import NotificationService
 from app.modules.usr.models import Role, User
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.service import (
@@ -19,6 +22,7 @@ from app.modules.usr.service import (
     AuthService,
 )
 from app.shared.audit import AuditLog
+from app.shared.events import EventPublisher
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -41,6 +45,33 @@ def get_hasher(settings: Settings = Depends(get_settings)) -> PasswordHasher:
 def get_audit_log(db: Session = Depends(get_db), clock: Clock = Depends(get_clock)) -> AuditLog:
     """Audit log bound to the request's transaction and the app clock."""
     return AuditLog(db, clock)
+
+
+def get_email_channel(request: Request) -> EmailChannel:
+    """The email channel (replaceable via ``app.state.email_channel``)."""
+    return request.app.state.email_channel
+
+
+def get_notification_service(
+    db: Session = Depends(get_db),
+    audit: AuditLog = Depends(get_audit_log),
+    clock: Clock = Depends(get_clock),
+    email: EmailChannel = Depends(get_email_channel),
+) -> NotificationService:
+    """NotificationService for the request."""
+    return NotificationService(
+        NotificationRepository(db), UserRepository(db), email, audit, clock,
+    )
+
+
+def get_event_publisher(
+    db: Session = Depends(get_db),
+    notifications: NotificationService = Depends(get_notification_service),
+) -> EventPublisher:
+    """Publisher with NotificationService subscribed. Other pages publish DomainEvents here."""
+    publisher = EventPublisher(db)
+    publisher.subscribe(notifications)
+    return publisher
 
 
 def get_auth_service(
