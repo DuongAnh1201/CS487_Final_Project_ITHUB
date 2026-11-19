@@ -3,6 +3,8 @@
 from collections import Counter
 from datetime import date
 
+from sqlalchemy.orm import Session
+
 from app.core.clock import Clock
 from app.core.exceptions import ConflictError
 from app.modules.ord.models import Order, OrderStatus
@@ -25,6 +27,16 @@ class OrderManager:
         self.audit = audit
         self.publisher = publisher
         self.clock = clock
+
+    @classmethod
+    def for_session(cls, session: Session, stock: StockGateway, audit: AuditLog,
+                    publisher: EventPublisher, clock: Clock) -> "OrderManager":
+        """Build a manager on an already-built stock gateway (the AssetManager).
+
+        Lets the Assets page attach this as a ``StockObserver`` without depending on ORD's
+        repository or on its FastAPI providers.
+        """
+        return cls(OrderRepository(session), stock, audit, publisher, clock)
 
     def create_order(self, user: User, item_id: int, quantity: int, vendor: str = "") -> Order:
         """A staff-requested order. One open order per item (BR-ORD-01)."""

@@ -201,3 +201,16 @@ def test_search_filter_and_summary(client, sa_headers, stock):
 def test_without_the_assets_page_wired_items_are_not_found(client, sa_headers):
     r = client.post("/orders", headers=sa_headers, json={"item_id": 1, "quantity": 1})
     assert (r.status_code, r.json()["detail"]) == (404, "Item not found.")
+
+
+def test_for_session_builds_a_manager_on_an_existing_gateway(app, client, admin_headers, stock, db):
+    """The Assets page attaches this as a StockObserver using its own AssetManager."""
+    from app.modules.ord.service import OrderManager
+    from app.shared.audit import AuditLog
+    from app.shared.events import EventPublisher
+
+    manager = OrderManager.for_session(db, stock, AuditLog(db, app.state.clock),
+                                       EventPublisher(db), app.state.clock)
+    assert manager.stock is stock
+    assert manager.on_low_stock(asset_id=2, available_quantity=1).item_name == "Toner"
+    db.rollback()
