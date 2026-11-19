@@ -12,11 +12,12 @@ from sqlalchemy.orm import Session
 
 from app.core.clock import Clock
 from app.core.database import get_db
+from app.core.exceptions import ConflictError
 from app.core.deps import get_audit_log, get_clock, get_current_user, get_event_publisher
 from app.modules.ast import router as ast_router
 from app.modules.ast.models import Location
 from app.modules.ast.repository import CategoryRepository, ItemRepository, LocationRepository
-from app.modules.ast.service import AssetManager, RetirementObserver, StockManager
+from app.modules.ast.service import AssetManager, LendingGuard, RetirementObserver, StockManager
 from app.modules.cls import integrations as cls_integrations
 from app.modules.cls.integrations import AssetGateway, AssetItem, AssetLocation
 from app.modules.cls.router import get_classroom_manager
@@ -75,6 +76,18 @@ class ClassroomRetirementObserver:
         self.classrooms.remove_retired_item(item_id, self.actor)
 
 
+class ClassroomLendingGuard:
+    """Blocks lending equipment that is installed in a classroom (DD-CLS-01, US-AST-05)."""
+
+    def __init__(self, classrooms: ClassroomManager) -> None:
+        self.classrooms = classrooms
+
+    def check_can_lend(self, item_id: int) -> None:
+        """Raise ConflictError while the item is installed."""
+        if self.classrooms.is_item_installed(item_id):
+            raise ConflictError("Item is installed in a classroom and cannot be lent.")
+
+
 def get_asset_gateway(request: Request, db: Session = Depends(get_db)) -> AssetGateway:
     """``app.state.asset_gateway`` when set, otherwise the AST-backed adapter."""
     return getattr(request.app.state, "asset_gateway", None) or AstAssetGateway(
@@ -87,6 +100,13 @@ def get_retirement_observers(
 ) -> tuple[RetirementObserver, ...]:
     """CLS removes retired equipment from its room (no cycle: CLS reads AST through repositories)."""
     return (ClassroomRetirementObserver(classrooms, user),)
+
+
+def get_lending_guards(
+    classrooms: ClassroomManager = Depends(get_classroom_manager),
+) -> tuple[LendingGuard, ...]:
+    """CLS blocks lending installed equipment."""
+    return (ClassroomLendingGuard(classrooms),)
 
 
 def get_asset_manager(
@@ -120,4 +140,5 @@ def wire_pages(app: FastAPI) -> None:
     app.dependency_overrides[cls_integrations.get_asset_gateway] = get_asset_gateway
     app.dependency_overrides[ast_router.get_retirement_observers] = get_retirement_observers
     app.dependency_overrides[ast_router.get_asset_manager] = get_asset_manager
+    app.dependency_overrides[ast_router.get_lending_guards] = get_lending_guards
     app.dependency_overrides[ord_router.get_stock_gateway] = get_stock_gateway
