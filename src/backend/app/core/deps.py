@@ -14,6 +14,7 @@ from app.core.security import PasswordHasher, TokenService
 from app.modules.ntf.channels import EmailChannel
 from app.modules.ntf.repository import NotificationRepository
 from app.modules.ntf.service import NotificationService
+from app.modules.prj.repository import ProjectRepository, TaskRepository, TaskWorkSource
 from app.modules.usr.models import Role, User
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.service import (
@@ -61,6 +62,7 @@ def get_notification_service(
     """NotificationService for the request."""
     return NotificationService(
         NotificationRepository(db), UserRepository(db), email, audit, clock,
+        membership=ProjectRepository(db), work=TaskWorkSource(TaskRepository(db)),
     )
 
 

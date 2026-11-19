@@ -12,6 +12,7 @@ from app.core.exceptions import register_exception_handlers
 from app.core.security import PasswordHasher
 from app.modules.ntf.channels import LoggingEmailChannel
 from app.modules.ntf.router import router as notifications_router
+from app.modules.prj.router import projects_router, tasks_router, templates_router
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
@@ -22,6 +23,9 @@ ROUTERS = [
     auth_router,
     users_router,
     notifications_router,
+    templates_router,
+    projects_router,
+    tasks_router,
 ]
 
 
