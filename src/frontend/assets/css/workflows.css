@@ -1,0 +1,19 @@
+/* Live views retain the mockup cards, palette, boards and tables (#82). */
+#page-content,.stack{display:flex;flex-direction:column;gap:16px}
+h1{margin:4px 0;font-size:22px;font-weight:800;color:#2B2F36}
+h3{margin:8px 0;font-size:15px}
+.pad{padding:16px}.actions,.spread,.page-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.spread{justify-content:space-between}
+.page-tabs{padding:12px 16px;border-top:1px solid #EDF0F4}.page-tabs [aria-pressed=true]{background:#BFE3D0;color:#173F2D}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:16px;align-items:end}.fields label{min-width:0}
+.fields .btn{align-self:end}.pad .fields{padding:0}.stack>.btn{align-self:flex-start}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding:16px}.project-card{padding:16px;color:#181818;text-decoration:none!important}
+.board{display:flex;gap:12px;padding:16px;align-items:flex-start;flex-wrap:wrap}.board .col{flex:1 1 250px;min-width:0}
+.tcard{padding:12px;border:1px solid #DCE1E8;border-radius:8px;background:white;margin-bottom:12px;overflow-wrap:anywhere}.tcard p{margin:8px 0}
+.record-link{border:0;background:transparent;color:#1F6B7A;font:600 14px Inter,system-ui,sans-serif;text-align:left;cursor:pointer;padding:0}
+.table-scroll{overflow-x:auto}.report-content,.audit-value{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;font:13px ui-monospace,monospace}
+.audit-value{min-width:180px;max-width:360px}.history-entry{display:flex;gap:12px;align-items:flex-start}.history-entry p{margin:0 0 6px}
+.split{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}.grow{flex:999 1 600px;min-width:0}.side{flex:1 1 360px;min-width:0}
+.profile{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0}.profile dt{color:#5A6472}.profile dd{margin:4px 0;font-weight:600}
+select[multiple]{min-height:120px}fieldset{border:1px solid #DCE1E8;border-radius:8px;min-width:0}label>.muted{font-size:12px;display:block;margin-top:6px}
+button:disabled{opacity:.55;cursor:default}.btn:focus-visible,.record-link:focus-visible{outline:2px solid #1F6B7A;outline-offset:3px}
+@media(max-width:600px){.fields{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}.board{padding:12px}.audit-value{max-width:220px}.page-tabs .btn{flex:1 1 120px}}
