@@ -5,6 +5,8 @@ import re
 import pytest
 
 PUBLIC = {("GET", "/health"), ("POST", "/auth/login"), ("POST", "/auth/google"), ("GET", "/auth/config")}
+# Verified by its signature instead of a login (see tests/ntf/test_email.py).
+SIGNED_WEBHOOKS = {("POST", "/webhooks/resend")}
 
 
 @pytest.fixture
@@ -221,7 +223,7 @@ def test_every_route_requires_login_except_the_public_ones(client):
     checked = []
     for path, operations in spec["paths"].items():
         for method in operations:
-            if (method.upper(), path) in PUBLIC:
+            if (method.upper(), path) in PUBLIC | SIGNED_WEBHOOKS:
                 continue
             response = client.request(method.upper(), concrete(path))
             assert response.status_code == 401, f"{method.upper()} {path} answered {response.status_code}"

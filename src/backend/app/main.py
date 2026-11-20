@@ -14,8 +14,8 @@ from app.integration import wire_pages
 from app.core.openapi import API_DESCRIPTION, TAGS, install_openapi
 from app.core.security import PasswordHasher
 from app.modules.ast.router import router as ast_router
-from app.modules.ntf.channels import LoggingEmailChannel
-from app.modules.ntf.router import router as notifications_router
+from app.modules.ntf.channels import EmailChannelFactory
+from app.modules.ntf.router import router as notifications_router, webhooks_router
 from app.modules.ord.router import router as orders_router
 from app.modules.rpt.repository import ReportRepository, ReportTemplateRepository
 from app.modules.rpt.router import audit_router, reports_router, templates_router as report_templates_router
@@ -38,6 +38,7 @@ ROUTERS = [
     auth_router,
     users_router,
     notifications_router,
+    webhooks_router,
     orders_router,
     reports_router,
     report_templates_router,
@@ -79,7 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.database = database
     app.state.clock = utc_now
-    app.state.email_channel = LoggingEmailChannel()
+    app.state.email_channel = EmailChannelFactory.from_settings(settings)
     app.state.stock_gateway = None  # None: ORD uses the AssetManager (see app.integration)
     app.state.google_verifier = (
         GoogleIdTokenVerifier(settings.google_client_ids) if settings.google_enabled else None

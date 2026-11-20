@@ -54,3 +54,28 @@ Rules:
 - The first Google sign-in stores the Google account id (`sub`) on the user; later sign-ins must match it.
 - Google sessions have the same 30-minute idle expiry. They are not forced through the temporary-password
   change (no password is used); password login keeps working and still forces it.
+
+## Enabling email (Resend)
+
+Notification emails are built in but **disabled** until `ITHUB_RESEND_API_KEY` and `ITHUB_EMAIL_FROM` are both set.
+Until then each notification is saved with `email_status` `SKIPPED` (the message is only logged) and
+`POST /notifications/email/test` returns `503 "Email sending is not configured."`.
+
+1. Create a [Resend](https://resend.com) account, add and verify your sending domain, and create an API key.
+2. Set the variables (in `.env` or the process environment) and restart the backend:
+
+   ```bash
+   ITHUB_RESEND_API_KEY=re_xxxxxxxxxxxx
+   ITHUB_EMAIL_FROM="IT Inventory Tracker <noreply@yourdomain.edu>"   # must use the verified domain
+   ITHUB_EMAIL_REPLY_TO=it-help@yourdomain.edu                         # optional
+   ITHUB_APP_BASE_URL=https://tracker.yourdomain.edu                   # frontend origin for email links
+   ```
+
+3. As an Admin, check `GET /notifications/email/config`, then send yourself `POST /notifications/email/test`.
+4. Optional delivery tracking: in Resend add a webhook to `https://<backend>/webhooks/resend` for
+   `email.delivered`, `email.bounced`, `email.complained` and `email.delivery_delayed`, then set
+   `ITHUB_RESEND_WEBHOOK_SECRET` to its signing secret (`whsec_...`). Without it the webhook route answers `503`.
+
+The API key is never logged or returned. Sending is synchronous (10-second timeout); a provider error marks the
+email `FAILED` and keeps the in-app notification. A `FAILED` or `BOUNCED` email can be retried up to 3 attempts in
+total. Notification columns changed (email message id, sent time, attempts): delete the local `ithub.db` once.

@@ -18,10 +18,11 @@ class RecordingEmail(EmailChannel):
         self.sent: list[tuple[str, str, str]] = []
         self.fail = False
 
-    def send(self, to_address: str, subject: str, body: str) -> None:
+    def send(self, to_address: str, subject: str, body: str, html: str | None = None) -> str | None:
         if self.fail:
             raise RuntimeError("SMTP down")
         self.sent.append((to_address, subject, body))
+        return f"msg-{len(self.sent)}"
 
 
 @pytest.fixture

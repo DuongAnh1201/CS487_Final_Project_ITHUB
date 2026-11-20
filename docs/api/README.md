@@ -156,7 +156,7 @@ An account past its `access_end_date` is deactivated automatically at its next l
 
 | Route | Purpose |
 |---|---|
-| `GET /notifications?unread_only=` | My notifications, newest first. Each has `id`, `event_type`, `message`, `related_type` + `related_id` (what it is about, for example `Order` 7), `created_at`, `is_read`, `read_at`, `email_status`. |
+| `GET /notifications?unread_only=` | My notifications, newest first. Each has `id`, `event_type`, `message`, `related_type` + `related_id` (what it is about, for example `Order` 7), `created_at`, `is_read`, `read_at`, `email_status`, `email_attempts`. |
 | `GET /notifications/{id}` | One of mine (someone else's gives `404`). |
 | `PATCH /notifications/{id}` | `{"read": true|false}`. |
 | `POST /notifications/shift-summary` | `{shift: MORNING|AFTERNOON|EVENING, shift_date, user_ids: [...]}`: sends each rostered user a summary of their open tasks. |
@@ -165,6 +165,17 @@ An account past its `access_end_date` is deactivated automatically at its next l
 `PROJECT_MEMBER_ADDED`, `ORDER_ARRIVED`, `LOW_STOCK`, `REPORT_SUBMITTED`, `REPORT_REVIEWED`, `MONTHLY_SUMMARY`,
 `SHIFT_SUMMARY`, `GENERAL`. Use `related_type`/`related_id` to link to the item. Poll `GET /notifications?unread_only=true`
 for a badge count (there is no push channel). You are never notified about your own actions.
+
+Email copy (Resend): `email_status` is one of `PENDING`, `SENT`, `DELIVERED`, `BOUNCED`, `COMPLAINED`, `FAILED`,
+`SKIPPED` (no email provider configured). Admin and retry routes:
+
+| Route | Who | Purpose |
+|---|---|---|
+| `GET /notifications/email/config` | Admin | `{enabled, provider: "resend"\|"log", from_address, webhook_enabled}`. Never the API key. |
+| `POST /notifications/email/test` | Admin | `{to?}` (default: me) sends a test email, returns `{status, message_id}`. `503 "Email sending is not configured."` when off; `502` when the provider rejects it. |
+| `GET /notifications/email/deliveries?status=&recipient_id=&date_from=&date_to=` | Admin | Delivery log: `id, recipient_id, event_type, email_status, attempts, error, sent_at, created_at`. |
+| `POST /notifications/{id}/email/retry` | owner or Admin | Re-send a `FAILED`/`BOUNCED` email. `409` for other statuses or after 3 attempts; `404` for someone else's. |
+| `POST /webhooks/resend` | public (signed) | Called by Resend, not by the frontend: Svix signature headers, `401` if invalid or older than 5 minutes, `503` without `ITHUB_RESEND_WEBHOOK_SECRET`. Sets `DELIVERED`/`BOUNCED`/`COMPLAINED`. |
 
 ### Orders (ORD)
 
