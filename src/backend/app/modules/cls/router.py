@@ -24,6 +24,7 @@ from app.modules.cls.schemas import (
     ClassroomSearch,
     ClosureUpdate,
     EquipmentCreate,
+    EquipmentHistoryRead,
     EquipmentRead,
     ConditionUpdate,
     EquipmentMove,
@@ -199,6 +200,17 @@ def remove(
     )
 
 
+@router.get(
+    "/classroom-equipment/{equipment_id}/history",
+    response_model=list[EquipmentHistoryRead],
+)
+def equipment_history(
+    equipment_id: int, manager: Manager, user: Actor
+) -> list[EquipmentHistoryRead]:
+    """Install, condition, move and removal history of one installed item."""
+    return manager.equipment_history(equipment_id)
+
+
 @router.post(
     "/classrooms/{classroom_id}/checks", response_model=RoomCheckRead, status_code=201
 )
@@ -256,6 +268,7 @@ def timetable(
     manager: Schedules,
     user: Actor,
     view: Literal["day", "week"] = "day",
+    include_cancelled: bool = False,
 ) -> Timetable:
-    """US-CLS-08: ordered day/week timetable."""
-    return manager.get_timetable(classroom_id, day, view)
+    """US-CLS-08: ordered day/week timetable, optionally with cancelled meetings."""
+    return manager.get_timetable(classroom_id, day, view, include_cancelled)

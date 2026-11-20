@@ -286,10 +286,11 @@ the installed desktops and any closure or unresolved critical issue. Room types:
 | `POST /classrooms/{id}/equipment` | any | Install a Desktop or Monitor: `{item_id, seat_label?}`. |
 | `POST /classroom-equipment/{id}/condition` | any | `{condition, reason, version}`: `WORKING`, `FAULTY`, `UNDER_REPAIR`, `OUT_OF_SERVICE`, `MISSING`. |
 | `POST /classroom-equipment/{id}/move` · `.../remove` | any | `{to_classroom_id, version}`; `{version}`. History is kept. |
+| `GET /classroom-equipment/{id}/history` | any | Install, condition, move and removal history of the item behind this record, oldest first: `{timestamp, user_id, action: INSTALL|CONDITION|REMOVE, classroom_id, old_condition, new_condition, reason, issue_id}`. A move is a `REMOVE` followed by an `INSTALL`. |
 | `POST /classrooms/{id}/checks` | any | Record every installed item's observed condition: `{notes?, results: [{room_equipment_id, observed_condition, comment?, version}]}`. |
-| `POST /schedule/imports` · `GET /schedule/imports/{id}` | Admin · any | Registrar CSV as JSON `{file_name, content}`: good rows are stored, rejected rows come back with row number and reason. |
+| `POST /schedule/imports` · `GET /schedule/imports/{id}` | Admin · any | Registrar CSV as JSON `{file_name, content}`; the header row must be exactly `course_code,course_title,instructor,building,room,day,start_time,end_time,term_start,term_end` (`day` is `MON`..`SUN`, times `HH:MM`). Good rows are stored, rejected rows come back with row number and reason. |
 | `POST /schedule/entries` · `PUT /schedule/entries/{id}` · `POST /schedule/entries/{id}/cancel` | Admin | Meetings: `{classroom_id, course_code, course_title, instructor_name, day_of_week, start_time, end_time, term_start, term_end}`; cancelling keeps the record. |
-| `GET /classrooms/{id}/timetable?day=YYYY-MM-DD&view=day|week` | any | Ordered meetings. |
+| `GET /classrooms/{id}/timetable?day=YYYY-MM-DD&view=day|week&include_cancelled=` | any | Ordered meetings; with `include_cancelled=true` cancelled ones are listed too (`status: CANCELLED`). |
 
 ### Issues (ISS)
 
@@ -301,9 +302,9 @@ Severities: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`; categories: `HARDWARE`, `SOFTWA
 | Route | Purpose |
 |---|---|
 | `POST /issues` | `{classroom_id, room_equipment_id?, category, severity, description, reporter_name, reporter_type, reporter_contact?}`. Automatic effects: a hardware issue on a working item marks it `FAULTY`; a critical issue without an item closes the room. Admins are notified (`ISSUE_REPORTED`). |
-| `GET /issues` | Filter and page (50 rows). |
+| `GET /issues` | Filter (`status, classroom_id, item_id, category, severity, assigned_to, unassigned=true, date_from, date_to`) and page (`page`, 50 rows). |
 | `GET /issues/possible-duplicates` | Existing reports that look like the one being entered, to show before saving. |
-| `GET /issues/{id}` · `GET /issues/{id}/history` | Detail with legal transitions; chronological timeline. |
+| `GET /issues/{id}` · `GET /issues/{id}/history` | Detail with legal transitions; chronological timeline; the first entry is the report itself (`old_status: null`, `new_status: OPEN`, comment `Reported`). |
 | `POST /issues/{id}/status` | `{status, version, note?, assignee_id?, original_id?, new_condition?}`. |
 | `POST /issues/{id}/resolve` | `{notes, new_condition?, version}`. |
 | `POST /issues/{id}/duplicate` | `{original_id, version}`; a fourth report of the same problem flags it as a repeat problem (Admins notified: `REPEAT_PROBLEM`). |

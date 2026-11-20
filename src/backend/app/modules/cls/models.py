@@ -269,10 +269,10 @@ class ScheduleEntry(Base):
             and other.start_time < self.end_time
         )
 
-    def occurs_on(self, day: date) -> bool:
-        """Whether this active meeting occurs on the given calendar date."""
+    def occurs_on(self, day: date, include_cancelled: bool = False) -> bool:
+        """Whether this meeting occurs on the given calendar date (cancelled ones only on request)."""
         return (
-            self.status == EntryStatus.ACTIVE
+            (include_cancelled or self.status == EntryStatus.ACTIVE)
             and self.term_start <= day <= self.term_end
             and list(DayOfWeek)[day.weekday()] == self.day_of_week
         )
