@@ -1,0 +1,144 @@
+// Login page: password and Google sign-in, forced password change, session-expired notice (USR).
+import { api, ApiError } from "../api.js";
+
+const params = new URLSearchParams(location.search);
+const cards = {
+  login: document.getElementById("login-card"),
+  change: document.getElementById("change-card"),
+  expired: document.getElementById("expired-card"),
+};
+
+function show(name) {
+  for (const [key, card] of Object.entries(cards)) card.hidden = key !== name;
+}
+
+function showError(box, message) {
+  const target = box.querySelector("[data-message]") ?? box;
+  target.textContent = message;
+  box.hidden = false;
+}
+
+/** After any successful sign-in: change the temporary password first, else go home. */
+function afterSignIn(session) {
+  api.saveSession(session);
+  if (session.must_change_password) show("change");
+  else location.href = "index.html";
+}
+
+// ---- password sign-in ---------------------------------------------------------------------------
+
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginError.hidden = true;
+  const button = loginForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const session = await api.post("/auth/login", {
+      email: loginForm.email.value.trim(),
+      password: loginForm.password.value,
+    }, { redirect: false });
+    afterSignIn(session);
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+    showError(loginError, error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// ---- Google sign-in (shown only when the server has it configured) -----------------------------
+
+async function setUpGoogle() {
+  let config;
+  try { config = await api.get("/auth/config", undefined, { redirect: false }); } catch { return; }
+  if (!config.google_enabled || !config.google_client_id) return;
+
+  const script = document.createElement("script");
+  script.src = "https://accounts.google.com/gsi/client";
+  script.async = true;
+  script.onload = () => {
+    google.accounts.id.initialize({
+      client_id: config.google_client_id,
+      callback: async ({ credential }) => {
+        loginError.hidden = true;
+        try {
+          afterSignIn(await api.post("/auth/google", { id_token: credential }, { redirect: false }));
+        } catch (error) {
+          if (error instanceof ApiError) showError(loginError, error.message); else throw error;
+        }
+      },
+    });
+    google.accounts.id.renderButton(document.getElementById("google-btn"), {
+      theme: "outline", size: "large", width: 360, text: "signin_with",
+    });
+    document.querySelectorAll("[data-google]").forEach((el) => { el.hidden = false; });
+  };
+  document.head.append(script);
+}
+
+// ---- forced password change ---------------------------------------------------------------------
+
+const changeForm = document.getElementById("change-form");
+const newPassword = changeForm.new_password;
+const confirmPassword = document.getElementById("cf");
+const rules = document.querySelectorAll("#pw-rules li");
+const RULE_TESTS = [(v) => v.length >= 10, (v) => /[A-Za-z]/.test(v), (v) => /\d/.test(v)];
+const GOOD = "#1F5A3B";
+const BAD = "#8A1C2B";
+
+function checkRules() {
+  const value = newPassword.value;
+  RULE_TESTS.forEach((test, i) => { rules[i].style.color = test(value) ? GOOD : BAD; });
+  return RULE_TESTS.every((test) => test(value));
+}
+
+newPassword.addEventListener("input", checkRules);
+
+let changeError = changeForm.querySelector("#change-error");
+if (!changeError) {
+  changeError = document.createElement("div");
+  changeError.id = "change-error";
+  changeError.className = "alert";
+  changeError.setAttribute("role", "alert");
+  changeError.style.cssText = "background:#FBDDE0;color:#8A1C2B";
+  changeError.hidden = true;
+  changeForm.prepend(changeError);
+}
+
+changeForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  changeError.hidden = true;
+  if (!checkRules()) return showError(changeError, "Password must be at least 10 characters and include letters and digits.");
+  if (newPassword.value !== confirmPassword.value) return showError(changeError, "The new passwords do not match.");
+  const button = changeForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    await api.post("/auth/change-password", {
+      current_password: changeForm.current_password.value,
+      new_password: newPassword.value,
+    }, { redirect: false });
+    location.href = "index.html";
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+    if (error.status === 401) { api.clearSession(); show("expired"); return; }
+    showError(changeError, error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// ---- which card to show -------------------------------------------------------------------------
+
+if (params.has("expired")) {
+  api.clearSession();
+  show("expired");
+} else if (params.has("change") && api.token) {
+  show("change");
+} else {
+  show("login");
+  setUpGoogle();
+}
+checkRules();

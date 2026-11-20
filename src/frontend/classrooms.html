@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-Hub · Classrooms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F5F2;font-family:'Inter',system-ui,sans-serif;color:#181818;font-size:14px}
+*{box-sizing:border-box}
+a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:underline}
+.nav{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;color:#3D4756;font-weight:600;font-size:13px;border-bottom:3px solid transparent;white-space:nowrap;text-decoration:none!important}
+.nav:hover{color:#1F4D3A;background:#F4F8F5}
+.nav.on{color:#1F4D3A;border-bottom-color:#7CC4A0;background:#EEF7F2}
+.card{background:#fff;border:1px solid #DCE1E8;border-radius:8px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #E6EAF0;flex-wrap:wrap}
+.card-t{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:6px;border:1px solid #C9D1DC;background:#fff;color:#1F6B7A;font:600 13px 'Inter',sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none!important}
+.btn:hover{background:#F2F7F4}
+.btn-brand{background:#BFE3D0;border-color:#A3D3BA;color:#173F2D}.btn-brand:hover{background:#ACDAC2;color:#173F2D}
+.ib{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:8px;border:0;background:transparent;color:#3D4756;cursor:pointer;position:relative}
+.b{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
+.b-good{background:#DDF2E6;color:#1F5A3B}.b-warn{background:#FCEBCF;color:#7A4A00}.b-bad{background:#FBDDE0;color:#8A1C2B}.b-neutral{background:#EDF0F4;color:#3D4756}.b-info{background:#DCEBF9;color:#1C4E7A}.b-final{background:#E7E0F5;color:#4A3577}
+.input{width:100%;min-height:38px;padding:8px 10px;border:1px solid #C9D1DC;border-radius:6px;font:14px 'Inter',sans-serif;color:#181818;background:#fff}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3D4756;margin-bottom:6px}
+.muted{color:#5A6472}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.tile{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;color:#fff;flex:none}
+.tab{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;margin-right:20px;color:#3D4756;font-weight:600;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap;text-decoration:none!important}
+.tab.on{color:#1F4D3A;border-bottom-color:#7CC4A0}
+.room{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #DCE1E8;border-radius:8px;background:#fff;color:#181818;text-decoration:none!important}
+.room:hover{border-color:#2B2F36}
+.seat{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:8px;border:1px solid #CFE6D4;background:#F3FAF4;min-height:76px;font:13px 'Inter',sans-serif;text-align:left;cursor:pointer;color:#181818}
+.seat .dot{width:8px;height:8px;border-radius:50%;background:#5DB386}
+.seat-faulty{border-color:#F3B9B9;background:#FFF5F5}.seat-faulty .dot{background:#E07A86}
+.seat-repair{border-color:#F5D29A;background:#FFF9EE}.seat-repair .dot{background:#EBA54E}
+.seat-oos{border-color:#B9C1CC;background:#EDF0F4}.seat-oos .dot{background:#3D4756}
+.seat-missing{border:1px dashed #8A94A3;background:#fff}.seat-missing .dot{background:#fff;border:2px solid #5A6472}
+.seat-sel{outline:3px solid #2B2F36;outline-offset:1px}
+.bar{height:6px;border-radius:3px;background:#EDF0F4;overflow:hidden}
+.bar span{display:block;height:100%;background:#5DB386}
+</style>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+<header style="background:#fff;border-bottom:1px solid #DCE1E8">
+<div style="display:flex;align-items:center;gap:16px;padding:8px 20px;flex-wrap:wrap">
+<a href="index.html" style="display:flex;align-items:center;gap:10px;color:#2B2F36;text-decoration:none"><img src="assets/sfbu-logo.png" alt="SFBU" style="width:40px;height:40px;object-fit:contain"><span style="font-weight:800;font-size:19px;letter-spacing:-0.01em">IT-Hub</span></a>
+<div style="flex:1 1 280px;display:flex;justify-content:center">
+<label style="position:relative;width:100%;max-width:560px;display:block"><span class="sr">Search IT-Hub</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" style="position:absolute;left:12px;top:11px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input class="input" type="search" placeholder="Search equipment, rooms, issues, orders…" style="padding-left:36px;background:#F7F9FB"></label>
+</div>
+<div style="display:flex;align-items:center;gap:4px">
+<a class="ib" href="notifications.html" aria-label="Notifications, 4 unread"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#F7C5CB;color:#7A1626;font-size:11px;font-weight:700;display:grid;place-items:center">4</span></a>
+<a href="admin.html" aria-label="My account" style="width:36px;height:36px;border-radius:50%;background:#FBD9C4;color:#6B3418;display:grid;place-items:center;font-weight:700;font-size:13px;margin-left:6px;text-decoration:none">MR</a>
+</div>
+</div>
+<nav aria-label="Main" style="display:flex;gap:2px;padding:0 12px;overflow-x:auto;border-top:1px solid #EDF0F4">
+<a class="nav" href="index.html">Home</a>
+<a class="nav" href="inventory.html">Inventory</a>
+<a class="nav on" href="classrooms.html" aria-current="page">Classrooms</a>
+<a class="nav" href="issues.html">Issues</a>
+<a class="nav" href="projects.html">Projects</a>
+<a class="nav" href="orders.html">Orders</a>
+<a class="nav" href="reports.html">Reports</a>
+<a class="nav" href="admin.html">Audit log</a>
+<a class="nav" href="admin.html">Admin</a>
+</nav>
+</header>
+
+<main style="flex:1;width:100%;max-width:1400px;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:16px">
+
+<section class="card">
+<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap">
+<span class="tile" style="background:#D6E6F7;color:#1C4E7A"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"></path></svg></span>
+<div style="flex:1 1 240px"><div class="muted" style="font-size:12px;font-weight:600">Classrooms</div><h1 style="margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36">Rooms</h1></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Room check</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Import schedule CSV</button><button class="btn btn-brand"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New room</button></div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 20px;border-top:1px solid #EDF0F4;align-items:end">
+<div><label class="lbl" for="fb">Building</label><select class="input" id="fb"><option>All buildings</option><option>Bldg A</option><option>Bldg B</option></select></div>
+<div><label class="lbl" for="ft">Room type</label><select class="input" id="ft"><option>All types</option><option>Lecture</option><option>Computer Lab</option></select></div>
+<div><label class="lbl" for="fc">Min. capacity</label><input class="input" id="fc" type="number" placeholder="e.g. 20"></div>
+<div><label class="lbl" for="fs">Status</label><select class="input" id="fs"><option>Any status</option><option>Available</option><option>Limited</option><option>Unusable</option><option>Closed</option></select></div>
+<div style="grid-column:span 2;display:flex;flex-direction:column"><span class="lbl">Free at</span><div style="display:flex;gap:6px"><label style="flex:1.3"><span class="sr">Date</span><input class="input" value="Nov 20"></label><label style="flex:1"><span class="sr">From</span><input class="input" value="10:00"></label><label style="flex:1"><span class="sr">To</span><input class="input" value="12:00"></label><button class="btn btn-brand">Find</button></div></div>
+</div>
+</section>
+
+<section aria-label="Rooms" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">
+<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-101</strong><span class="b b-good">AVAILABLE</span></div><span class="muted" style="font-size:13px">Lecture · 60 seats</span><span style="font-size:13px">No desktops installed</span></a>
+<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-203</strong><span class="b b-good">AVAILABLE</span></div><span class="muted" style="font-size:13px">Computer Lab · 30 seats</span><div class="bar"><span style="width:100%"></span></div><span style="font-size:13px">30 / 30 desktops working</span></a>
+<a class="room" href="classrooms.html" style="outline:2px solid #2B2F36"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">B-110</strong><span class="b b-warn">LIMITED</span></div><span class="muted" style="font-size:13px">Computer Lab · 24 seats</span><div class="bar"><span style="width:83%"></span></div><span style="font-size:13px">20 / 24 desktops working</span></a>
+<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-015</strong><span class="b b-bad">UNUSABLE</span></div><span class="muted" style="font-size:13px">Computer Lab · 16 seats</span><div class="bar"><span style="width:0%"></span></div><span style="font-size:13px">0 / 16 desktops working</span></a>
+<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-204</strong><span class="b b-final">CLOSED</span></div><span class="muted" style="font-size:13px">Computer Lab · 30 seats</span><span style="font-size:13px">Critical issue: power outage</span></a>
+<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">B-205</strong><span class="b b-good">AVAILABLE</span></div><span class="muted" style="font-size:13px">Lecture · 45 seats</span><span style="font-size:13px">No desktops installed</span></a>
+</section>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<section class="card" style="flex:999 1 620px;min-width:0">
+<div role="status" style="display:flex;gap:10px;align-items:center;padding:10px 16px;background:#DCEBF9;color:#1C4E7A;font-size:13px;border-radius:8px 8px 0 0;flex-wrap:wrap"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg><span style="flex:1">Someone else updated this room. Reload to see the latest before saving.</span><button class="btn" style="min-height:32px">Reload</button></div>
+<div style="display:flex;align-items:center;gap:14px;padding:16px;flex-wrap:wrap">
+<div style="flex:1 1 260px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0;font-size:20px;font-weight:800;color:#2B2F36">B-110</h2><span class="b b-warn">LIMITED</span></div><p class="muted" style="margin:4px 0 0;font-size:13px">Bldg B · Floor 1 · Computer Lab · Capacity 24</p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Install equipment</button><button class="btn">Room check</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Edit room</button><button class="btn" style="color:#8A1C2B">Close for maintenance</button></div></div>
+</div>
+<nav aria-label="Room sections" style="display:flex;padding:0 16px;overflow-x:auto;border-top:1px solid #EDF0F4;border-bottom:1px solid #EDF0F4">
+<a class="tab on" href="classrooms.html" aria-current="page">Installed equipment</a>
+<a class="tab" href="classrooms.html">Timetable</a>
+<a class="tab" href="classrooms.html">History</a>
+</nav>
+<div style="display:flex;gap:14px;flex-wrap:wrap;padding:12px 16px;font-size:12px" class="muted">
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#5DB386"></span>Working</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#E07A86"></span>Faulty</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#EBA54E"></span>Under Repair</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#3D4756"></span>Out of Service</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #5A6472"></span>Missing</span>
+</div>
+<div style="padding:0 16px 8px"><div style="text-align:center;font-size:11px;font-weight:700;letter-spacing:.1em;color:#5A6472;background:#F7F9FB;border:1px solid #DCE1E8;border-radius:6px;padding:6px">FRONT · INSTRUCTOR STATION</div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:8px 16px 16px">
+<button type="button" class="seat " data-seat="01" data-cond="Working" aria-label="Seat 01, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>01</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-01</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="02" data-cond="Working" aria-label="Seat 02, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>02</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-02</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="03" data-cond="Working" aria-label="Seat 03, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>03</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-03</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="04" data-cond="Working" aria-label="Seat 04, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>04</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-04</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="05" data-cond="Working" aria-label="Seat 05, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>05</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-05</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="06" data-cond="Working" aria-label="Seat 06, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>06</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-06</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat seat-faulty seat-sel" data-seat="07" data-cond="Faulty" aria-label="Seat 07, Faulty"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>07</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-07</span><span style="font-size:11px;font-weight:600">Faulty</span></button>
+<button type="button" class="seat " data-seat="08" data-cond="Working" aria-label="Seat 08, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>08</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-08</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="09" data-cond="Working" aria-label="Seat 09, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>09</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-09</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="10" data-cond="Working" aria-label="Seat 10, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>10</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-10</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="11" data-cond="Working" aria-label="Seat 11, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>11</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-11</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat seat-repair" data-seat="12" data-cond="Under Repair" aria-label="Seat 12, Under Repair"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>12</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-12</span><span style="font-size:11px;font-weight:600">Under Repair</span></button>
+<button type="button" class="seat " data-seat="13" data-cond="Working" aria-label="Seat 13, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>13</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-13</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="14" data-cond="Working" aria-label="Seat 14, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>14</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-14</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="15" data-cond="Working" aria-label="Seat 15, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>15</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-15</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="16" data-cond="Working" aria-label="Seat 16, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>16</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-16</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="17" data-cond="Working" aria-label="Seat 17, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>17</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-17</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat seat-oos" data-seat="18" data-cond="Out of Service" aria-label="Seat 18, Out of Service"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>18</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-18</span><span style="font-size:11px;font-weight:600">Out of Service</span></button>
+<button type="button" class="seat " data-seat="19" data-cond="Working" aria-label="Seat 19, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>19</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-19</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="20" data-cond="Working" aria-label="Seat 20, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>20</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-20</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="21" data-cond="Working" aria-label="Seat 21, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>21</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-21</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat " data-seat="22" data-cond="Working" aria-label="Seat 22, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>22</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-22</span><span style="font-size:11px;font-weight:600">Working</span></button>
+<button type="button" class="seat seat-missing" data-seat="23" data-cond="Missing" aria-label="Seat 23, Missing"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>23</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-23</span><span style="font-size:11px;font-weight:600">Missing</span></button>
+<button type="button" class="seat " data-seat="24" data-cond="Working" aria-label="Seat 24, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>24</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-24</span><span style="font-size:11px;font-weight:600">Working</span></button>
+</div>
+</section>
+
+<aside style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<section class="card">
+<div class="card-h"><h2 class="card-t" id="seat-title">Seat 07 · PC-B110-07</h2><span class="b b-bad" id="seat-cond">Faulty</span></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div><label class="lbl" for="cc">Change condition</label><select class="input" id="cc"><option>Working</option><option selected>Faulty</option><option>Under Repair</option><option>Out of Service</option><option>Missing</option></select></div>
+<div><label class="lbl" for="cr">Reason <span style="color:#8A1C2B">*</span></label><textarea class="input" id="cr" rows="2" placeholder="Required, e.g. no display output"></textarea></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-brand">Save condition</button><button class="btn">Move to room…</button><button class="btn">Remove</button></div>
+<div style="border-top:1px solid #EDF0F4;padding-top:12px;display:flex;flex-direction:column;gap:10px;font-size:13px">
+<strong style="font-size:13px">History</strong>
+<div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#E07A86;margin-top:6px;flex:none"></span><div><div>Working → <strong>Faulty</strong> · from issue <a href="issues.html">ISS-128</a></div><div class="muted" style="font-size:12px">Nov 18, 4:12 PM · System</div></div></div>
+<div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#5DB386;margin-top:6px;flex:none"></span><div><div>Installed at seat 07</div><div class="muted" style="font-size:12px">Aug 12 · Alex Kim</div></div></div>
+</div>
+</div>
+</section>
+
+<section class="card">
+<div class="card-h"><h2 class="card-t">Today in B-110</h2><div role="group" aria-label="View" style="display:flex;border:1px solid #C9D1DC;border-radius:6px;overflow:hidden"><button style="min-height:32px;padding:0 12px;border:0;background:#BFE3D0;color:#173F2D;font:600 12px Inter,sans-serif" aria-pressed="true">Day</button><button style="min-height:32px;padding:0 12px;border:0;background:#fff;color:#3D4756;font:600 12px Inter,sans-serif" aria-pressed="false">Week</button></div></div>
+<div style="padding:8px 16px 16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:12px;padding:10px;border-radius:8px;background:#F2F7F4"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#2B2F36">9:00–10:15</div><div><div style="font-weight:600">CS 210 · Data Structures</div><div class="muted" style="font-size:12px">Dr. A. Mehta</div></div></div>
+<div style="display:flex;gap:12px;padding:10px;border-radius:8px;background:#F2F7F4"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#2B2F36">10:30–11:45</div><div><div style="font-weight:600">EE 301 · Signals &amp; Systems</div><div class="muted" style="font-size:12px">Dr. K. Tanaka</div></div></div>
+<div style="display:flex;gap:12px;padding:10px;border-radius:8px;border:1px dashed #C9D1DC"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#5A6472">12:00–2:00</div><div class="muted">Free</div></div>
+<div style="display:flex;gap:12px;padding:10px;border-radius:8px;background:#F7F9FB;opacity:.75"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#5A6472;text-decoration:line-through">2:00–3:15</div><div><div style="font-weight:600;color:#5A6472">BUS 150 · Analytics</div><span class="b b-final">Cancelled</span></div></div>
+</div>
+</section>
+
+
+<section class="card">
+<div class="card-h"><h2 class="card-t">Schedule import · fall_2026.csv</h2></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div style="padding:12px;border-radius:8px;background:#DDF2E6"><div style="font-size:24px;font-weight:800;color:#1F5A3B">142</div><div style="font-size:12px;font-weight:600;color:#1F5A3B">rows accepted</div></div><div style="padding:12px;border-radius:8px;background:#FBDDE0"><div style="font-size:24px;font-weight:800;color:#8A1C2B">3</div><div style="font-size:12px;font-weight:600;color:#8A1C2B">rows rejected</div></div></div>
+<ul style="margin:0;padding:0;list-style:none;font-size:13px;display:flex;flex-direction:column;gap:8px">
+<li style="display:flex;gap:10px"><span class="b b-neutral">Row 18</span><span>Unknown room "C-301"</span></li>
+<li style="display:flex;gap:10px"><span class="b b-neutral">Row 77</span><span>Overlaps CS 210 in B-110</span></li>
+<li style="display:flex;gap:10px"><span class="b b-neutral">Row 131</span><span>End time is before start time</span></li>
+</ul>
+</div>
+</section>
+
+</aside>
+</div>
+</main>
+</div>
+<script>
+document.querySelectorAll('.seat').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.seat').forEach(function (x) { x.classList.remove('seat-sel'); });
+    b.classList.add('seat-sel');
+    var t = document.getElementById('seat-title'); if (t) t.textContent = 'Seat ' + b.dataset.seat + ' · PC-B110-' + b.dataset.seat;
+    var c = document.getElementById('seat-cond'); if (c) c.textContent = b.dataset.cond;
+  });
+});
+</script>
+</body>
+</html>

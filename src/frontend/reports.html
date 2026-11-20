@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-Hub · Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F5F2;font-family:'Inter',system-ui,sans-serif;color:#181818;font-size:14px}
+*{box-sizing:border-box}
+a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:underline}
+.nav{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;color:#3D4756;font-weight:600;font-size:13px;border-bottom:3px solid transparent;white-space:nowrap;text-decoration:none!important}
+.nav:hover{color:#1F4D3A;background:#F4F8F5}
+.nav.on{color:#1F4D3A;border-bottom-color:#7CC4A0;background:#EEF7F2}
+.card{background:#fff;border:1px solid #DCE1E8;border-radius:8px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #E6EAF0;flex-wrap:wrap}
+.card-t{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:6px;border:1px solid #C9D1DC;background:#fff;color:#1F6B7A;font:600 13px 'Inter',sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none!important}
+.btn:hover{background:#F2F7F4}
+.btn-brand{background:#BFE3D0;border-color:#A3D3BA;color:#173F2D}.btn-brand:hover{background:#ACDAC2;color:#173F2D}
+.ib{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:8px;border:0;background:transparent;color:#3D4756;cursor:pointer;position:relative}
+.b{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
+.b-good{background:#DDF2E6;color:#1F5A3B}.b-warn{background:#FCEBCF;color:#7A4A00}.b-bad{background:#FBDDE0;color:#8A1C2B}.b-neutral{background:#EDF0F4;color:#3D4756}.b-info{background:#DCEBF9;color:#1C4E7A}.b-final{background:#E7E0F5;color:#4A3577}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;font-weight:600;color:#5A6472;background:#F7F9FB;padding:10px 16px;border-bottom:1px solid #DCE1E8;white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid #EDF0F4;white-space:nowrap}
+.input{width:100%;min-height:38px;padding:8px 10px;border:1px solid #C9D1DC;border-radius:6px;font:14px 'Inter',sans-serif;color:#181818;background:#fff}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3D4756;margin-bottom:6px}
+.muted{color:#5A6472}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.tile{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;color:#fff;flex:none}
+.path{display:flex;gap:4px;overflow-x:auto}
+.step{flex:1 0 120px;display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 18px;font-size:13px;font-weight:600;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.step:first-child{clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%);border-radius:18px 0 0 18px}
+.step:last-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,12px 50%);border-radius:0 18px 18px 0}
+.done{background:#DDF2E6;color:#1F5A3B}.cur{background:#BFE3D0;color:#173F2D}.next{background:#EDF0F4;color:#3D4756}
+.seg{display:inline-flex;border:1px solid #C9D1DC;border-radius:6px;overflow:hidden;flex-wrap:wrap}
+.seg button{min-height:34px;padding:0 10px;border:0;border-right:1px solid #C9D1DC;background:#fff;font:600 12px 'Inter',sans-serif;color:#3D4756;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button.on{background:#BFE3D0;color:#173F2D}
+.chk{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #ECEAE4;border-radius:8px}
+.chk input{width:18px;height:18px;flex:none}
+.out{flex:1 1 140px;display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:8px;border:1px solid #DCE1E8;background:#fff;text-align:left;font:13px 'Inter',sans-serif;color:#181818;cursor:pointer}
+.out.on{border:2px solid #7CC4A0;background:#F2F9F5}
+</style>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+<header style="background:#fff;border-bottom:1px solid #DCE1E8">
+<div style="display:flex;align-items:center;gap:16px;padding:8px 20px;flex-wrap:wrap">
+<a href="index.html" style="display:flex;align-items:center;gap:10px;color:#2B2F36;text-decoration:none"><img src="assets/sfbu-logo.png" alt="SFBU" style="width:40px;height:40px;object-fit:contain"><span style="font-weight:800;font-size:19px;letter-spacing:-0.01em">IT-Hub</span></a>
+<div style="flex:1 1 280px;display:flex;justify-content:center">
+<label style="position:relative;width:100%;max-width:560px;display:block"><span class="sr">Search IT-Hub</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" style="position:absolute;left:12px;top:11px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input class="input" type="search" placeholder="Search equipment, rooms, issues, orders…" style="padding-left:36px;background:#F7F9FB"></label>
+</div>
+<div style="display:flex;align-items:center;gap:4px">
+<a class="ib" href="notifications.html" aria-label="Notifications, 4 unread"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#F7C5CB;color:#7A1626;font-size:11px;font-weight:700;display:grid;place-items:center">4</span></a>
+<a href="admin.html" aria-label="My account" style="width:36px;height:36px;border-radius:50%;background:#FBD9C4;color:#6B3418;display:grid;place-items:center;font-weight:700;font-size:13px;margin-left:6px;text-decoration:none">MR</a>
+</div>
+</div>
+<nav aria-label="Main" style="display:flex;gap:2px;padding:0 12px;overflow-x:auto;border-top:1px solid #EDF0F4">
+<a class="nav" href="index.html">Home</a>
+<a class="nav" href="inventory.html">Inventory</a>
+<a class="nav" href="classrooms.html">Classrooms</a>
+<a class="nav" href="issues.html">Issues</a>
+<a class="nav" href="projects.html">Projects</a>
+<a class="nav" href="orders.html">Orders</a>
+<a class="nav on" href="reports.html" aria-current="page">Reports</a>
+<a class="nav" href="admin.html">Audit log</a>
+<a class="nav" href="admin.html">Admin</a>
+</nav>
+</header>
+<main style="flex:1;width:100%;max-width:1400px;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:16px">
+<section class="card">
+<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap">
+<span class="tile" style="background:#E7E0F5;color:#4A3577"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h5"></path></svg></span>
+<div style="flex:1 1 240px"><div class="muted" style="font-size:12px;font-weight:600">Reports</div><h1 style="margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36">Daily reports &amp; reviews</h1></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Blank report</button><button class="btn btn-brand"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New from template</button></div>
+</div>
+<nav aria-label="Report sections" style="display:flex;padding:0 20px;overflow-x:auto;border-top:1px solid #EDF0F4">
+<a class="tab on" href="reports.html" aria-current="page">My reports</a>
+<a class="tab" href="reports.html">By project</a>
+<a class="tab" href="reports.html">Reviewer inbox <span class="b b-info">1</span></a>
+<a class="tab" href="reports.html">Templates</a>
+<a class="tab" href="reports.html">Monthly summary</a>
+</nav>
+</section>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<section class="card" style="flex:999 1 560px;min-width:0">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:14px 16px;border-bottom:1px solid #E6EAF0">
+<label style="grid-column:span 2"><span class="sr">Search by number or keyword</span><input class="input" type="search" placeholder="Report # or keyword"></label>
+<label><span class="sr">Status</span><select class="input"><option>Any status</option><option>Draft</option><option>Submitted</option><option>Reviewed</option><option>Rejected</option><option>Passed</option></select></label>
+<label><span class="sr">Type</span><select class="input"><option>All types</option><option>Daily</option><option>Monthly summary</option></select></label>
+<label><span class="sr">Project</span><select class="input"><option>Any project</option><option>Fall lab refresh</option><option>No project</option></select></label>
+</div>
+<div style="overflow-x:auto">
+<table>
+<thead><tr><th>Report</th><th>Title</th><th>Shift</th><th>Project</th><th>Reviewers</th><th>Date</th><th>Status</th></tr></thead>
+<tbody>
+<tr style="background:#F2F7F4"><td><a href="reports.html" style="font-weight:700">RPT-0415</a></td><td>Morning checklist</td><td>Evening</td><td>Fall lab refresh</td><td class="muted">—</td><td>Nov 19</td><td><span class="b b-neutral">Draft</span></td></tr>
+<tr><td><a href="reports.html" style="font-weight:700">RPT-0412</a></td><td>Morning checklist</td><td>Morning</td><td class="muted">No project</td><td>Jordan Lee</td><td>Nov 19</td><td><span class="b b-info">Submitted</span></td></tr>
+<tr><td><a href="reports.html" style="font-weight:700">RPT-0407</a></td><td>Lab B-110 re-image log</td><td>Afternoon</td><td>Fall lab refresh</td><td>Jordan Lee</td><td>Nov 18</td><td><span class="b b-warn">Reviewed · needs changes</span></td></tr>
+<tr><td><a href="reports.html" style="font-weight:700">RPT-0398</a></td><td>Morning checklist</td><td>Morning</td><td class="muted">No project</td><td>Jordan Lee</td><td>Nov 17</td><td><span class="b b-good">Passed</span></td></tr>
+<tr><td><a href="reports.html" style="font-weight:700">RPT-0390</a></td><td>Network closet notes</td><td>Evening</td><td>Network closet cleanup</td><td>Alex Kim</td><td>Nov 14</td><td><span class="b b-bad">Rejected</span></td></tr>
+<tr><td><a href="reports.html" style="font-weight:700">SUM-2026-10</a></td><td>Monthly summary · October</td><td class="muted">—</td><td class="muted">—</td><td>Active Admins</td><td>Oct 31</td><td><span class="b b-good">Passed</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="card" style="flex:1 1 400px;min-width:0">
+<div class="card-h"><div><h2 class="card-t">RPT-0415 · Morning checklist</h2><p class="muted" style="margin:4px 0 0;font-size:13px">From template · stays a Draft until submitted</p></div><span class="b b-neutral">Draft</span></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div><label class="lbl" for="sh">Shift</label><select class="input" id="sh"><option>Morning</option><option>Afternoon</option><option selected>Evening</option></select></div><div><label class="lbl" for="lp">Linked project / task</label><select class="input" id="lp"><option>Fall lab refresh</option></select></div></div>
+<span class="lbl" style="margin:0">Checklist</span>
+<label class="chk"><input type="checkbox" checked>All lab doors unlocked and lights on</label>
+<label class="chk"><input type="checkbox" checked>Instructor stations boot and project</label>
+<label class="chk"><input type="checkbox">Printers have paper and toner</label>
+<div class="chk" style="flex-direction:column;align-items:stretch;gap:6px"><label for="nt" style="font-size:13px">Notes on issues found</label><textarea class="input" id="nt" rows="2">B-110 seat 07 still faulty (ISS-128).</textarea></div>
+<div><label class="lbl" for="rv">Reviewers <span style="color:#8A1C2B">*</span></label><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:38px;padding:4px 6px;border:1px solid #C9D1DC;border-radius:6px"><span class="b b-neutral" style="padding:4px 10px">Jordan Lee ×</span><input id="rv" placeholder="Add reviewer" style="border:0;outline-offset:2px;flex:1;min-width:100px;font:14px Inter,sans-serif"></div><p class="muted" style="margin:6px 0 0;font-size:12px">Choose at least one. Reviewers are notified.</p></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" style="flex:1">Submit for review</button><button class="btn">Save draft</button></div>
+</div>
+</section>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<section class="card" style="flex:999 1 560px;min-width:0">
+<div class="card-h"><div><h2 class="card-t">Review · RPT-0412</h2><p class="muted" style="margin:4px 0 0;font-size:13px">Morning checklist by Alex Kim · you are a reviewer</p></div><span class="b b-info">Submitted</span></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:10px;flex-wrap:wrap" role="radiogroup" aria-label="Review outcome">
+<button class="out" role="radio" aria-checked="false"><strong style="color:#1F5A3B">Passed</strong><span class="muted" style="font-size:12px">Final</span></button>
+<button class="out on" role="radio" aria-checked="true"><strong style="color:#7A4A00">Needs changes</strong><span class="muted" style="font-size:12px">Status "Reviewed" · author can resubmit</span></button>
+<button class="out" role="radio" aria-checked="false"><strong style="color:#8A1C2B">Rejected</strong><span class="muted" style="font-size:12px">Final · comment required</span></button>
+</div>
+<div><label class="lbl" for="rc">Comment <span style="color:#8A1C2B">*</span></label><textarea class="input" id="rc" rows="2">Please add which printers were low on toner.</textarea></div>
+<div><button class="btn btn-brand">Send review</button></div>
+</div>
+</section>
+<section class="card" style="flex:1 1 400px;min-width:0">
+<div class="card-h"><h2 class="card-t">History · RPT-0407</h2></div>
+<ul style="margin:0;padding:12px 16px 16px;list-style:none;display:flex;flex-direction:column;gap:12px;font-size:13px">
+<li style="display:flex;gap:10px"><span class="b b-warn" style="flex:none">Reviewed</span><div><div>"Add the image version used." — Jordan Lee</div><div class="muted" style="font-size:12px">Nov 18, 6:10 PM</div></div></li>
+<li style="display:flex;gap:10px"><span class="b b-info" style="flex:none">Submitted</span><div><div>Sent to Jordan Lee</div><div class="muted" style="font-size:12px">Nov 18, 4:55 PM · Maya Reyes</div></div></li>
+<li style="display:flex;gap:10px"><span class="b b-neutral" style="flex:none">Draft</span><div><div>Created from "Morning checklist"</div><div class="muted" style="font-size:12px">Nov 18, 1:02 PM · Maya Reyes</div></div></li>
+</ul>
+<div style="margin:0 16px 16px;padding:12px;border-radius:8px;background:#E7E0F5;color:#4A3577;font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1">November monthly summary can be generated on or after Nov 30.</span><button class="btn" disabled style="opacity:.6;min-height:32px">Generate</button></div>
+</section>
+</div>
+</main>
+</div>
+</body>
+</html>

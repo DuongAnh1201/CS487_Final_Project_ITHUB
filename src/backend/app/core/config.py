@@ -1,6 +1,7 @@
 """Application settings (pydantic-settings). Override any field with an env var."""
 
 import json
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import SecretStr, field_validator
@@ -26,6 +27,10 @@ class Settings(BaseSettings):
     # ITHUB_GOOGLE_CLIENT_IDS accepts a comma-separated list or a JSON list.
     google_client_ids: Annotated[list[str], NoDecode] = []
     google_hosted_domain: str | None = None  # e.g. "sfbu.edu"; None accepts any Google account
+
+    # Static frontend served at /app on the same origin as the API (no CORS needed).
+    # ITHUB_FRONTEND_DIR overrides it; a folder that does not exist turns the mount off.
+    frontend_dir: Path | None = Path(__file__).resolve().parents[3] / "frontend"
 
     # First-start Admin account (seeded only when no user exists).
     admin_full_name: str = "System Administrator"
