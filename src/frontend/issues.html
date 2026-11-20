@@ -18,6 +18,7 @@ a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:under
 .card-t{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:6px;border:1px solid #C9D1DC;background:#fff;color:#1F6B7A;font:600 13px 'Inter',sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none!important}
 .btn:hover{background:#F2F7F4}
+.btn:disabled{opacity:.5;cursor:default}
 .btn-brand{background:#BFE3D0;border-color:#A3D3BA;color:#173F2D}.btn-brand:hover{background:#ACDAC2;color:#173F2D}
 .ib{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:8px;border:0;background:transparent;color:#3D4756;cursor:pointer;position:relative}
 .b{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
@@ -39,6 +40,10 @@ td{padding:11px 16px;border-bottom:1px solid #EDF0F4;white-space:nowrap}
 .seg button{min-height:34px;padding:0 10px;border:0;border-right:1px solid #C9D1DC;background:#fff;font:600 12px 'Inter',sans-serif;color:#3D4756;cursor:pointer}
 .seg button:last-child{border-right:0}
 .seg button.on{background:#BFE3D0;color:#173F2D}
+dialog{border:1px solid #DCE1E8;border-radius:8px;padding:0;width:calc(100% - 32px);max-width:520px;color:#181818}
+dialog::backdrop{background:rgba(24,24,24,.4)}
+dialog form{padding:16px;display:flex;flex-direction:column;gap:12px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 </style>
 <link rel="stylesheet" href="assets/css/app.css">
 </head>
@@ -73,86 +78,81 @@ td{padding:11px 16px;border-bottom:1px solid #EDF0F4;white-space:nowrap}
 <section class="card">
 <div style="display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap">
 <span class="tile" style="background:#FCDDC7;color:#7A3D12"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"></path><path d="M12 10v4M12 17h.01"></path></svg></span>
-<div style="flex:1 1 240px"><div class="muted" style="font-size:12px;font-weight:600">Issues</div><h1 style="margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36">All open issues</h1></div>
-<button class="btn btn-brand"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Report an issue</button>
+<div style="flex:1 1 240px"><div class="muted" style="font-size:12px;font-weight:600">Issues</div><h1 style="margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36">Issues</h1></div>
+<button class="btn btn-brand" id="btn-report"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Report an issue</button>
 </div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 20px;border-top:1px solid #EDF0F4">
-<label><span class="sr">Status</span><select class="input"><option>Status: open</option><option>Open</option><option>Assigned</option><option>In Progress</option><option>Resolved</option><option>Closed</option><option>Duplicate</option><option>Rejected</option></select></label>
-<label><span class="sr">Severity</span><select class="input"><option>Any severity</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></label>
-<label><span class="sr">Category</span><select class="input"><option>Any category</option><option>Hardware</option><option>Software</option><option>Network</option><option>Room/Facility</option><option>Other</option></select></label>
-<label><span class="sr">Room</span><select class="input"><option>Any room</option><option>A-204</option><option>B-110</option></select></label>
-<label><span class="sr">Assignee</span><select class="input"><option>Any assignee</option><option>Me</option><option>Unassigned</option></select></label>
-</div>
+<form id="filters" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 20px;border-top:1px solid #EDF0F4">
+<label><span class="sr">Status</span><select class="input" name="status"><option value="">Any status</option><option value="OPEN">Open</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="RESOLVED">Resolved</option><option value="CLOSED">Closed</option><option value="DUPLICATE">Duplicate</option><option value="REJECTED">Rejected</option></select></label>
+<label><span class="sr">Severity</span><select class="input" name="severity"><option value="">Any severity</option><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></label>
+<label><span class="sr">Category</span><select class="input" name="category"><option value="">Any category</option><option value="HARDWARE">Hardware</option><option value="SOFTWARE">Software</option><option value="NETWORK">Network</option><option value="ROOM_FACILITY">Room/Facility</option><option value="OTHER">Other</option></select></label>
+<label><span class="sr">Room</span><select class="input" name="classroom_id" id="f-room"><option value="">Any room</option></select></label>
+<label><span class="sr">Assignee</span><select class="input" name="assignee"><option value="">Any assignee</option><option value="me">Me</option><option value="none">Unassigned</option></select></label>
+<label><span class="sr">From date</span><input class="input" type="date" name="date_from" title="Reported from"></label>
+<label><span class="sr">To date</span><input class="input" type="date" name="date_to" title="Reported until"></label>
+</form>
 <div style="overflow-x:auto;border-top:1px solid #EDF0F4">
 <table>
 <thead><tr><th>#</th><th>Description</th><th>Room</th><th>Item</th><th>Category</th><th>Severity</th><th>Status</th><th>Age</th><th>Assignee</th></tr></thead>
-<tbody>
-<tr><td><a href="issues.html" style="font-weight:700">ISS-131</a></td><td>Power outage across the room</td><td>A-204</td><td class="muted">Whole room</td><td>Room/Facility</td><td><span class="b b-bad">Critical</span></td><td><span class="b b-info">Assigned</span></td><td>2 h</td><td>Alex Kim</td></tr>
-<tr style="background:#F2F7F4"><td><a href="issues.html" style="font-weight:700">ISS-128</a></td><td>No display output <span class="b b-warn" style="margin-left:4px">Repeat problem</span></td><td>B-110</td><td>PC-B110-07</td><td>Hardware</td><td><span class="b b-warn">High</span></td><td><span class="b b-info">In Progress</span></td><td>1 d</td><td>Maya Reyes</td></tr>
-<tr><td><a href="issues.html" style="font-weight:700">ISS-126</a></td><td>MATLAB license error on login</td><td>B-110</td><td>PC-B110-12</td><td>Software</td><td><span class="b b-neutral">Medium</span></td><td><span class="b b-warn">Open</span></td><td>2 d</td><td class="muted">Unassigned</td></tr>
-<tr><td><a href="issues.html" style="font-weight:700">ISS-122</a></td><td>Wi-Fi drops near the back row</td><td>A-203</td><td class="muted">—</td><td>Network</td><td><span class="b b-good">Low</span></td><td><span class="b b-good">Resolved</span></td><td>4 d</td><td>Alex Kim</td></tr>
-<tr><td><a href="issues.html" style="font-weight:700">ISS-119</a></td><td>Monitor flickering</td><td>A-204</td><td>MN-0388</td><td>Hardware</td><td><span class="b b-neutral">Medium</span></td><td><span class="b b-final">Duplicate</span></td><td>6 d</td><td>Maya Reyes</td></tr>
-</tbody>
+<tbody id="issue-rows"></tbody>
 </table>
 </div>
-<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;flex-wrap:wrap;gap:8px"><span class="muted" style="font-size:13px">Page 1 of 1 · 50 rows per page</span><div style="display:flex;gap:6px"><button class="btn" disabled style="opacity:.5">Previous</button><button class="btn" disabled style="opacity:.5">Next</button></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;flex-wrap:wrap;gap:8px"><span class="muted" style="font-size:13px" id="page-info"></span><div style="display:flex;gap:6px"><button class="btn" id="prev" disabled>Previous</button><button class="btn" id="next" disabled>Next</button></div></div>
 </section>
 
 <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
-<section class="card" style="flex:999 1 600px;min-width:0">
+<section class="card" id="detail" hidden style="flex:999 1 600px;min-width:0">
+<div id="conflict" role="status" hidden style="display:flex;gap:10px;align-items:center;padding:10px 16px;background:#DCEBF9;color:#1C4E7A;font-size:13px;border-radius:8px 8px 0 0;flex-wrap:wrap"><span style="flex:1">Someone else updated this. Reload?</span><button class="btn" id="btn-reload" style="min-height:32px">Reload</button></div>
 <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
-<div style="flex:1 1 300px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h2 style="margin:0;font-size:20px;font-weight:800;color:#2B2F36">ISS-128 · No display output</h2><span class="b b-warn"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg>Repeat problem · 4th report</span></div><p class="muted" style="margin:4px 0 0;font-size:13px">B-110 · <a href="classrooms.html">PC-B110-07</a> · Hardware · High · reported by Priya Shah (Student)</p></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-brand">Resolve</button><button class="btn">Mark as duplicate</button><div style="display:flex;gap:8px"><button class="btn">Reassign</button><button class="btn" style="color:#8A1C2B">Reject</button></div></div>
+<div style="flex:1 1 300px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h2 id="d-title" style="margin:0;font-size:20px;font-weight:800;color:#2B2F36"></h2><span id="d-repeat" hidden class="b b-warn">Repeat problem</span><span id="d-overdue" hidden class="b b-bad">Overdue</span></div><p id="d-sub" class="muted" style="margin:4px 0 0;font-size:13px"></p></div>
+<div id="d-actions" style="display:flex;gap:8px;flex-wrap:wrap"></div>
 </div>
-<div class="path" role="list" aria-label="Issue status">
-<div class="step done" role="listitem"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"></path></svg>Open</div>
-<div class="step done" role="listitem"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"></path></svg>Assigned</div>
-<div class="step cur" role="listitem" aria-current="step">In Progress</div>
-<div class="step next" role="listitem">Resolved</div>
-<div class="step next" role="listitem">Closed</div>
-</div>
+<div class="path" role="list" aria-label="Issue status" id="d-path"></div>
+<p class="muted" style="margin:0;font-size:13px" id="d-desc"></p>
+<p class="muted" style="margin:0;font-size:12px" id="d-resolution" hidden></p>
 <p class="muted" style="margin:0;font-size:12px">Buttons show only the status changes the server allows for you. Assign, Reject and Close are Admin only.</p>
 
-<div style="border:1px solid #DCE1E8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px;background:#F7F9FB">
+<form id="form-resolve" hidden style="border:1px solid #DCE1E8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px;background:#F7F9FB">
 <strong>Resolve issue</strong>
-<div><label class="lbl" for="rn">Resolution notes <span style="color:#8A1C2B">*</span></label><textarea class="input" id="rn" rows="2">Replaced DisplayPort cable and reseated GPU.</textarea></div>
-<div><span class="lbl">New condition for PC-B110-07</span><div class="seg" role="group" aria-label="New condition"><button type="button" class="on" aria-pressed="true">Working</button><button type="button" aria-pressed="false">Faulty</button><button type="button" aria-pressed="false">Under Repair</button><button type="button" aria-pressed="false">Out of Service</button><button type="button" aria-pressed="false">Missing</button></div></div>
-<div style="display:flex;gap:8px"><button class="btn btn-brand">Save resolution</button><button class="btn">Cancel</button></div>
-</div>
+<div><label class="lbl" for="rn">Resolution notes <span style="color:#8A1C2B">*</span></label><textarea class="input" id="rn" name="notes" rows="2"></textarea></div>
+<div id="cond-field"><span class="lbl" id="cond-label">New condition</span><div class="seg" role="group" aria-labelledby="cond-label" id="cond-seg"></div></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Save resolution</button><button class="btn" type="button" id="cancel-resolve">Cancel</button></div>
+</form>
 
 <div style="display:flex;flex-direction:column;gap:0">
 <strong style="margin-bottom:10px">Timeline</strong>
-<div style="display:flex;gap:12px;padding-bottom:14px"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:28px;height:28px;border-radius:50%;background:#FBD9C4;color:#6B3418;display:grid;place-items:center;font-size:11px;font-weight:700">MR</span><span style="flex:1;width:2px;background:#DCE1E8;margin-top:4px"></span></div><div style="flex:1;min-width:0"><div><strong>Maya Reyes</strong> commented</div><div style="margin-top:6px;padding:10px 12px;background:#F7F9FB;border:1px solid #EDF0F4;border-radius:8px">Monitor works on another PC, so it's the GPU or cable.</div><div class="muted" style="font-size:12px;margin-top:4px">Today, 3:40 PM</div></div></div>
-<div style="display:flex;gap:12px;padding-bottom:14px"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:28px;height:28px;border-radius:50%;background:#DCEBF9;color:#1C4E7A;display:grid;place-items:center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span style="flex:1;width:2px;background:#DCE1E8;margin-top:4px"></span></div><div><div>Status <span class="b b-info">Assigned</span> → <span class="b b-info">In Progress</span> by Maya Reyes</div><div class="muted" style="font-size:12px;margin-top:4px">Today, 2:05 PM</div></div></div>
-<div style="display:flex;gap:12px;padding-bottom:14px"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:28px;height:28px;border-radius:50%;background:#DCEBF9;color:#1C4E7A;display:grid;place-items:center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span style="flex:1;width:2px;background:#DCE1E8;margin-top:4px"></span></div><div><div>Assigned to Maya Reyes by Jordan Lee (Admin)</div><div class="muted" style="font-size:12px;margin-top:4px">Nov 18, 5:00 PM</div></div></div>
-<div style="display:flex;gap:12px"><div><span style="width:28px;height:28px;border-radius:50%;background:#FCEBCF;color:#7A4A00;display:grid;place-items:center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></div><div><div>Reported · PC-B110-07 marked <span class="b b-bad">Faulty</span> · Admins notified</div><div class="muted" style="font-size:12px;margin-top:4px">Nov 18, 4:12 PM · System</div></div></div>
+<div id="timeline"></div>
 </div>
-<div style="display:flex;gap:8px;align-items:flex-start"><label style="flex:1"><span class="sr">Add a comment</span><textarea class="input" rows="2" placeholder="Add a comment…"></textarea></label><button class="btn">Comment</button></div>
+<form id="form-comment" style="display:flex;gap:8px;align-items:flex-start"><label style="flex:1"><span class="sr">Add a comment</span><textarea class="input" name="text" rows="2" placeholder="Add a comment…"></textarea></label><button class="btn" type="submit">Comment</button></form>
 </div>
 </section>
 
-<aside style="flex:1 1 360px;min-width:0">
-<section class="card">
+<aside id="report" class="card" style="flex:1 1 360px;min-width:0">
 <div class="card-h"><h2 class="card-t">Report an issue</h2></div>
-<form style="padding:16px;display:flex;flex-direction:column;gap:12px">
-<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div><label class="lbl" for="rc">Classroom</label><select class="input" id="rc"><option>B-110</option></select></div><div><label class="lbl" for="ri">PC / monitor</label><select class="input" id="ri"><option>PC-B110-07</option><option>Whole room</option></select></div></div>
-<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div><label class="lbl" for="rk">Category</label><select class="input" id="rk"><option>Hardware</option><option>Software</option><option>Network</option><option>Room/Facility</option><option>Other</option></select></div><div><label class="lbl" for="rs">Severity</label><select class="input" id="rs"><option>Low</option><option>Medium</option><option selected>High</option><option>Critical</option></select></div></div>
-<div><label class="lbl" for="rd">Description</label><textarea class="input" id="rd" rows="2">Screen stays black</textarea></div>
-<div style="border:1px solid #F5D29A;background:#FFF9EE;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px">
-<strong style="font-size:13px;color:#7A4A00">Possible duplicates</strong>
-<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px"><span><a href="issues.html">ISS-128</a> No display output · In Progress</span><button class="btn" type="button" style="min-height:30px;padding:0 10px">Attach</button></div>
-<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px"><span><a href="issues.html">ISS-104</a> Black screen on boot · Closed</span><button class="btn" type="button" style="min-height:30px;padding:0 10px">Attach</button></div>
-</div>
-<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div><label class="lbl" for="rr">Reporter name</label><input class="input" id="rr"></div><div><label class="lbl" for="rt">Reporter type</label><select class="input" id="rt"><option>Student</option><option>Faculty</option><option>Staff</option></select></div></div>
-<div><label class="lbl" for="rx">Contact (optional)</label><input class="input" id="rx" placeholder="Email or phone"></div>
+<form id="form-report" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div class="g2"><div><label class="lbl" for="rc">Classroom</label><select class="input" id="rc" name="classroom_id" required></select></div><div><label class="lbl" for="ri">PC / monitor</label><select class="input" id="ri" name="room_equipment_id"><option value="">Whole room</option></select></div></div>
+<div class="g2"><div><label class="lbl" for="rk">Category</label><select class="input" id="rk" name="category"><option value="HARDWARE">Hardware</option><option value="SOFTWARE">Software</option><option value="NETWORK">Network</option><option value="ROOM_FACILITY">Room/Facility</option><option value="OTHER">Other</option></select></div><div><label class="lbl" for="rs">Severity</label><select class="input" id="rs" name="severity"><option value="LOW">Low</option><option value="MEDIUM" selected>Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div></div>
+<div><label class="lbl" for="rd">Description</label><textarea class="input" id="rd" name="description" rows="2" required></textarea></div>
+<div id="dups" hidden style="border:1px solid #F5D29A;background:#FFF9EE;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px"></div>
+<div class="g2"><div><label class="lbl" for="rr">Reporter name</label><input class="input" id="rr" name="reporter_name" required></div><div><label class="lbl" for="rt">Reporter type</label><select class="input" id="rt" name="reporter_type"><option value="STUDENT">Student</option><option value="FACULTY">Faculty</option><option value="STAFF">Staff</option></select></div></div>
+<div><label class="lbl" for="rx">Contact (optional)</label><input class="input" id="rx" name="reporter_contact" placeholder="Email or phone"></div>
 <div style="font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;background:#DCEBF9;color:#1C4E7A">On save: a hardware issue marks a working PC <strong>Faulty</strong>; a <strong>Critical</strong> issue with no item <strong>closes the room</strong>; Admins are notified.</div>
-<button class="btn btn-brand" type="button" style="min-height:40px">Submit report</button>
+<button class="btn btn-brand" type="submit" style="min-height:40px">Submit report</button>
 </form>
-</section>
 </aside>
 </div>
 </main>
 </div>
+
+<dialog id="dlg-status"><form id="form-status"><h2 class="card-t" id="status-title"></h2>
+<div id="assignee-field" hidden><label class="lbl" for="sa">Assign to</label><select class="input" id="sa" name="assignee_id"></select></div>
+<div id="note-field"><label class="lbl" for="sn" id="sn-label">Note</label><textarea class="input" id="sn" name="note" rows="2"></textarea></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Confirm</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-duplicate"><form id="form-duplicate"><h2 class="card-t">Mark as duplicate</h2>
+<div><label class="lbl" for="do">Original issue</label><select class="input" id="do" name="original_id" required></select></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Mark as duplicate</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<script type="module" src="assets/js/pages/issues.js"></script>
 </body>
 </html>

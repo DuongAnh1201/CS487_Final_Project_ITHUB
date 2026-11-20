@@ -18,6 +18,7 @@ a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:under
 .card-t{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:6px;border:1px solid #C9D1DC;background:#fff;color:#1F6B7A;font:600 13px 'Inter',sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none!important}
 .btn:hover{background:#F2F7F4}
+.btn:disabled{opacity:.5;cursor:default}
 .btn-brand{background:#BFE3D0;border-color:#A3D3BA;color:#173F2D}.btn-brand:hover{background:#ACDAC2;color:#173F2D}
 .ib{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:8px;border:0;background:transparent;color:#3D4756;cursor:pointer;position:relative}
 .b{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
@@ -40,6 +41,11 @@ a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:under
 .seat-sel{outline:3px solid #2B2F36;outline-offset:1px}
 .bar{height:6px;border-radius:3px;background:#EDF0F4;overflow:hidden}
 .bar span{display:block;height:100%;background:#5DB386}
+dialog{border:1px solid #DCE1E8;border-radius:8px;padding:0;width:calc(100% - 32px);max-width:560px;color:#181818}
+dialog::backdrop{background:rgba(24,24,24,.4)}
+dialog form{padding:16px;display:flex;flex-direction:column;gap:12px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.entry{display:flex;gap:12px;padding:10px;border-radius:8px;background:#F2F7F4;align-items:flex-start}
 </style>
 <link rel="stylesheet" href="assets/css/app.css">
 </head>
@@ -75,39 +81,27 @@ a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:under
 <div style="display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap">
 <span class="tile" style="background:#D6E6F7;color:#1C4E7A"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"></path></svg></span>
 <div style="flex:1 1 240px"><div class="muted" style="font-size:12px;font-weight:600">Classrooms</div><h1 style="margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36">Rooms</h1></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Room check</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Import schedule CSV</button><button class="btn btn-brand"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New room</button></div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="btn-import" data-admin-only>Import schedule CSV</button><button class="btn btn-brand" id="btn-new-room" data-admin-only><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New room</button></div>
 </div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 20px;border-top:1px solid #EDF0F4;align-items:end">
-<div><label class="lbl" for="fb">Building</label><select class="input" id="fb"><option>All buildings</option><option>Bldg A</option><option>Bldg B</option></select></div>
-<div><label class="lbl" for="ft">Room type</label><select class="input" id="ft"><option>All types</option><option>Lecture</option><option>Computer Lab</option></select></div>
-<div><label class="lbl" for="fc">Min. capacity</label><input class="input" id="fc" type="number" placeholder="e.g. 20"></div>
-<div><label class="lbl" for="fs">Status</label><select class="input" id="fs"><option>Any status</option><option>Available</option><option>Limited</option><option>Unusable</option><option>Closed</option></select></div>
-<div style="grid-column:span 2;display:flex;flex-direction:column"><span class="lbl">Free at</span><div style="display:flex;gap:6px"><label style="flex:1.3"><span class="sr">Date</span><input class="input" value="Nov 20"></label><label style="flex:1"><span class="sr">From</span><input class="input" value="10:00"></label><label style="flex:1"><span class="sr">To</span><input class="input" value="12:00"></label><button class="btn btn-brand">Find</button></div></div>
-</div>
+<form id="filters" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 20px;border-top:1px solid #EDF0F4;align-items:end">
+<div><label class="lbl" for="fb">Building</label><select class="input" id="fb" name="building"><option value="">All buildings</option></select></div>
+<div><label class="lbl" for="ft">Room type</label><select class="input" id="ft" name="room_type"><option value="">All types</option><option value="LECTURE">Lecture</option><option value="COMPUTER_LAB">Computer lab</option></select></div>
+<div><label class="lbl" for="fc">Min. capacity</label><input class="input" id="fc" name="min_capacity" type="number" min="0" placeholder="e.g. 20"></div>
+<div><label class="lbl" for="fs">Status</label><select class="input" id="fs" name="status"><option value="">Any status</option><option value="AVAILABLE">Available</option><option value="LIMITED">Limited</option><option value="UNUSABLE">Unusable</option><option value="CLOSED">Closed</option></select></div>
+<div style="grid-column:span 2;display:flex;flex-direction:column"><span class="lbl">Free at</span><div style="display:flex;gap:6px"><label style="flex:1.3"><span class="sr">Date</span><input class="input" type="date" name="slot_date"></label><label style="flex:1"><span class="sr">From</span><input class="input" type="time" name="start_time"></label><label style="flex:1"><span class="sr">To</span><input class="input" type="time" name="end_time"></label><button class="btn btn-brand" type="submit">Find</button></div></div>
+</form>
 </section>
 
-<section aria-label="Rooms" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">
-<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-101</strong><span class="b b-good">AVAILABLE</span></div><span class="muted" style="font-size:13px">Lecture · 60 seats</span><span style="font-size:13px">No desktops installed</span></a>
-<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-203</strong><span class="b b-good">AVAILABLE</span></div><span class="muted" style="font-size:13px">Computer Lab · 30 seats</span><div class="bar"><span style="width:100%"></span></div><span style="font-size:13px">30 / 30 desktops working</span></a>
-<a class="room" href="classrooms.html" style="outline:2px solid #2B2F36"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">B-110</strong><span class="b b-warn">LIMITED</span></div><span class="muted" style="font-size:13px">Computer Lab · 24 seats</span><div class="bar"><span style="width:83%"></span></div><span style="font-size:13px">20 / 24 desktops working</span></a>
-<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-015</strong><span class="b b-bad">UNUSABLE</span></div><span class="muted" style="font-size:13px">Computer Lab · 16 seats</span><div class="bar"><span style="width:0%"></span></div><span style="font-size:13px">0 / 16 desktops working</span></a>
-<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">A-204</strong><span class="b b-final">CLOSED</span></div><span class="muted" style="font-size:13px">Computer Lab · 30 seats</span><span style="font-size:13px">Critical issue: power outage</span></a>
-<a class="room" href="classrooms.html"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:15px">B-205</strong><span class="b b-good">AVAILABLE</span></div><span class="muted" style="font-size:13px">Lecture · 45 seats</span><span style="font-size:13px">No desktops installed</span></a>
-</section>
+<section aria-label="Rooms" id="room-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px"></section>
 
-<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<div id="room-view" hidden style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
 <section class="card" style="flex:999 1 620px;min-width:0">
-<div role="status" style="display:flex;gap:10px;align-items:center;padding:10px 16px;background:#DCEBF9;color:#1C4E7A;font-size:13px;border-radius:8px 8px 0 0;flex-wrap:wrap"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg><span style="flex:1">Someone else updated this room. Reload to see the latest before saving.</span><button class="btn" style="min-height:32px">Reload</button></div>
+<div id="conflict" role="status" hidden style="display:flex;gap:10px;align-items:center;padding:10px 16px;background:#DCEBF9;color:#1C4E7A;font-size:13px;border-radius:8px 8px 0 0;flex-wrap:wrap"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg><span style="flex:1">Someone else updated this. Reload?</span><button class="btn" id="btn-reload" style="min-height:32px">Reload</button></div>
 <div style="display:flex;align-items:center;gap:14px;padding:16px;flex-wrap:wrap">
-<div style="flex:1 1 260px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0;font-size:20px;font-weight:800;color:#2B2F36">B-110</h2><span class="b b-warn">LIMITED</span></div><p class="muted" style="margin:4px 0 0;font-size:13px">Bldg B · Floor 1 · Computer Lab · Capacity 24</p></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Install equipment</button><button class="btn">Room check</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Edit room</button><button class="btn" style="color:#8A1C2B">Close for maintenance</button></div></div>
+<div style="flex:1 1 260px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 id="room-title" style="margin:0;font-size:20px;font-weight:800;color:#2B2F36"></h2><span id="room-status"></span></div><p id="room-sub" class="muted" style="margin:4px 0 0;font-size:13px"></p><p id="room-closed" class="muted" style="margin:4px 0 0;font-size:13px" hidden></p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="classrooms.html">All rooms</a><button class="btn" id="btn-install">Install equipment</button><button class="btn" id="btn-check">Room check</button><button class="btn" id="btn-edit-room" data-admin-only>Edit room</button><button class="btn" id="btn-closure" data-admin-only style="color:#8A1C2B">Close for maintenance</button><button class="btn" id="btn-deactivate" data-admin-only style="color:#8A1C2B">Deactivate</button></div>
 </div>
-<nav aria-label="Room sections" style="display:flex;padding:0 16px;overflow-x:auto;border-top:1px solid #EDF0F4;border-bottom:1px solid #EDF0F4">
-<a class="tab on" href="classrooms.html" aria-current="page">Installed equipment</a>
-<a class="tab" href="classrooms.html">Timetable</a>
-<a class="tab" href="classrooms.html">History</a>
-</nav>
-<div style="display:flex;gap:14px;flex-wrap:wrap;padding:12px 16px;font-size:12px" class="muted">
+<div style="display:flex;gap:14px;flex-wrap:wrap;padding:12px 16px;font-size:12px;border-top:1px solid #EDF0F4" class="muted">
 <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#5DB386"></span>Working</span>
 <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#E07A86"></span>Faulty</span>
 <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#EBA54E"></span>Under Repair</span>
@@ -115,85 +109,76 @@ a{color:#1F6B7A;text-decoration:none}a:hover{color:#144852;text-decoration:under
 <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #5A6472"></span>Missing</span>
 </div>
 <div style="padding:0 16px 8px"><div style="text-align:center;font-size:11px;font-weight:700;letter-spacing:.1em;color:#5A6472;background:#F7F9FB;border:1px solid #DCE1E8;border-radius:6px;padding:6px">FRONT · INSTRUCTOR STATION</div></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:8px 16px 16px">
-<button type="button" class="seat " data-seat="01" data-cond="Working" aria-label="Seat 01, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>01</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-01</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="02" data-cond="Working" aria-label="Seat 02, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>02</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-02</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="03" data-cond="Working" aria-label="Seat 03, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>03</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-03</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="04" data-cond="Working" aria-label="Seat 04, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>04</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-04</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="05" data-cond="Working" aria-label="Seat 05, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>05</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-05</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="06" data-cond="Working" aria-label="Seat 06, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>06</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-06</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat seat-faulty seat-sel" data-seat="07" data-cond="Faulty" aria-label="Seat 07, Faulty"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>07</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-07</span><span style="font-size:11px;font-weight:600">Faulty</span></button>
-<button type="button" class="seat " data-seat="08" data-cond="Working" aria-label="Seat 08, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>08</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-08</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="09" data-cond="Working" aria-label="Seat 09, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>09</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-09</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="10" data-cond="Working" aria-label="Seat 10, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>10</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-10</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="11" data-cond="Working" aria-label="Seat 11, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>11</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-11</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat seat-repair" data-seat="12" data-cond="Under Repair" aria-label="Seat 12, Under Repair"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>12</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-12</span><span style="font-size:11px;font-weight:600">Under Repair</span></button>
-<button type="button" class="seat " data-seat="13" data-cond="Working" aria-label="Seat 13, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>13</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-13</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="14" data-cond="Working" aria-label="Seat 14, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>14</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-14</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="15" data-cond="Working" aria-label="Seat 15, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>15</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-15</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="16" data-cond="Working" aria-label="Seat 16, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>16</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-16</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="17" data-cond="Working" aria-label="Seat 17, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>17</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-17</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat seat-oos" data-seat="18" data-cond="Out of Service" aria-label="Seat 18, Out of Service"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>18</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-18</span><span style="font-size:11px;font-weight:600">Out of Service</span></button>
-<button type="button" class="seat " data-seat="19" data-cond="Working" aria-label="Seat 19, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>19</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-19</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="20" data-cond="Working" aria-label="Seat 20, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>20</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-20</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="21" data-cond="Working" aria-label="Seat 21, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>21</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-21</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat " data-seat="22" data-cond="Working" aria-label="Seat 22, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>22</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-22</span><span style="font-size:11px;font-weight:600">Working</span></button>
-<button type="button" class="seat seat-missing" data-seat="23" data-cond="Missing" aria-label="Seat 23, Missing"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>23</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-23</span><span style="font-size:11px;font-weight:600">Missing</span></button>
-<button type="button" class="seat " data-seat="24" data-cond="Working" aria-label="Seat 24, Working"><span style="display:flex;justify-content:space-between;align-items:center;width:100%"><strong>24</strong><span class="dot"></span></span><span class="muted" style="font-size:11px">PC-B110-24</span><span style="font-size:11px;font-weight:600">Working</span></button>
-</div>
+<div id="seats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:8px 16px 16px"></div>
 </section>
 
 <aside style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:16px">
-<section class="card">
-<div class="card-h"><h2 class="card-t" id="seat-title">Seat 07 · PC-B110-07</h2><span class="b b-bad" id="seat-cond">Faulty</span></div>
-<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
-<div><label class="lbl" for="cc">Change condition</label><select class="input" id="cc"><option>Working</option><option selected>Faulty</option><option>Under Repair</option><option>Out of Service</option><option>Missing</option></select></div>
-<div><label class="lbl" for="cr">Reason <span style="color:#8A1C2B">*</span></label><textarea class="input" id="cr" rows="2" placeholder="Required, e.g. no display output"></textarea></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-brand">Save condition</button><button class="btn">Move to room…</button><button class="btn">Remove</button></div>
-<div style="border-top:1px solid #EDF0F4;padding-top:12px;display:flex;flex-direction:column;gap:10px;font-size:13px">
-<strong style="font-size:13px">History</strong>
-<div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#E07A86;margin-top:6px;flex:none"></span><div><div>Working → <strong>Faulty</strong> · from issue <a href="issues.html">ISS-128</a></div><div class="muted" style="font-size:12px">Nov 18, 4:12 PM · System</div></div></div>
-<div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#5DB386;margin-top:6px;flex:none"></span><div><div>Installed at seat 07</div><div class="muted" style="font-size:12px">Aug 12 · Alex Kim</div></div></div>
-</div>
-</div>
+<section class="card" id="seat-panel">
+<div class="card-h"><h2 class="card-t" id="seat-title">Select a seat</h2><span id="seat-cond"></span></div>
+<p id="seat-empty" class="empty">Click a seat on the map to change its condition, move it or remove it.</p>
+<form id="seat-form" hidden style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div><label class="lbl" for="cc">Change condition</label><select class="input" id="cc" name="condition"><option value="WORKING">Working</option><option value="FAULTY">Faulty</option><option value="UNDER_REPAIR">Under repair</option><option value="OUT_OF_SERVICE">Out of service</option><option value="MISSING">Missing</option></select></div>
+<div><label class="lbl" for="cr">Reason <span style="color:#8A1C2B">*</span></label><textarea class="input" id="cr" name="reason" rows="2" placeholder="Required, e.g. no display output"></textarea></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-brand" type="submit">Save condition</button><button class="btn" type="button" id="btn-move">Move to room…</button><button class="btn" type="button" id="btn-remove">Remove</button></div>
+<div id="seat-details" class="muted" style="border-top:1px solid #EDF0F4;padding-top:12px;font-size:13px"></div>
+</form>
 </section>
 
 <section class="card">
-<div class="card-h"><h2 class="card-t">Today in B-110</h2><div role="group" aria-label="View" style="display:flex;border:1px solid #C9D1DC;border-radius:6px;overflow:hidden"><button style="min-height:32px;padding:0 12px;border:0;background:#BFE3D0;color:#173F2D;font:600 12px Inter,sans-serif" aria-pressed="true">Day</button><button style="min-height:32px;padding:0 12px;border:0;background:#fff;color:#3D4756;font:600 12px Inter,sans-serif" aria-pressed="false">Week</button></div></div>
-<div style="padding:8px 16px 16px;display:flex;flex-direction:column;gap:8px">
-<div style="display:flex;gap:12px;padding:10px;border-radius:8px;background:#F2F7F4"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#2B2F36">9:00–10:15</div><div><div style="font-weight:600">CS 210 · Data Structures</div><div class="muted" style="font-size:12px">Dr. A. Mehta</div></div></div>
-<div style="display:flex;gap:12px;padding:10px;border-radius:8px;background:#F2F7F4"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#2B2F36">10:30–11:45</div><div><div style="font-weight:600">EE 301 · Signals &amp; Systems</div><div class="muted" style="font-size:12px">Dr. K. Tanaka</div></div></div>
-<div style="display:flex;gap:12px;padding:10px;border-radius:8px;border:1px dashed #C9D1DC"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#5A6472">12:00–2:00</div><div class="muted">Free</div></div>
-<div style="display:flex;gap:12px;padding:10px;border-radius:8px;background:#F7F9FB;opacity:.75"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#5A6472;text-decoration:line-through">2:00–3:15</div><div><div style="font-weight:600;color:#5A6472">BUS 150 · Analytics</div><span class="b b-final">Cancelled</span></div></div>
-</div>
+<div class="card-h"><h2 class="card-t" id="tt-title">Timetable</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label><span class="sr">Date</span><input class="input" type="date" id="tt-date" style="min-height:32px;width:auto"></label><div role="group" aria-label="View" style="display:flex;border:1px solid #C9D1DC;border-radius:6px;overflow:hidden"><button type="button" class="seg-btn" data-view="day" style="min-height:32px;padding:0 12px;border:0;font:600 12px Inter,sans-serif">Day</button><button type="button" class="seg-btn" data-view="week" style="min-height:32px;padding:0 12px;border:0;font:600 12px Inter,sans-serif">Week</button></div><button class="btn" id="btn-add-entry" data-admin-only style="min-height:32px">Add meeting</button></div></div>
+<div id="timetable" style="padding:8px 16px 16px;display:flex;flex-direction:column;gap:8px"></div>
 </section>
 
-
-<section class="card">
-<div class="card-h"><h2 class="card-t">Schedule import · fall_2026.csv</h2></div>
-<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
-<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div style="padding:12px;border-radius:8px;background:#DDF2E6"><div style="font-size:24px;font-weight:800;color:#1F5A3B">142</div><div style="font-size:12px;font-weight:600;color:#1F5A3B">rows accepted</div></div><div style="padding:12px;border-radius:8px;background:#FBDDE0"><div style="font-size:24px;font-weight:800;color:#8A1C2B">3</div><div style="font-size:12px;font-weight:600;color:#8A1C2B">rows rejected</div></div></div>
-<ul style="margin:0;padding:0;list-style:none;font-size:13px;display:flex;flex-direction:column;gap:8px">
-<li style="display:flex;gap:10px"><span class="b b-neutral">Row 18</span><span>Unknown room "C-301"</span></li>
-<li style="display:flex;gap:10px"><span class="b b-neutral">Row 77</span><span>Overlaps CS 210 in B-110</span></li>
-<li style="display:flex;gap:10px"><span class="b b-neutral">Row 131</span><span>End time is before start time</span></li>
-</ul>
-</div>
+<section class="card" id="import-card" hidden>
+<div class="card-h"><h2 class="card-t" id="import-title">Schedule import</h2></div>
+<div id="import-body" style="padding:16px;display:flex;flex-direction:column;gap:12px"></div>
 </section>
-
 </aside>
 </div>
+
+<section class="card" id="import-view" hidden>
+<div class="card-h"><h2 class="card-t" id="import-title-list">Last schedule import</h2></div>
+<div id="import-body-list" style="padding:16px;display:flex;flex-direction:column;gap:12px"></div>
+</section>
 </main>
 </div>
-<script>
-document.querySelectorAll('.seat').forEach(function (b) {
-  b.addEventListener('click', function () {
-    document.querySelectorAll('.seat').forEach(function (x) { x.classList.remove('seat-sel'); });
-    b.classList.add('seat-sel');
-    var t = document.getElementById('seat-title'); if (t) t.textContent = 'Seat ' + b.dataset.seat + ' · PC-B110-' + b.dataset.seat;
-    var c = document.getElementById('seat-cond'); if (c) c.textContent = b.dataset.cond;
-  });
-});
-</script>
+
+<dialog id="dlg-room"><form id="form-room"><h2 class="card-t" id="room-form-title">New room</h2>
+<div id="room-location-field"><label class="lbl" for="rl">Location</label><select class="input" id="rl" name="location_id" required></select></div>
+<div class="g2"><div><label class="lbl" for="rcap">Capacity</label><input class="input" id="rcap" name="capacity" type="number" min="1" required></div><div><label class="lbl" for="rtype">Room type</label><select class="input" id="rtype" name="room_type"><option value="LECTURE">Lecture</option><option value="COMPUTER_LAB">Computer lab</option></select></div></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-closure"><form id="form-closure"><h2 class="card-t" id="closure-title">Close for maintenance</h2>
+<div><label class="lbl" for="clr">Reason</label><textarea class="input" id="clr" name="reason" rows="2" placeholder="e.g. Water leak"></textarea></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Confirm</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-install"><form id="form-install"><h2 class="card-t">Install equipment</h2>
+<div><label class="lbl" for="ii">Desktop or monitor</label><select class="input" id="ii" name="item_id" required></select></div>
+<div><label class="lbl" for="is">Seat label (optional)</label><input class="input" id="is" name="seat_label" placeholder="e.g. A1"></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Install</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-move"><form id="form-move"><h2 class="card-t">Move to another room</h2>
+<div><label class="lbl" for="mr">Room</label><select class="input" id="mr" name="to_classroom_id" required></select></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Move</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-check"><form id="form-check"><h2 class="card-t">Room check</h2>
+<p class="muted" style="margin:0;font-size:13px">Record what you see on every installed item.</p>
+<div id="check-rows" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto"></div>
+<div><label class="lbl" for="cn">Notes (optional)</label><textarea class="input" id="cn" name="notes" rows="2"></textarea></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Save room check</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-entry"><form id="form-entry"><h2 class="card-t" id="entry-title">Add meeting</h2>
+<div class="g2"><div><label class="lbl" for="ec">Course code</label><input class="input" id="ec" name="course_code" required></div><div><label class="lbl" for="et">Course title</label><input class="input" id="et" name="course_title" required></div></div>
+<div class="g2"><div><label class="lbl" for="ei">Instructor</label><input class="input" id="ei" name="instructor_name" required></div><div><label class="lbl" for="ed">Day</label><select class="input" id="ed" name="day_of_week"><option value="MON">Monday</option><option value="TUE">Tuesday</option><option value="WED">Wednesday</option><option value="THU">Thursday</option><option value="FRI">Friday</option><option value="SAT">Saturday</option><option value="SUN">Sunday</option></select></div></div>
+<div class="g2"><div><label class="lbl" for="es">Start</label><input class="input" id="es" name="start_time" type="time" required></div><div><label class="lbl" for="ee">End</label><input class="input" id="ee" name="end_time" type="time" required></div></div>
+<div class="g2"><div><label class="lbl" for="ets">Term start</label><input class="input" id="ets" name="term_start" type="date" required></div><div><label class="lbl" for="ete">Term end</label><input class="input" id="ete" name="term_end" type="date" required></div></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<dialog id="dlg-import"><form id="form-import"><h2 class="card-t">Import schedule CSV</h2>
+<p class="muted" style="margin:0;font-size:13px">Header row: <code>course_code,course_title,instructor,building,room,day,start_time,end_time,term_start,term_end</code>. Good rows are stored; rejected rows are listed with the reason.</p>
+<div><label class="lbl" for="cf">CSV file</label><input class="input" id="cf" name="file" type="file" accept=".csv,text/csv" required></div>
+<div style="display:flex;gap:8px"><button class="btn btn-brand" type="submit">Import</button><button class="btn" type="button" data-close>Cancel</button></div></form></dialog>
+
+<script type="module" src="assets/js/pages/classrooms.js"></script>
 </body>
 </html>

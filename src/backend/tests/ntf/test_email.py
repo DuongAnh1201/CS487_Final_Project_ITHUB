@@ -302,3 +302,19 @@ def test_webhook_is_idempotent_on_the_svix_id(client, admin_headers, sa_headers,
 def test_webhook_ignores_unknown_emails(client, resend, db):
     assert post_webhook(client, event("email.delivered", "nope")).status_code == 200
     assert db.query(EmailWebhookEvent).count() == 0
+
+
+def test_email_links_open_the_record_page_of_the_served_frontend():
+    from types import SimpleNamespace
+
+    from app.modules.ntf.service import NotificationService
+
+    service = SimpleNamespace(app_base_url="http://127.0.0.1:8000/app")
+    order = SimpleNamespace(related_type="Order", related_id=7)
+    unknown = SimpleNamespace(related_type="Something", related_id=3)
+    task = SimpleNamespace(related_type="Task", related_id=4)
+    none = SimpleNamespace(related_type=None, related_id=None)
+    assert NotificationService._link(service, order) == "http://127.0.0.1:8000/app/orders.html?id=7"
+    assert NotificationService._link(service, unknown) == "http://127.0.0.1:8000/app/notifications.html?id=3"
+    assert NotificationService._link(service, task) == "http://127.0.0.1:8000/app/projects.html?task=4"
+    assert NotificationService._link(service, none) is None

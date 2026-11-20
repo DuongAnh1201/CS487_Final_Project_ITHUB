@@ -106,6 +106,10 @@ class IssueRepository(BaseRepository[Issue]):
             value = getattr(criteria, field)
             if value is not None:
                 query = query.where(getattr(Issue, field) == value)
+        if criteria.assigned_to is not None:
+            query = query.where(Issue.assigned_to == criteria.assigned_to)
+        if criteria.unassigned:
+            query = query.where(Issue.assigned_to.is_(None))
         if criteria.item_id is not None:
             query = query.join(
                 RoomEquipment, Issue.room_equipment_id == RoomEquipment.id

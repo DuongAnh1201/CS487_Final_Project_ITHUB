@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     email_from: str | None = None  # e.g. "IT Inventory Tracker <noreply@yourdomain>"
     email_reply_to: str | None = None
     resend_webhook_secret: SecretStr | None = None  # enables POST /webhooks/resend
-    app_base_url: str = "http://localhost:5173"  # frontend origin used in email links
+    app_base_url: str = "http://127.0.0.1:8000/app"  # where the frontend pages are served; used in email links
 
     @staticmethod
     def _split_list(value: object, strip_slash: bool = False) -> object:

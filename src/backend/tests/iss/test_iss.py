@@ -201,6 +201,7 @@ def test_full_lifecycle_history_comments_permissions(
     )
     history = client.get(url + "/history", headers=admin_headers).json()
     assert [h["new_status"] for h in history] == [
+        "OPEN",  # the report itself
         "ASSIGNED",
         "IN_PROGRESS",
         None,

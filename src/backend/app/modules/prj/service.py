@@ -27,12 +27,15 @@ from app.modules.usr.models import User, UserStatus
 from app.modules.usr.repository import UserRepository
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.patch import PatchChanges
 
 MSG_DATES = "Due date cannot be earlier than the start date."
 MSG_NOT_COMPLETE = "A project can be completed only when all its tasks are Complete."
 MSG_FINISHED = "Only unfinished tasks can be handed off."
 MSG_BAD_ASSIGNEE = "Assignee must be an active user."
 MSG_ALREADY_LINKED = "Task already belongs to a project."
+CLEARABLE_PROJECT_FIELDS = frozenset({"due_date"})
+CLEARABLE_TASK_FIELDS = frozenset({"due_date", "project_id"})  # project_id: only null on a standalone task
 MSG_ALREADY_MEMBER = "User is already a project member."
 MSG_ALREADY_ASSIGNED = "Task is already assigned to this user."
 
@@ -99,9 +102,9 @@ class ProjectManager(_Base):
         return project
 
     def update_project(self, actor: User, project_id: int, data: ProjectUpdate) -> Project:
-        """Update details; completing requires all tasks Complete, reopening sets ACTIVE (BR-15)."""
+        """Update details (null clears the due date); completing requires all tasks Complete (BR-15)."""
         project = self.projects.get_or_raise(project_id)
-        changes = data.model_dump(exclude_unset=True, exclude_none=True)
+        changes = PatchChanges.of(data, CLEARABLE_PROJECT_FIELDS)
         self._check_dates(changes.get("start_date", project.start_date),
                           changes.get("due_date", project.due_date))
         if changes.get("status") == ProjectStatus.COMPLETED and not project.all_tasks_complete:
@@ -202,11 +205,15 @@ class TaskManager(_Base):
         return task
 
     def update_task(self, actor: User, task_id: int, data: TaskUpdate) -> Task:
-        """Edit a task; ``project_id`` links a standalone task to a project (BR-14)."""
+        """Edit a task (null clears the due date); ``project_id`` links a standalone task once (BR-14)."""
         task = self.tasks.get_or_raise(task_id)
-        changes = data.model_dump(exclude_unset=True, exclude_none=True)
+        changes = PatchChanges.of(data, CLEARABLE_TASK_FIELDS)
         old = self._snapshot(task)
         old_project = task.project
+        if "project_id" in changes and changes["project_id"] is None:
+            if task.project_id is not None:
+                raise ConflictError(MSG_ALREADY_LINKED)  # a link cannot be removed
+            del changes["project_id"]
         if "project_id" in changes:
             if task.project_id is not None and changes["project_id"] != task.project_id:
                 raise ConflictError(MSG_ALREADY_LINKED)

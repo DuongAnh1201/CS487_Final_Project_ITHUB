@@ -129,6 +129,15 @@ class Issue(Base):
             created_by=user.id,
             created_at=now,
             target_date=now.date() + timedelta(days=data["severity"].target_days()),
+            history=[  # the first timeline entry is the report itself
+                IssueUpdate(
+                    user_id=user.id,
+                    timestamp=now,
+                    old_status=None,
+                    new_status=IssueStatus.OPEN,
+                    comment="Reported",
+                )
+            ],
         )
 
     def allowed_next_statuses(self, user: User) -> list[IssueStatus]:

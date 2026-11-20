@@ -23,6 +23,7 @@ from app.modules.usr.models import Role, User, UserStatus
 from app.modules.usr.repository import UserRepository
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.patch import PatchChanges
 
 MSG_NOT_EDITABLE = "Submitted reports cannot be edited."
 MSG_TITLE = "Title is required."
@@ -33,6 +34,8 @@ MORNING_CHECKLIST = ("Morning checklist", "Daily morning classroom and equipment
     "Classroom computers powered on", "Projectors and displays working",
     "Network and Wi-Fi working", "Printers stocked", "Issues found"])
 
+
+CLEARABLE_REPORT_FIELDS = frozenset({"project_id", "task_id"})
 
 class _Base:
     """Shared dependencies and helpers."""
@@ -94,10 +97,10 @@ class ReportManager(_Base):
         return report
 
     def update_report(self, user: User, report_id: int, data: ReportUpdate) -> Report:
-        """Edit title, description or links while the report is editable."""
+        """Edit title, description or links while the report is editable; null removes a link."""
         report = self._editable(report_id)
         old = self._snapshot(report)
-        for field, value in data.model_dump(exclude_unset=True, exclude_none=True).items():
+        for field, value in PatchChanges.of(data, CLEARABLE_REPORT_FIELDS).items():
             setattr(report, field, value.strip() if field == "title" else value)
         self._touch(user, report, old)
         return report
