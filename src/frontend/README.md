@@ -39,7 +39,7 @@ To serve the pages from another server instead (for example `npx serve -l 5173 s
 - **Palette:** brand sage `#BFE3D0` / `#173F2D`, charcoal text `#2B2F36`, teal links `#1F6B7A`, SFBU gold `#8A6A2F`, cream background `#F7F5F2`.
 - **Status colours:** good `#DDF2E6`, warning `#FCEBCF`, bad `#FBDDE0`, in progress `#DCEBF9`, neutral `#EEF0F3`, final/archived `#E7E0F5`.
 - **Font:** Inter, loaded from Google Fonts, so you need an internet connection for it. Without one, the pages fall back to the system font.
-- **Data:** all names, numbers and records are made-up sample data.
+- **Data:** wired pages load real API records. Unwired mockups retain sample data until their page-wiring tasks land.
 - **Wiring to the backend:** see `docs/api/README.md` and the live `/docs` page.
 
 ## How a page is wired
@@ -61,3 +61,46 @@ Conventions:
 6. Open a record from another page with `?id=<id>` (for example `issues.html?id=5`).
 
 `login.html` and `index.html` are the reference pages.
+
+## Inventory, Orders and Notifications (#81)
+
+These pages follow the shared start-up and error-handling pattern. Each loads its
+own module in `assets/js/pages/`; `forms.js` supplies escaped form/table helpers.
+No new build step or runtime package is needed. All people selectors use
+`GET /users/directory` for both roles.
+
+- Inventory has equipment search and details, registration/editing, incidents and
+  Admin retirement; stock and movement history with automatic-order links; borrower,
+  checkout/return/extension, history and overdue views; category/location creation.
+- Orders has live summary counts, text/status/date filters, manual creation,
+  placement, partial/full receipt and cancellation. Automatic orders show **System**.
+- Notifications has unread/all views, read/unread and mark-all controls, related-record
+  links, and directory-selected shift summaries. Admins also see email configuration,
+  a test-send control, filtered delivery history and failed/bounced-email retry.
+  Server messages (including unconfigured email) are shown unchanged.
+
+Deep links: `inventory.html?id=<item>`, `?consumable=<item>`, `?loan=<loan>`, or
+`?tab=equipment|consumables|loans|overdue|borrowers|lookups`; `orders.html?id=<order>`;
+`notifications.html?id=<notification>`. The mockup side panels contain live forms
+or selected-record details; secondary operation forms open on demand.
+
+Checks:
+
+```bash
+node --test src/frontend/tests/forms.test.mjs
+node --check src/frontend/assets/js/pages/forms.js
+node --check src/frontend/assets/js/pages/inventory.js
+node --check src/frontend/assets/js/pages/orders.js
+node --check src/frontend/assets/js/pages/notifications.js
+cd src/backend && .venv/bin/pytest -q
+```
+
+Browser review should cover Admin and SA sessions: create lookup/equipment/borrower,
+edit, lend/extend/return, incidents/retire, consumable movements and auto orders;
+manual orders, duplicate rejection, partial/full receipts and cancellation; notification
+read state and shift roster selection; email configuration/test/error/retry; deep links,
+empty/filter states, and narrow screens. Use a disposable database for write scenarios.
+Real outbound email requires a configured provider; UI retry can also be verified
+against a simulated failed delivery without sending external email.
+
+The layout was checked side by side against Tom's mockups at commit `597d2f5`: original column widths, stacked cards, horizontal tabs, compact filter rows and sidebar structure are preserved. Sample-only errors and records are replaced by real conditional states.
