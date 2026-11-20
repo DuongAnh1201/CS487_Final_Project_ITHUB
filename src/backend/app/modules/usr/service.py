@@ -239,6 +239,10 @@ class UserManager:
         AccessControl.require_role(actor, Role.ADMIN)
         return self.users.search(role, status)
 
+    def staff_directory(self, q: str | None = None) -> list[User]:
+        """Active staff for member, assignee, reviewer and recipient pickers (any logged-in user)."""
+        return self.users.directory(q.strip() if q else None)
+
     def get_user(self, actor: User, user_id: int) -> User:
         """Fetch one user (Admin only)."""
         AccessControl.require_role(actor, Role.ADMIN)

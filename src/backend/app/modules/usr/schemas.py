@@ -87,6 +87,16 @@ class UserRead(BaseModel):
     created_at: datetime
 
 
+class StaffEntry(BaseModel):
+    """One active account in the staff directory: just enough to pick a person."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    full_name: str
+    role: Role
+
+
 class LoginResponse(BaseModel):
     """Result of a successful login."""
 
