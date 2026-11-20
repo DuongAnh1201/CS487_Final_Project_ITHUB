@@ -46,6 +46,29 @@ td{padding:11px 16px;border-bottom:1px solid #EDF0F4;white-space:nowrap}
 .done{background:#DDF2E6;color:#1F5A3B}.cur{background:#BFE3D0;color:#173F2D}.next{background:#EEF0F3;color:#3D4756}
 .stat{display:flex;flex-direction:column;gap:4px;padding:14px 16px;text-decoration:none!important;color:#181818}
 .stat:hover{background:#FAF9F6}
+
+/* Live views use the mockup geometry; only functional view/form hooks are added. */
+.page-title{display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap}
+.page-title h1{margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36}
+.page-title>div:not(.toolbar){flex:1 1 240px}.page-title>.toolbar{flex:0 0 auto}.page-title .muted{font-size:12px;font-weight:600}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.views{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.primary{flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.side{flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.fields{padding:16px;display:flex;flex-direction:column;gap:14px}
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 16px;border-bottom:1px solid #E6EAF0;align-items:center}
+.filter-grid .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.search-field{position:relative;grid-column:span 2}.search-field .input{padding-right:38px}.search-field button{position:absolute;right:1px;top:1px;width:36px;min-height:36px;padding:0;border:0;background:transparent;color:#1F6B7A;cursor:pointer}
+.detail-grid{margin:0;padding:14px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;font-size:13px;overflow-wrap:anywhere}
+.detail-grid dd{margin:2px 0 0;font-weight:600;white-space:pre-wrap}
+.low-stock{background:#FFF8F8}.selected-record{background:#F2F7F4}
+.btn:disabled{opacity:.55;cursor:default}td .btn{min-height:30px;padding:0 9px}
+.form-help{padding:10px 12px;margin:0;background:#DCEBF9;border-radius:6px;color:#1C4E7A;font-size:13px;line-height:1.5}
+.list-meta{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px}.list-meta .btn{min-height:28px;padding:0 8px;font-size:12px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat strong{font-size:24px;font-weight:800}.stat .muted{font-size:12px;font-weight:600}
+.nrow a{white-space:normal;overflow-wrap:anywhere}.read-toggle{min-height:28px;padding:0 8px;font-size:12px}
+@media(max-width:500px){.search-field{grid-column:span 1}.filter-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr 1fr}}
 </style>
 <link rel="stylesheet" href="assets/css/app.css">
 </head>
@@ -55,11 +78,11 @@ td{padding:11px 16px;border-bottom:1px solid #EDF0F4;white-space:nowrap}
 <div style="display:flex;align-items:center;gap:16px;padding:8px 20px;flex-wrap:wrap">
 <a href="index.html" style="display:flex;align-items:center;gap:10px;color:#2B2F36;text-decoration:none"><img src="assets/sfbu-logo.png" alt="SFBU" style="width:40px;height:40px;object-fit:contain"><span style="font-weight:800;font-size:19px;letter-spacing:-0.01em">IT-Hub</span></a>
 <div style="flex:1 1 280px;display:flex;justify-content:center">
-<label style="position:relative;width:100%;max-width:560px;display:block"><span class="sr">Search IT-Hub</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" style="position:absolute;left:12px;top:11px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input class="input" type="search" placeholder="Search equipment, rooms, issues, orders…" style="padding-left:36px;background:#F7F9FB"></label>
+<label style="position:relative;width:100%;max-width:560px;display:block"><span class="sr">Search IT-Hub</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" style="position:absolute;left:12px;top:11px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input class="input" type="search" placeholder="Search this page" id="header-search" style="padding-left:36px;background:#F7F9FB"></label>
 </div>
 <div style="display:flex;align-items:center;gap:4px">
-<a class="ib" href="notifications.html" aria-label="Notifications, 4 unread"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#F7C5CB;color:#7A1626;font-size:11px;font-weight:700;display:grid;place-items:center">4</span></a>
-<a href="admin.html" aria-label="My account" style="width:36px;height:36px;border-radius:50%;background:#FBD9C4;color:#6B3418;display:grid;place-items:center;font-weight:700;font-size:13px;margin-left:6px;text-decoration:none">MR</a>
+<a class="ib" href="notifications.html" aria-label="Notifications"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#F7C5CB;color:#7A1626;font-size:11px;font-weight:700;display:grid;place-items:center" hidden>0</span></a>
+<a href="admin.html" aria-label="My account" style="width:36px;height:36px;border-radius:50%;background:#FBD9C4;color:#6B3418;display:grid;place-items:center;font-weight:700;font-size:13px;margin-left:6px;text-decoration:none">…</a>
 </div>
 </div>
 <nav aria-label="Main" style="display:flex;gap:2px;padding:0 12px;overflow-x:auto;border-top:1px solid #EDF0F4">
@@ -75,81 +98,10 @@ td{padding:11px 16px;border-bottom:1px solid #EDF0F4;white-space:nowrap}
 </nav>
 </header>
 <main style="flex:1;width:100%;max-width:1400px;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:16px">
-<section class="card">
-<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap">
-<span class="tile" style="background:#FCEBCF;color:#7A4A00"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg></span>
-<div style="flex:1 1 240px"><div class="muted" style="font-size:12px;font-weight:600">Orders</div><h1 style="margin:2px 0 0;font-size:22px;font-weight:800;color:#2B2F36">All orders</h1></div>
-<button class="btn btn-brand"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New order</button>
-</div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-top:1px solid #EDF0F4">
-<a class="stat" href="orders.html" style="border-right:1px solid #EDF0F4"><span class="muted" style="font-size:12px;font-weight:600">Total</span><span style="font-size:24px;font-weight:800">24</span></a>
-<a class="stat" href="orders.html" style="border-right:1px solid #EDF0F4"><span class="muted" style="font-size:12px;font-weight:600">Requested</span><span style="font-size:24px;font-weight:800;color:#7A4A00">3</span></a>
-<a class="stat" href="orders.html" style="border-right:1px solid #EDF0F4"><span class="muted" style="font-size:12px;font-weight:600">Ordered</span><span style="font-size:24px;font-weight:800;color:#1C4E7A">4</span></a>
-<a class="stat" href="orders.html" style="border-right:1px solid #EDF0F4"><span class="muted" style="font-size:12px;font-weight:600">Partially arrived</span><span style="font-size:24px;font-weight:800;color:#1C4E7A">1</span></a>
-<a class="stat" href="orders.html" style="border-right:1px solid #EDF0F4"><span class="muted" style="font-size:12px;font-weight:600">Arrived</span><span style="font-size:24px;font-weight:800;color:#1F5A3B">14</span></a>
-<a class="stat" href="orders.html"><span class="muted" style="font-size:12px;font-weight:600">Cancelled</span><span style="font-size:24px;font-weight:800;color:#4A3577">2</span></a>
-</div>
-</section>
-
-<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
-<section class="card" style="flex:999 1 600px;min-width:0">
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 16px;border-bottom:1px solid #E6EAF0">
-<label style="grid-column:span 2"><span class="sr">Search order number or item</span><input class="input" type="search" placeholder="Order # or item name"></label>
-<label><span class="sr">Status</span><select class="input"><option>Any status</option><option>Requested</option><option>Ordered</option><option>Partially arrived</option><option>Arrived</option><option>Cancelled</option></select></label>
-<label><span class="sr">Request date</span><input class="input" value="Last 30 days"></label>
-</div>
-<div style="overflow-x:auto">
-<table>
-<thead><tr><th>Order</th><th>Item</th><th>Qty</th><th>Received</th><th>Vendor</th><th>Requested by</th><th>Requested</th><th>Status</th></tr></thead>
-<tbody>
-<tr style="background:#F2F7F4"><td><a href="orders.html" style="font-weight:700">#12</a></td><td>HDMI cables (2 m)</td><td>20</td><td>8</td><td>CDW</td><td><span class="b b-final">Auto</span></td><td>Nov 17</td><td><span class="b b-info">Partially arrived</span></td></tr>
-<tr><td><a href="orders.html" style="font-weight:700">#13</a></td><td>Toner HP 58A</td><td>10</td><td>0</td><td class="muted">—</td><td><span class="b b-final">Auto</span></td><td>Nov 18</td><td><span class="b b-warn">Requested</span></td></tr>
-<tr><td><a href="orders.html" style="font-weight:700">#11</a></td><td>Keyboard (USB)</td><td>15</td><td>0</td><td>Amazon Business</td><td>Alex Kim</td><td>Nov 12</td><td><span class="b b-info">Ordered</span></td></tr>
-<tr><td><a href="orders.html" style="font-weight:700">#9</a></td><td>USB-C chargers 65W</td><td>10</td><td>10</td><td>CDW</td><td>Maya Reyes</td><td>Nov 2</td><td><span class="b b-good">Arrived</span></td></tr>
-<tr style="color:#5A6472"><td><span style="font-weight:700">#8</span></td><td>Mouse pads</td><td>30</td><td>0</td><td>—</td><td>Jordan Lee</td><td>Oct 28</td><td><span class="b b-final">Cancelled</span></td></tr>
-</tbody>
-</table>
-</div>
-</section>
-
-<aside style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
-<section class="card">
-<div class="card-h"><div><h2 class="card-t">Order #12 · HDMI cables (2 m)</h2><p class="muted" style="margin:4px 0 0;font-size:13px">Created automatically from low stock · Vendor CDW</p></div></div>
-<div style="padding:16px;display:flex;flex-direction:column;gap:14px">
-<div class="path" role="list" aria-label="Order status">
-<div class="step done" role="listitem">Requested</div>
-<div class="step done" role="listitem">Ordered</div>
-<div class="step cur" role="listitem" aria-current="step">Partially arrived</div>
-<div class="step next" role="listitem">Arrived</div>
-</div>
-<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center">
-<div style="padding:12px;border-radius:8px;background:#F4F3EF"><div style="font-size:22px;font-weight:800">20</div><div class="muted" style="font-size:12px;font-weight:600">Ordered</div></div>
-<div style="padding:12px;border-radius:8px;background:#DDF2E6"><div style="font-size:22px;font-weight:800;color:#1F5A3B">8</div><div style="font-size:12px;font-weight:600;color:#1F5A3B">Received</div></div>
-<div style="padding:12px;border-radius:8px;background:#FCEBCF"><div style="font-size:22px;font-weight:800;color:#7A4A00">12</div><div style="font-size:12px;font-weight:600;color:#7A4A00">Remaining</div></div>
-</div>
-<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><div style="flex:1 1 140px"><label class="lbl" for="rq">Quantity received</label><input class="input" id="rq" type="number" value="12"></div><button class="btn btn-brand" style="min-height:38px">Receive</button></div>
-<p class="muted" style="margin:0;font-size:12px">Stock goes up automatically. Cancel is only possible while Requested or Ordered.</p>
-<div style="border-top:1px solid #EDF0F4;padding-top:12px;display:flex;flex-direction:column;gap:8px;font-size:13px">
-<strong>Status history</strong>
-<div style="display:flex;justify-content:space-between;gap:8px"><span>Received 8 · Partially arrived</span><span class="muted">Nov 19 · Maya Reyes</span></div>
-<div style="display:flex;justify-content:space-between;gap:8px"><span>Placed · Ordered</span><span class="muted">Nov 17 · Jordan Lee</span></div>
-<div style="display:flex;justify-content:space-between;gap:8px"><span>Created · Requested</span><span class="muted">Nov 17 · System</span></div>
-</div>
-</div>
-</section>
-
-<section class="card">
-<div class="card-h"><h2 class="card-t">New order</h2></div>
-<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
-<div><label class="lbl" for="oi">Consumable item</label><select class="input" id="oi" style="border-color:#E07A86"><option>Toner HP 58A</option></select></div>
-<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div><label class="lbl" for="oq">Quantity</label><input class="input" id="oq" type="number" value="5"></div><div><label class="lbl" for="ov">Vendor (optional)</label><input class="input" id="ov"></div></div>
-<div role="alert" style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;background:#FBDDE0;color:#8A1C2B;font-size:13px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>This item already has an open order.</div>
-<button class="btn btn-brand" disabled style="opacity:.55;min-height:40px">Create order</button>
-</div>
-</section>
-</aside>
-</div>
+<section class="card"><div class="page-title"><span class="tile" style="background:#FCEBCF;color:#7A4A00"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg></span><div style="flex:1 1 240px"><div class="muted">Orders</div><h1>All orders</h1></div><button class="btn btn-brand" id="new-order"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New order</button></div><div id="order-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-top:1px solid #EDF0F4"></div></section>
+<div class="views"><section class="card primary" style="flex-basis:600px;gap:0"><form id="order-filters" class="filter-grid"><label class="search-field"><span class="sr">Search order number or item</span><input class="input" type="search" name="q" placeholder="Order # or item name"><button type="submit" aria-label="Search orders">⌕</button></label><label><span class="sr">Status</span><select class="input" name="status"><option value="">Any status</option><option value="REQUESTED">Requested</option><option value="ORDERED">Ordered</option><option value="PARTIALLY_ARRIVED">Partially arrived</option><option value="ARRIVED">Arrived</option><option value="CANCELLED">Cancelled</option></select></label><label><span class="sr">Request date</span><select class="input" name="period"><option value="">All request dates</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="custom">Custom dates…</option></select></label><div id="order-custom-dates" class="form-grid" style="grid-column:1/-1" hidden><label><span class="lbl">Requested from</span><input class="input" type="date" name="date_from" aria-label="Requested from"></label><label><span class="lbl">Requested through</span><input class="input" type="date" name="date_to" aria-label="Requested through"></label></div></form><div id="order-list"><p class="empty" role="status">Loading orders…</p></div><div class="list-meta"><span id="order-count" class="muted"></span><button class="btn" id="clear-orders">Clear filters</button></div></section><aside class="side" style="flex-basis:380px"><section id="order-detail" class="card" hidden></section><section id="editor" class="card" hidden></section></aside></div>
 </main>
 </div>
+<script type="module" src="assets/js/pages/orders.js"></script>
 </body>
 </html>
