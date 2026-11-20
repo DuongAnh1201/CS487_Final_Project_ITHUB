@@ -35,10 +35,11 @@ MSG_EMAIL_OFF = "Email sending is not configured."
 MSG_PROVIDER_ERROR = "The email provider could not send the message."
 MSG_NOT_RETRYABLE = "Only a failed or bounced email can be retried."
 MSG_RETRY_LIMIT = "The email has already been tried the maximum number of times."
-# Frontend page that shows each kind of record (src/frontend, served at ITHUB_APP_BASE_URL).
+# Frontend page and query parameter that open each kind of record (src/frontend, served at ITHUB_APP_BASE_URL).
 RECORD_PAGES = {
-    "Order": "orders.html", "Report": "reports.html", "Issue": "issues.html", "Project": "projects.html",
-    "Task": "projects.html", "Asset": "inventory.html", "Item": "inventory.html", "Classroom": "classrooms.html",
+    "Order": "orders.html?id=", "Report": "reports.html?id=", "Issue": "issues.html?id=",
+    "Project": "projects.html?id=", "Task": "projects.html?task=", "Asset": "inventory.html?id=",
+    "Item": "inventory.html?id=", "Classroom": "classrooms.html?id=",
 }
 MAX_EMAIL_ATTEMPTS = 3
 WEBHOOK_STATUS = {
@@ -199,8 +200,8 @@ class NotificationService:
         """Frontend URL of the record the notification is about."""
         if not self.app_base_url or not notification.related_type or notification.related_id is None:
             return None
-        page = RECORD_PAGES.get(notification.related_type, "notifications.html")
-        return f"{self.app_base_url}/{page}?id={notification.related_id}"
+        page = RECORD_PAGES.get(notification.related_type, "notifications.html?id=")
+        return f"{self.app_base_url}/{page}{notification.related_id}"
 
     # ---- Email administration (NTF-FR-08) ---------------------------------
 

@@ -312,7 +312,9 @@ def test_email_links_open_the_record_page_of_the_served_frontend():
     service = SimpleNamespace(app_base_url="http://127.0.0.1:8000/app")
     order = SimpleNamespace(related_type="Order", related_id=7)
     unknown = SimpleNamespace(related_type="Something", related_id=3)
+    task = SimpleNamespace(related_type="Task", related_id=4)
     none = SimpleNamespace(related_type=None, related_id=None)
     assert NotificationService._link(service, order) == "http://127.0.0.1:8000/app/orders.html?id=7"
     assert NotificationService._link(service, unknown) == "http://127.0.0.1:8000/app/notifications.html?id=3"
+    assert NotificationService._link(service, task) == "http://127.0.0.1:8000/app/projects.html?task=4"
     assert NotificationService._link(service, none) is None
