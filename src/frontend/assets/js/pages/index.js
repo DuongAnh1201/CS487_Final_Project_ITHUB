@@ -11,7 +11,8 @@ export function linkFor(relatedType, relatedId) {
     Order: "orders.html", Report: "reports.html", Issue: "issues.html", Project: "projects.html",
     Task: "projects.html", Asset: "inventory.html", Item: "inventory.html", Classroom: "classrooms.html",
   }[relatedType] ?? "notifications.html";
-  return relatedId ? `${page}?id=${relatedId}` : page;
+  const parameter = relatedType === "Task" ? "task" : "id";
+  return relatedId ? `${page}?${parameter}=${relatedId}` : page;
 }
 
 /** Replace a widget's sample rows and count. `total` defaults to the number of rows. */
