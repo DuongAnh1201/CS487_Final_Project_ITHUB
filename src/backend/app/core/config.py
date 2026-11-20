@@ -3,7 +3,7 @@
 import json
 from typing import Annotated
 
-from pydantic import field_validator
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     # None => a random temporary password is generated and logged once at first start.
     admin_password: str | None = None
 
+    # Email through Resend stays off until both the API key and the sender are set.
+    resend_api_key: SecretStr | None = None  # secret: never logged or returned by the API
+    email_from: str | None = None  # e.g. "IT Inventory Tracker <noreply@yourdomain>"
+    email_reply_to: str | None = None
+    resend_webhook_secret: SecretStr | None = None  # enables POST /webhooks/resend
+    app_base_url: str = "http://localhost:5173"  # frontend origin used in email links
+
     @staticmethod
     def _split_list(value: object, strip_slash: bool = False) -> object:
         """Accept a comma-separated string or a JSON list."""
@@ -59,6 +66,16 @@ class Settings(BaseSettings):
     @classmethod
     def _blank_domain_is_none(cls, value: object) -> object:
         return value or None
+
+    @field_validator("resend_api_key", "email_from", "email_reply_to", "resend_webhook_secret", mode="before")
+    @classmethod
+    def _blank_is_none(cls, value: object) -> object:
+        return value or None
+
+    @property
+    def email_enabled(self) -> bool:
+        """True when Resend has an API key and a sender address."""
+        return bool(self.resend_api_key and self.email_from)
 
     @property
     def google_enabled(self) -> bool:

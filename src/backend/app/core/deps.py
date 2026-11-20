@@ -60,11 +60,13 @@ def get_notification_service(
     audit: AuditLog = Depends(get_audit_log),
     clock: Clock = Depends(get_clock),
     email: EmailChannel = Depends(get_email_channel),
+    settings: Settings = Depends(get_settings),
 ) -> NotificationService:
     """NotificationService for the request."""
     return NotificationService(
         NotificationRepository(db), UserRepository(db), email, audit, clock,
         membership=ProjectRepository(db), work=TaskWorkSource(TaskRepository(db)),
+        app_base_url=settings.app_base_url,
     )
 
 

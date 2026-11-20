@@ -30,6 +30,7 @@ TAGS = [
     {"name": "reports", "description": "Daily reports, review workflow, monthly summary (RPT)."},
     {"name": "report-templates", "description": "Daily-report checklists (RPT)."},
     {"name": "audit", "description": "Read-only audit log (RPT)."},
+    {"name": "webhooks", "description": "Signed provider callbacks (email delivery events)."},
     {"name": "health", "description": "Liveness check."},
 ]
 
@@ -40,8 +41,9 @@ ERROR_DESCRIPTIONS = {
     409: "The action conflicts with existing data or the record's current state.",
 }
 LOGIN_ROUTES = {"/auth/login", "/auth/google"}
+SIGNED_ROUTES = {"/webhooks/resend"}  # no login: the provider signature is checked instead
 # POST routes that cannot conflict with existing data.
-NO_CONFLICT_ROUTES = LOGIN_ROUTES | {"/auth/logout", "/notifications/shift-summary", "/reports/monthly-summary"}
+NO_CONFLICT_ROUTES = LOGIN_ROUTES | SIGNED_ROUTES | {"/auth/logout", "/notifications/shift-summary", "/notifications/email/test", "/reports/monthly-summary"}
 _REQUIREMENT_SUFFIX = re.compile(r"\s*\((?:[A-Z]{2,}-[A-Z0-9-]+)(?:, ?[A-Z]{2,}-[A-Z0-9-]+)*\)\.?$")
 _ID_PREFIX = re.compile(r"^(?:[A-Z]{2,}-[A-Z]*-?[0-9]+(?:[/,] ?[0-9]+)*(?:\s*[-–]\s*[0-9]+)?:\s*)+")
 _ERROR_REF = {"$ref": "#/components/schemas/ErrorResponse"}
@@ -72,7 +74,7 @@ def document_schema(schema: dict[str, Any]) -> dict[str, Any]:
             codes: list[int] = []
             if operation.get("security"):
                 codes += [401, 403]
-            elif path in LOGIN_ROUTES:
+            elif path in LOGIN_ROUTES | SIGNED_ROUTES:
                 codes.append(401)
             if "{" in path:
                 codes.append(404)

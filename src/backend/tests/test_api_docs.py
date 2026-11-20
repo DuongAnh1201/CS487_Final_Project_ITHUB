@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.main import create_app
 
-PUBLIC = {"/health", "/auth/login", "/auth/google", "/auth/config"}
+PUBLIC = {"/health", "/auth/login", "/auth/google", "/auth/config", "/webhooks/resend"}
 ORIGIN = "http://localhost:5173"
 
 

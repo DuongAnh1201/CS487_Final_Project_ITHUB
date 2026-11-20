@@ -50,6 +50,12 @@ class ServiceUnavailableError(DomainError):
     status_code = 503
 
 
+class BadGatewayError(DomainError):
+    """An external provider failed (502)."""
+
+    status_code = 502
+
+
 async def domain_error_handler(_: Request, exc: DomainError) -> JSONResponse:
     """Return ``{"detail": message}`` with the error's status code."""
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
