@@ -127,6 +127,7 @@ wrong method gives `405`.
 - **IDs** are integers, unique per kind (order 7, report 7 and user 7 are different records).
 - **Nothing is deleted.** There are no `DELETE` routes: accounts are deactivated, orders cancelled, audit records are permanent.
 - **Filters** are query parameters and are combined with AND. List routes return an array; an empty array means "no results".
+- **PATCH** changes only the fields you send. Send `null` to clear an optional value: a project's or task's `due_date`, or a report's `project_id`/`task_id`. `null` on a required field (title, name, priority, status) is ignored. A task linked to a project cannot be unlinked (`409`).
 - **Request bodies** have an example in `/docs` (Schemas section or the route's *Request body*).
 
 ## 6. Endpoints
