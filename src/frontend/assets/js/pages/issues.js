@@ -56,11 +56,13 @@ function listQuery() {
   const data = formData($("filters"));
   const query = { page: state.page, page_size: 50 };
   for (const key of ["status", "severity", "category", "classroom_id", "date_from", "date_to"]) if (data[key]) query[key] = data[key];
-  return { query, assignee: data.assignee };
+  if (data.assignee === "me") query.assigned_to = user.id;
+  if (data.assignee === "none") query.unassigned = true;
+  return query;
 }
 
 async function loadList() {
-  const { query, assignee } = listQuery();
+  const query = listQuery();
   const body = $("issue-rows");
   let page;
   try { page = await api.get("/issues", query); } catch (error) {
@@ -68,7 +70,7 @@ async function loadList() {
     return;
   }
   await Promise.all([...new Set(page.items.map((i) => i.classroom_id))].map(learnEquipment));
-  const items = page.items.filter((i) => !assignee || (assignee === "me" ? i.assigned_to === user.id : i.assigned_to === null));
+  const items = page.items;
   renderList(body, items, (i) => html`<tr${i.id === issueId ? raw(' style="background:#F2F7F4"') : ""}><td><a href="issues.html?id=${i.id}" style="font-weight:700">${i.issue_id}</a></td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis" title="${i.description}">${i.description}${i.is_repeat_problem ? raw(html` <span class="b b-warn" style="margin-left:4px">Repeat problem</span>`) : ""}</td><td>${issueRoom(i)}</td><td class="${i.room_equipment_id === null ? "muted" : ""}">${issueItem(i)}</td><td>${label(i.category)}</td><td>${badge(i.severity)}</td><td>${badge(i.status)}${i.is_overdue ? raw(html` <span class="b b-bad">Overdue</span>`) : ""}</td><td>${timeAgo(i.created_at)}</td><td class="${i.assigned_to === null ? "muted" : ""}">${i.assigned_to === null ? "Unassigned" : userName(state.users, i.assigned_to)}</td></tr>`,
   page.message ?? "No issues match these filters.");
   if (!items.length) body.innerHTML = html`<tr><td colspan="9" class="empty">${page.message ?? "No issues match these filters."}</td></tr>`;
@@ -118,11 +120,7 @@ function renderDetail(issue) {
   $("form-resolve").hidden = true;
 }
 
-function renderTimeline(recorded) {
-  // The server records changes after the report; show the report itself as the first entry.
-  const issue = state.issue;
-  const history = recorded.some((u) => !u.old_status && u.new_status) ? recorded
-    : [{ user_id: issue.created_by, timestamp: issue.created_at, old_status: null, new_status: "OPEN", comment: "" }, ...recorded];
+function renderTimeline(history) {
   const dot = (bg, fg, inner) => html`<span style="width:28px;height:28px;border-radius:50%;background:${bg};color:${fg};display:grid;place-items:center;font-size:11px;font-weight:700">${inner}</span>`;
   const rows = [...history].reverse().map((u, i, all) => {
     const who = userName(state.users, u.user_id);
@@ -130,7 +128,7 @@ function renderTimeline(recorded) {
     const line = !u.old_status && u.new_status ? raw(html`Reported by <strong>${who}</strong> · status ${badge(u.new_status)}`)
       : changed ? raw(html`Status ${badge(u.old_status)} → ${badge(u.new_status)} by <strong>${who}</strong>`)
         : raw(html`<strong>${who}</strong> commented`);
-    const note = u.comment ? raw(html`<div style="margin-top:6px;padding:10px 12px;background:#F7F9FB;border:1px solid #EDF0F4;border-radius:8px;white-space:pre-wrap">${u.comment}</div>`) : "";
+    const note = u.comment && !(u.old_status === null && u.new_status) ? raw(html`<div style="margin-top:6px;padding:10px 12px;background:#F7F9FB;border:1px solid #EDF0F4;border-radius:8px;white-space:pre-wrap">${u.comment}</div>`) : "";
     const icon = changed || (!u.old_status && u.new_status) ? dot("#DCEBF9", "#1C4E7A", "→") : dot("#FBD9C4", "#6B3418", who.split(/\s+/).map((w) => w[0]).slice(0, 2).join(""));
     return html`<div style="display:flex;gap:12px;padding-bottom:14px"><div style="display:flex;flex-direction:column;align-items:center">${raw(icon)}${i < all.length - 1 ? raw('<span style="flex:1;width:2px;background:#DCE1E8;margin-top:4px"></span>') : ""}</div><div style="flex:1;min-width:0"><div>${line}</div>${note}<div class="muted" style="font-size:12px;margin-top:4px">${fmtDateTime(u.timestamp)}</div></div></div>`;
   });

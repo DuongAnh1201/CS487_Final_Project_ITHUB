@@ -46,6 +46,7 @@ from app.modules.cls.schemas import (
     ClassroomSearch,
     ClassroomSummary,
     ClassroomUpdate,
+    EquipmentHistoryRead,
     RoomCheckCreate,
     ScheduleCreate,
     ScheduleRead,
@@ -374,9 +375,13 @@ class ScheduleManager:
         return result
 
     def get_timetable(
-        self, classroom_id: int, day: date, view: str = "day"
+        self,
+        classroom_id: int,
+        day: date,
+        view: str = "day",
+        include_cancelled: bool = False,
     ) -> Timetable:
-        """Return ordered day/week meetings, excluding cancellations (US-CLS-08)."""
+        """Return ordered day/week meetings; cancelled ones only when asked (US-CLS-08)."""
         self.classrooms.get_or_raise(classroom_id)
         if view not in ("day", "week"):
             raise ValidationRuleError("View must be day or week.")
@@ -386,7 +391,7 @@ class ScheduleManager:
         for offset in range(1 if view == "day" else 7):
             current = first + timedelta(days=offset)
             matches = sorted(
-                (entry for entry in entries if entry.occurs_on(current)),
+                (entry for entry in entries if entry.occurs_on(current, include_cancelled)),
                 key=lambda entry: entry.start_time,
             )
             days.append(
@@ -660,6 +665,32 @@ class ClassroomManager:
             user,
             equipment.condition,
         )
+
+    def equipment_history(self, equipment_id: int) -> list[EquipmentHistoryRead]:
+        """Install, condition, move and removal history of the item behind this record, oldest first."""
+        item_id = self.equipment.get_or_raise(equipment_id).item_id
+        rows = {e.id: e for e in self.equipment.find_all_for_item(item_id)}
+        records = [
+            r
+            for row_id in rows
+            for r in self.audit.search(
+                entity_type="RoomEquipment", entity_id=row_id, limit=1000
+            )
+        ]
+        records.sort(key=lambda r: (r.timestamp, r.id))
+        return [
+            EquipmentHistoryRead(
+                timestamp=r.timestamp,
+                user_id=r.actor_id,
+                action=r.action,
+                classroom_id=rows[int(r.entity_id)].classroom_id,
+                old_condition=(r.old_value or {}).get("condition"),
+                new_condition=(r.new_value or {}).get("condition"),
+                reason=(r.new_value or {}).get("reason") or "",
+                issue_id=(r.new_value or {}).get("triggered_by"),
+            )
+            for r in records
+        ]
 
     def is_item_installed(self, item_id: int) -> bool:
         """AST lending guard (DD-CLS-01)."""

@@ -42,6 +42,16 @@ class RoomEquipmentRepository(BaseRepository[RoomEquipment]):
             )
         )
 
+    def find_all_for_item(self, item_id: int) -> list[RoomEquipment]:
+        """Every installation record of an item, current and past."""
+        return list(
+            self.session.scalars(
+                select(RoomEquipment)
+                .where(RoomEquipment.item_id == item_id)
+                .order_by(RoomEquipment.id)
+            )
+        )
+
     def find_installed_by_classroom(self, classroom_id: int) -> list[RoomEquipment]:
         """Load current equipment in a room."""
         return list(

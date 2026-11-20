@@ -129,7 +129,26 @@ function renderSeatPanel() {
   $("seat-title").textContent = `Seat ${e.seat_label || `#${e.id}`} · ${itemLabel(state.items, e.item_id)}`;
   $("cc").value = e.condition;
   $("cr").value = "";
-  $("seat-details").innerHTML = html`<strong style="font-size:13px;color:#181818">Details</strong><div>Installed ${fmtDateTime(e.installed_at)}</div><div>Last changed ${fmtDateTime(e.updated_at)} by ${userName(state.users, e.updated_by)}</div>`;
+  loadSeatHistory(e.id);
+}
+
+const HISTORY_DOT = { INSTALL: "#5DB386", REMOVE: "#8A94A3", CONDITION: "#EBA54E" };
+
+/** History of the item behind a seat: installs, condition changes, moves and removals. */
+async function loadSeatHistory(equipmentId) {
+  const box = $("seat-details");
+  box.innerHTML = html`<strong style="font-size:13px;color:#181818">History</strong><p class="empty" style="padding:8px 0">Loading…</p>`;
+  let rows;
+  try { rows = await api.get(`/classroom-equipment/${equipmentId}/history`); } catch (error) {
+    box.innerHTML = html`<strong style="font-size:13px;color:#181818">History</strong><p class="empty" style="padding:8px 0">${error.message}</p>`;
+    return;
+  }
+  if (state.seat !== equipmentId) return;  // another seat was selected meanwhile
+  const room = (id) => (state.rooms.find((r) => r.id === id) ? roomName(state.rooms.find((r) => r.id === id)) : `room #${id}`);
+  const text = (r) => r.action === "CONDITION"
+    ? raw(html`${label(r.old_condition)} → <strong>${label(r.new_condition)}</strong>${r.reason ? ` · ${r.reason}` : ""}${r.issue_id ? raw(html` · from issue <a href="issues.html?id=${r.issue_id}">#${r.issue_id}</a>`) : ""}`)
+    : r.action === "INSTALL" ? `Installed in ${room(r.classroom_id)}` : `Removed from ${room(r.classroom_id)}`;
+  box.innerHTML = html`<strong style="font-size:13px;color:#181818">History</strong>${[...rows].reverse().map((r) => raw(html`<div style="display:flex;gap:10px;margin-top:10px"><span style="width:8px;height:8px;border-radius:50%;background:${HISTORY_DOT[r.action] ?? "#8A94A3"};margin-top:6px;flex:none"></span><div><div>${text(r)}</div><div class="muted" style="font-size:12px">${fmtDateTime(r.timestamp)} · ${userName(state.users, r.user_id)}</div></div></div>`))}`;
 }
 
 $("seat-form").addEventListener("submit", (event) => {
@@ -315,6 +334,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function entryRow(entry, withDay) {
   const when = `${hhmm(entry.start_time)}–${hhmm(entry.end_time)}`;
+  if (entry.status === "CANCELLED") {
+    return html`<div class="entry" style="background:#F7F9FB;opacity:.75"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#5A6472;text-decoration:line-through">${when}</div><div style="min-width:0"><div style="font-weight:600;color:#5A6472">${entry.course_code} · ${entry.course_title}</div><span class="b b-final">Cancelled</span></div></div>`;
+  }
   const actions = isAdminUser ? raw(html`<span style="display:flex;gap:6px;margin-left:auto"><button class="btn" style="min-height:28px;padding:0 8px" data-edit="${entry.id}">Edit</button><button class="btn" style="min-height:28px;padding:0 8px;color:#8A1C2B" data-cancel="${entry.id}">Cancel</button></span>`) : "";
   return html`<div class="entry"><div style="width:84px;flex:none;font-size:12px;font-weight:700;color:#2B2F36">${when}</div><div style="min-width:0"><div style="font-weight:600">${entry.course_code} · ${entry.course_title}</div><div class="muted" style="font-size:12px">${entry.instructor_name}${withDay ? ` · ${label(entry.day_of_week)}` : ""}${entry.source === "IMPORT" ? " · imported" : ""}</div></div>${actions}</div>`;
 }
@@ -329,7 +351,7 @@ async function loadTimetable() {
   });
   $("tt-title").textContent = state.view === "day" ? `${fmtDate(day)} in ${roomName(state.room)}` : `Week of ${fmtDate(day)}`;
   let timetable;
-  try { timetable = await api.get(`/classrooms/${roomId}/timetable`, { day, view: state.view }); } catch (error) {
+  try { timetable = await api.get(`/classrooms/${roomId}/timetable`, { day, view: state.view, include_cancelled: true }); } catch (error) {
     $("timetable").innerHTML = html`<p class="empty">${error.message}</p>`;
     return;
   }
@@ -410,6 +432,7 @@ $("form-import").addEventListener("submit", (event) => {
 state.users = await loadUsers(user);
 state.items = await loadItems().catch(() => new Map());
 if (roomId) {
+  state.rooms = await api.get("/classrooms").catch(() => []);
   $("filters").closest("section").hidden = true;
   $("room-grid").hidden = true;
   $("room-view").hidden = false;

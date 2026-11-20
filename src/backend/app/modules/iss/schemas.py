@@ -127,6 +127,8 @@ class IssueSearch(BaseModel):
     item_id: int | None = Field(default=None, gt=0)
     category: IssueCategory | None = None
     severity: Severity | None = None
+    assigned_to: int | None = Field(default=None, gt=0)
+    unassigned: bool = False
     date_from: date | None = None
     date_to: date | None = None
     page: int = Field(default=1, ge=1)

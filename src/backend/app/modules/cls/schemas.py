@@ -96,6 +96,21 @@ class EquipmentRead(ReadModel):
     version: int
 
 
+class EquipmentHistoryRead(BaseModel):
+    """One installation, condition, move or removal of an item (from the audit log)."""
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"timestamp": "2026-01-05T09:00:00", "user_id": 1, "action": "CONDITION", "classroom_id": 1, "old_condition": "WORKING", "new_condition": "FAULTY", "reason": "No display", "issue_id": None}]})
+
+    timestamp: datetime
+    user_id: int | None
+    action: str  # INSTALL, CONDITION or REMOVE (a move is REMOVE then INSTALL)
+    classroom_id: int
+    old_condition: EquipmentCondition | None = None
+    new_condition: EquipmentCondition | None = None
+    reason: str = ""
+    issue_id: int | None = None
+
+
 class ConditionUpdate(BaseModel):
     """ConditionUpdate JSON contract or domain enumeration."""
 
@@ -223,7 +238,7 @@ class ScheduleRead(ScheduleCreate, ReadModel):
 class CsvImportCreate(BaseModel):
     """CsvImportCreate JSON contract or domain enumeration."""
 
-    model_config = ConfigDict(json_schema_extra={"examples": [{"file_name": "fall-schedule.csv", "content": "classroom_id,course_code,course_title,instructor_name,day_of_week,start_time,end_time,term_start,term_end\n1,CS101,Intro to CS,Dr. Lee,MON,09:00,10:30,2026-01-12,2026-05-15"}]})
+    model_config = ConfigDict(json_schema_extra={"examples": [{"file_name": "fall-schedule.csv", "content": "course_code,course_title,instructor,building,room,day,start_time,end_time,term_start,term_end\nCS101,Intro to CS,Dr. Lee,Main,101,MON,09:00,10:30,2026-01-12,2026-05-15"}]})
 
     file_name: str = Field(min_length=1, max_length=255)
     content: str = Field(max_length=5_000_000)
