@@ -146,6 +146,7 @@ All routes need the bearer token except `GET /health`, `POST /auth/login`, `POST
 | `POST /auth/change-password` | any | `{current_password, new_password}`. Clears `must_change_password`. |
 | `POST /users` | Admin | Create an account: `{full_name, email, school_id, role, access_end_date?, temporary_password}`. |
 | `GET /users?role=&status=` | Admin | List users. |
+| `GET /users/directory?q=` | any | Active staff as `[{id, full_name, role}]`, sorted by name; `q` matches part of a name. Use it for member, assignee, reviewer and recipient pickers (both roles). |
 | `GET /users/{id}` | Admin | One user. |
 | `PATCH /users/{id}` | Admin | Change `role` and/or `status` (`ACTIVE`/`INACTIVE`). The last active Admin cannot be demoted or deactivated (`409 "At least one active Admin is required."`). |
 | `POST /users/{id}/reset-password` | Admin | Set a temporary password; the user must change it at next login and is logged out everywhere. |

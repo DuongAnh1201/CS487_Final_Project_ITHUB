@@ -1,6 +1,6 @@
 """USR routes: /auth/* and /users/*."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.clock import Clock
@@ -10,6 +10,7 @@ from app.core.deps import (
     get_audit_log,
     get_auth_service,
     get_clock,
+    get_current_user,
     get_current_user_allow_temp,
     get_hasher,
     get_settings,
@@ -27,6 +28,7 @@ from app.modules.usr.schemas import (
     LoginResponse,
     MessageResponse,
     ResetPasswordRequest,
+    StaffEntry,
     UserCreate,
     UserRead,
     UserUpdate,
@@ -125,6 +127,16 @@ def list_users(
 ) -> list[User]:
     """List users, filtered by role and status (FR-USR-10)."""
     return manager.list_users(actor, role, status)
+
+
+@users_router.get("/directory", response_model=list[StaffEntry])
+def staff_directory(
+    q: str | None = Query(default=None, max_length=100, description="Part of a name."),
+    actor: User = Depends(get_current_user),
+    manager: UserManager = Depends(get_user_manager),
+) -> list[User]:
+    """Active staff (id, name, role) for pickers; open to every logged-in user."""
+    return manager.staff_directory(q)
 
 
 @users_router.get("/{user_id}", response_model=UserRead)

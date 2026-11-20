@@ -28,6 +28,13 @@ class UserRepository(BaseRepository[User]):
             )
         ) or 0
 
+    def directory(self, name_contains: str | None = None) -> list[User]:
+        """Active users ordered by name, optionally filtered by part of the name."""
+        stmt = select(User).where(User.status == UserStatus.ACTIVE).order_by(User.full_name, User.id)
+        if name_contains:
+            stmt = stmt.where(User.full_name.ilike(f"%{name_contains}%"))
+        return list(self.session.scalars(stmt))
+
     def search(self, role: Role | None = None, status: UserStatus | None = None) -> list[User]:
         """List users filtered by role and/or status (FR-USR-10)."""
         stmt = select(User).order_by(User.id)
