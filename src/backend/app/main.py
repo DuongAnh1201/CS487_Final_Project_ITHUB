@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.clock import utc_now
 from app.core.config import Settings
@@ -96,7 +98,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     wire_pages(app)
     install_openapi(app)
+    mount_frontend(app, settings)
     return app
+
+
+def mount_frontend(app: FastAPI, settings: Settings) -> None:
+    """Serve the static frontend at /app and send / to the login page (outside the API schema)."""
+    folder = settings.frontend_dir
+    if folder is None or not folder.is_dir():
+        return
+    app.mount("/app", StaticFiles(directory=folder, html=True), name="frontend")
+
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        """Open the frontend."""
+        return RedirectResponse("/app/login.html")
 
 
 app = create_app()
