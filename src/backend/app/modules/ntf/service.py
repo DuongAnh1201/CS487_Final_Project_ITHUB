@@ -35,6 +35,11 @@ MSG_EMAIL_OFF = "Email sending is not configured."
 MSG_PROVIDER_ERROR = "The email provider could not send the message."
 MSG_NOT_RETRYABLE = "Only a failed or bounced email can be retried."
 MSG_RETRY_LIMIT = "The email has already been tried the maximum number of times."
+# Frontend page that shows each kind of record (src/frontend, served at ITHUB_APP_BASE_URL).
+RECORD_PAGES = {
+    "Order": "orders.html", "Report": "reports.html", "Issue": "issues.html", "Project": "projects.html",
+    "Task": "projects.html", "Asset": "inventory.html", "Item": "inventory.html", "Classroom": "classrooms.html",
+}
 MAX_EMAIL_ATTEMPTS = 3
 WEBHOOK_STATUS = {
     "email.delivered": EmailStatus.DELIVERED,
@@ -194,7 +199,8 @@ class NotificationService:
         """Frontend URL of the record the notification is about."""
         if not self.app_base_url or not notification.related_type or notification.related_id is None:
             return None
-        return f"{self.app_base_url}/{notification.related_type.lower()}s/{notification.related_id}"
+        page = RECORD_PAGES.get(notification.related_type, "notifications.html")
+        return f"{self.app_base_url}/{page}?id={notification.related_id}"
 
     # ---- Email administration (NTF-FR-08) ---------------------------------
 
