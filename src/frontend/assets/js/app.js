@@ -145,7 +145,7 @@ export function label(value) {
 const BADGE_KIND = {
   good: ["AVAILABLE", "ACTIVE", "WORKING", "ARRIVED", "PASSED", "RESOLVED", "COMPLETE", "COMPLETED", "RETURNED", "SENT", "DELIVERED", "GOOD", "LOW"],
   info: ["IN_PROGRESS", "ORDERED", "SUBMITTED", "ASSIGNED", "ON_LOAN", "OPEN_LOAN", "PLANNED", "PENDING", "UNDER_REPAIR"],
-  warn: ["LIMITED", "PARTIALLY_ARRIVED", "REVIEWED", "OPEN", "FAULTY", "ON_HOLD", "FAIR", "MEDIUM", "HIGH", "REQUESTED"],
+  warn: ["LIMITED", "PARTIALLY_ARRIVED", "REVIEWED", "OPEN", "FAULTY", "ON_HOLD", "FAIR", "HIGH", "REQUESTED"],
   bad: ["UNUSABLE", "REJECTED", "LOST", "DAMAGED", "MISSING", "OUT_OF_SERVICE", "CRITICAL", "FAILED", "BOUNCED", "POOR", "OVERDUE"],
   final: ["CLOSED", "CANCELLED", "RETIRED", "DUPLICATE", "INACTIVE"],
 };
@@ -215,13 +215,3 @@ export function renderList(container, items, renderItem, emptyText = "Nothing he
     ? items.map(renderItem).join("")
     : html`<p class="empty">${emptyText}</p>`;
 }
-
-// Styles for the helpers above (each mockup page carries its own <style>; these are additions).
-document.head.insertAdjacentHTML("beforeend", `<style>
-#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:1000;max-width:380px}
-.toast{padding:12px 16px;border-radius:8px;font:500 14px 'Inter',system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.12)}
-.toast-good{background:#DDF2E6;color:#1F5A3B}.toast-bad{background:#FBDDE0;color:#8A1C2B}.toast-info{background:#DCEBF9;color:#1C4E7A}
-.field-error{margin:6px 0 0;font-size:12px;color:#8A1C2B}
-.empty{margin:0;padding:16px;color:#5A6472;font-size:13px}
-[hidden]{display:none!important}
-</style>`);

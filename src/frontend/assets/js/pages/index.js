@@ -104,7 +104,7 @@ async function lowStock() {
 async function roomsWidget(rooms) {
   const notAvailable = rooms.filter((r) => r.status !== "AVAILABLE");
   const section = fill("rooms", notAvailable.map((r) => {
-    const why = r.closed_reason ?? (r.check_overdue ? "Room check overdue" : `${label(r.status)}: some desktops need attention`);
+    const why = r.closed_reason || (r.check_overdue ? "Room check overdue" : `${label(r.status)}: some desktops need attention`);
     return html`<a class="li" href="classrooms.html?id=${r.id}"><div style="flex:1;min-width:0"><div style="font-weight:600">${r.building}-${r.room} · ${label(r.room_type)}</div>${sub(why)}</div>${badge(r.status)}</a>`;
   }), "Every room is available.");
   const suffix = section.querySelector(".cnt .muted");
