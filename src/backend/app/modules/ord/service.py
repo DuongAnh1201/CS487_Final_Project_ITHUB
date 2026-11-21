@@ -13,6 +13,7 @@ from app.modules.ord.repository import OrderRepository
 from app.modules.usr.models import User
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.formatting import human_datetime
 
 MSG_OPEN_ORDER = "This item already has an open order."
 
@@ -79,7 +80,13 @@ class OrderManager:
             f"{'arrived' if done else 'partly arrived'}: {quantity} received, "
             f"{order.remaining_quantity} still expected.",
             actor_id=user.id, recipient_ids=(order.requested_by,) if order.requested_by else (),
-            related_type="Order", related_id=order.id))
+            related_type="Order", related_id=order.id,
+            details={
+                "item_name": order.item_name, "order_no": f"#{order.id}",
+                "qty_ordered": order.quantity_ordered, "qty_received": order.quantity_received,
+                "received_at": human_datetime(self.clock()), "vendor": order.vendor or "Not set",
+                "complete": done,
+            }))
         return order
 
     def cancel_order(self, user: User, order_id: int) -> Order:

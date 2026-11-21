@@ -1,6 +1,8 @@
 """Issue manager and side-effect strategies (DD-ISS-01, US-ISS-01–07)."""
 
 from abc import ABC, abstractmethod
+from typing import Any
+
 from app.core.clock import Clock
 from app.core.exceptions import ValidationRuleError
 from app.modules.cls.models import EquipmentCondition
@@ -25,10 +27,15 @@ from app.modules.usr.models import User, UserStatus
 from app.modules.usr.repository import UserRepository
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.formatting import label
 
 
 class IssueEffect(ABC):
     """Strategy for issue-triggered changes (SP4 §7)."""
+
+    @abstractmethod
+    def describe(self, issue: Issue, ctx: "IssueManager") -> str:
+        """What the effect changed, in one sentence for the Admin email ("" when nothing)."""
 
     @abstractmethod
     def on_reported(self, issue: Issue, ctx: "IssueManager", user: User) -> None: ...
@@ -46,6 +53,9 @@ class IssueEffect(ABC):
 
 class NoEquipmentEffect(IssueEffect):
     """Issues without an equipment/critical-room effect need no extra writes."""
+
+    def describe(self, issue: Issue, ctx: "IssueManager") -> str:
+        return ""
 
     def on_reported(self, issue: Issue, ctx: "IssueManager", user: User) -> None:
         pass
@@ -65,6 +75,13 @@ class NoEquipmentEffect(IssueEffect):
 
 class HardwareItemEffect(IssueEffect):
     """Keep hardware condition aligned without overriding other active problems."""
+
+    def describe(self, issue: Issue, ctx: "IssueManager") -> str:
+        reported = ctx.classrooms.equipment.get_or_raise(issue.room_equipment_id)
+        equipment = ctx.classrooms.equipment.find_installed_by_item(reported.item_id)
+        if equipment is not None and equipment.condition == EquipmentCondition.FAULTY:
+            return "The reported item is now marked Faulty."
+        return ""
 
     def _set(
         self,
@@ -109,6 +126,10 @@ class HardwareItemEffect(IssueEffect):
 
 class CriticalRoomEffect(IssueEffect):
     """Close rooms for unresolved Critical room issues; retain Admin overrides."""
+
+    def describe(self, issue: Issue, ctx: "IssueManager") -> str:
+        room = ctx.classrooms.repository.get_or_raise(issue.classroom_id)
+        return "The room is now closed for maintenance." if room.closed_for_maintenance else ""
 
     def _refresh(self, issue: Issue, ctx: "IssueManager", user: User) -> None:
         room = ctx.classrooms.repository.get_or_raise(issue.classroom_id)
@@ -199,7 +220,8 @@ class IssueManager:
             ):
                 raise ValidationRuleError("Item is not installed in this classroom.")
         issue = self.repository.add(Issue.create(data.model_dump(), user, self.clock()))
-        for effect in self.effects.effects_for(issue):
+        effects = self.effects.effects_for(issue)
+        for effect in effects:
             effect.on_reported(issue, self, user)
         self.audit.record(
             user,
@@ -217,9 +239,26 @@ class IssueManager:
                 actor_id=user.id,
                 related_type="Issue",
                 related_id=issue.id,
+                details=self._email_details(issue, effects),
             )
         )
         return issue
+
+    def _email_details(self, issue: Issue, effects: list[IssueEffect]) -> dict[str, Any]:
+        """Values for the Admins' issue-reported email (FR-NTF-01)."""
+        room = self.classrooms.repository.get_or_raise(issue.classroom_id)
+        location = self.classrooms.assets.find_location(room.location_id)
+        item = ""
+        if issue.room_equipment_id is not None:
+            equipment = self.classrooms.equipment.get_or_raise(issue.room_equipment_id)
+            item = f"{self.classrooms.assets.find_item(equipment.item_id).category} #{equipment.item_id}"
+        return {
+            "issue_no": issue.issue_id, "severity": label(issue.severity),
+            "room": f"{location.building} {location.room}", "item": item,
+            "category": label(issue.category), "description": issue.description,
+            "reporter": issue.reporter_name, "reporter_type": label(issue.reporter_type),
+            "auto_effect": " ".join(text for e in effects if (text := e.describe(issue, self))),
+        }
 
     def _original(self, issue: Issue, original_id: int | None) -> Issue:
         if original_id is None:

@@ -23,6 +23,7 @@ from app.modules.usr.models import Role, User, UserStatus
 from app.modules.usr.repository import UserRepository
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.formatting import human_datetime, label
 from app.shared.patch import PatchChanges
 
 MSG_NOT_EDITABLE = "Submitted reports cannot be edited."
@@ -30,6 +31,12 @@ MSG_TITLE = "Title is required."
 MSG_MONTH_END = "The monthly summary can only be generated at the end of the month."
 MSG_SUMMARY_EXISTS = "The monthly summary for this month already exists."
 MSG_BAD_REVIEWER = "Reviewer must be an active user."
+# What the author does next, shown in the report-reviewed email.
+NEXT_STEPS = {
+    ReviewOutcome.REVIEWED: "Your reviewer has read the report. Check the comment and update the report if needed.",
+    ReviewOutcome.REJECTED: "Edit the report to address the comment, then submit it again.",
+    ReviewOutcome.PASSED: "No action needed. The report is closed.",
+}
 MORNING_CHECKLIST = ("Morning checklist", "Daily morning classroom and equipment check.", [
     "Classroom computers powered on", "Projectors and displays working",
     "Network and Wi-Fi working", "Printers stocked", "Issues found"])
@@ -151,7 +158,12 @@ class ReportManager(_Base):
             self.publisher.publish(DomainEvent(
                 EventType.REPORT_REVIEWED, f"Report #{report.id} is now {report.status.value}.",
                 actor_id=user.id, recipient_ids=(report.author_id,),
-                related_type="Report", related_id=report.id))
+                related_type="Report", related_id=report.id,
+                details={
+                    "reviewer": user.full_name, "report_no": f"#{report.id}", "outcome": label(outcome),
+                    "report_title": report.title, "review_comment": comment.strip(),
+                    "submitted_at": human_datetime(report.submitted_at), "next_step": NEXT_STEPS[outcome],
+                }))
         return report
 
     def find_report(self, report_id: int) -> Report:

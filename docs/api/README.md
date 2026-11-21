@@ -177,6 +177,8 @@ Email copy (Resend): `email_status` is one of `PENDING`, `SENT`, `DELIVERED`, `B
 |---|---|---|
 | `GET /notifications/email/config` | Admin | `{enabled, provider: "resend"\|"log", from_address, webhook_enabled}`. Never the API key. |
 | `POST /notifications/email/test` | Admin | `{to?}` (default: me) sends a test email, returns `{status, message_id}`. `503 "Email sending is not configured."` when off; `502` when the provider rejects it. |
+| `GET /notifications/email/templates` | Admin | The designed emails: `[{event_type, template, subject}]` (sample subject). |
+| `GET /notifications/email/templates/{event_type}/preview` | Admin | HTML page: that email filled with sample values (any event type; others show the general design). |
 | `GET /notifications/email/deliveries?status=&recipient_id=&date_from=&date_to=` | Admin | Delivery log: `id, recipient_id, event_type, email_status, attempts, error, sent_at, created_at`. |
 | `POST /notifications/{id}/email/retry` | owner or Admin | Re-send a `FAILED`/`BOUNCED` email. `409` for other statuses or after 3 attempts; `404` for someone else's. |
 | `POST /webhooks/resend` | public (signed) | Called by Resend, not by the frontend: Svix signature headers, `401` if invalid or older than 5 minutes, `503` without `ITHUB_RESEND_WEBHOOK_SECRET`. Sets `DELIVERED`/`BOUNCED`/`COMPLAINED`. |

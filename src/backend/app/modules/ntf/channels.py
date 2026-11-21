@@ -1,6 +1,5 @@
 """Email delivery behind an interface (FR-NTF-07, NTF-FR-08, BR-12)."""
 
-import html
 import logging
 import threading
 from abc import ABC, abstractmethod
@@ -80,11 +79,3 @@ class EmailChannelFactory:
             return ResendEmailChannel(settings.resend_api_key.get_secret_value(), settings.email_from,
                                       settings.email_reply_to)
         return LoggingEmailChannel()
-
-
-def render_html(message: str, link: str | None = None) -> str:
-    """A simple HTML version of the message (escaped) with an optional "open" link."""
-    paragraphs = "".join(f"<p>{html.escape(line)}</p>" for line in message.splitlines() if line.strip())
-    button = (f'<p><a href="{html.escape(link, quote=True)}">Open in IT Inventory Tracker</a></p>'
-              if link else "")
-    return f"<div>{paragraphs}{button}</div>"
