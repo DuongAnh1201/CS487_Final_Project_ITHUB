@@ -1,6 +1,6 @@
-# IT-Hub: frontend design (static HTML)
+# IT Hub: frontend design (static HTML)
 
-Every IT-Hub screen as plain HTML, CSS and JavaScript modules. There is no build step: the backend serves this folder.
+Every IT Hub screen as plain HTML, CSS and JavaScript modules. There is no build step: the backend serves this folder.
 
 ## Run it
 
@@ -37,6 +37,7 @@ To serve the pages from another server instead (for example `npx serve -l 5173 s
 - The pages show the **Admin** view. In the Student Assistant view, Admin-only buttons are hidden.
 - **Styles:** each page carries its styles in its own `<style>` block in `<head>`. The shared classes are `.card`, `.btn`, `.btn-brand`, `.b-*` (status badges), `.input` and `.nav`.
 - **Palette:** brand sage `#BFE3D0` / `#173F2D`, charcoal text `#2B2F36`, teal links `#1F6B7A`, SFBU gold `#8A6A2F`, cream background `#F7F5F2`.
+- **Logo:** `assets/brand/` holds the IT Hub logo (from the designer). The header uses `it-hub-logo-horizontal.svg`, the login card `it-hub-logo-stacked.svg`, watermarks and the tab icon `it-hub-icon.svg` (PNG fallbacks: `favicon-32.png`, `it-hub-icon-192.png` / `-512.png`). Use `it-hub-logo-horizontal-reverse.svg` on dark backgrounds and `-tagline` where "SFBU IT Department" should show. Logo colours: charcoal `#2B2F36`, gold `#C9A46A` / `#8A6A2F`, cream `#FFF6EA` / `#EADBBE`, mint `#7CC4A0`.
 - **Status colours:** good `#DDF2E6`, warning `#FCEBCF`, bad `#FBDDE0`, in progress `#DCEBF9`, neutral `#EEF0F3`, final/archived `#E7E0F5`.
 - **Font:** Inter, loaded from Google Fonts, so you need an internet connection for it. Without one, the pages fall back to the system font.
 - **Data:** wired pages load real API records. Unwired mockups retain sample data until their page-wiring tasks land.

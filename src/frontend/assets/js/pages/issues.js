@@ -97,7 +97,7 @@ async function loadDetail() {
 
 function renderDetail(issue) {
   $("detail").hidden = false;
-  document.title = `IT-Hub · ${issue.issue_id}`;
+  document.title = `IT Hub · ${issue.issue_id}`;
   $("d-title").textContent = `${issue.issue_id} · ${label(issue.category)}`;
   $("d-repeat").hidden = !issue.is_repeat_problem;
   $("d-overdue").hidden = !issue.is_overdue;

@@ -88,7 +88,7 @@ async function setUpFirebase(firebase) {
     projectId: firebase.project_id, ...(firebase.app_id ? { appId: firebase.app_id } : {}),
   });
   const firebaseAuth = auth.getAuth(app);
-  await auth.setPersistence(firebaseAuth, auth.inMemoryPersistence); // IT-Hub keeps its own session
+  await auth.setPersistence(firebaseAuth, auth.inMemoryPersistence); // IT Hub keeps its own session
   const provider = new auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
