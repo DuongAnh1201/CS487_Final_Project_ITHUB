@@ -1,11 +1,17 @@
-"""Shared fixtures: in-memory app, TestClient, controllable clock, login helpers."""
+"""Shared fixtures: in-memory app, TestClient, controllable clock, login helpers.
 
+Set ITHUB_TEST_DATABASE_URL to a throwaway PostgreSQL database to run the whole suite there
+instead of in-memory SQLite. Its public schema is wiped before every test.
+"""
+
+import os
 from collections.abc import Callable, Iterator
 from datetime import datetime, timedelta
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
@@ -15,6 +21,7 @@ ADMIN_EMAIL = "admin@sfbu.edu"
 ADMIN_PASSWORD = "AdminPass123"  # permanent password set by the fixture
 SA_EMAIL = "sa@sfbu.edu"
 SA_PASSWORD = "AssistPass123"
+TEST_DATABASE_URL = os.environ.get("ITHUB_TEST_DATABASE_URL")
 
 
 class FakeClock:
@@ -32,10 +39,24 @@ class FakeClock:
 
 
 @pytest.fixture
-def settings() -> Settings:
-    """In-memory database, fast bcrypt."""
+def database_url() -> str:
+    """In-memory SQLite, or a clean PostgreSQL schema when ITHUB_TEST_DATABASE_URL is set."""
+    if not TEST_DATABASE_URL:
+        return "sqlite://"
+    url = Settings(database_url=TEST_DATABASE_URL).database_url  # same driver switch as the app
+    engine = create_engine(url)
+    with engine.begin() as connection:
+        connection.execute(text("DROP SCHEMA public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
+    engine.dispose()
+    return url
+
+
+@pytest.fixture
+def settings(database_url: str) -> Settings:
+    """Test database, fast bcrypt."""
     return Settings(
-        database_url="sqlite://", secret_key="test-secret", bcrypt_rounds=4,
+        database_url=database_url, secret_key="test-secret", bcrypt_rounds=4,
         admin_email=ADMIN_EMAIL, admin_password="TempAdmin123",
     )
 

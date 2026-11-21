@@ -13,6 +13,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="ITHUB_", env_file=".env", extra="ignore")
 
+    # SQLite file locally. For Supabase paste its connection string as is (postgresql://...);
+    # it is switched to the psycopg driver below.
     database_url: str = "sqlite:///./ithub.db"
     secret_key: str = "change-me-in-production"
     session_timeout_minutes: int = 30  # NFR-USR-02: idle expiry
@@ -55,6 +57,16 @@ class Settings(BaseSettings):
                 return json.loads(text)
             parts = [part.strip() for part in text.split(",") if part.strip()]
             return [p.rstrip("/") for p in parts] if strip_slash else parts
+        return value
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _use_psycopg_driver(cls, value: object) -> object:
+        """``postgres://`` and ``postgresql://`` (as Supabase shows them) → ``postgresql+psycopg://``."""
+        if isinstance(value, str):
+            for prefix in ("postgres://", "postgresql://"):
+                if value.startswith(prefix):
+                    return "postgresql+psycopg://" + value.removeprefix(prefix)
         return value
 
     @field_validator("cors_origins", mode="before")

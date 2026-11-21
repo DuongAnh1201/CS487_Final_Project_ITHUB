@@ -131,7 +131,9 @@ class RoomEquipment(Base):
             "uq_installed_item",
             "item_id",
             unique=True,
+            # Partial index: one *current* installation per item; history rows stay (FR-CLS).
             sqlite_where=text("removed_at IS NULL"),
+            postgresql_where=text("removed_at IS NULL"),
         ),
         {"sqlite_autoincrement": True},
     )

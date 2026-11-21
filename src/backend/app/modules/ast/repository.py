@@ -37,7 +37,7 @@ class ItemRepository(BaseRepository[Item]):
             if value is not None:
                 column = getattr(Item, key)
                 query = query.where(
-                    column.contains(value, autoescape=True)
+                    column.icontains(value, autoescape=True)  # case-insensitive on SQLite and PostgreSQL
                     if key in {"asset_tag", "serial_number", "model"}
                     else column == value
                 )

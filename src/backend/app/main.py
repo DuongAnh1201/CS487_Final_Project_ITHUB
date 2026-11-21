@@ -58,7 +58,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        database.create_all()
+        database.prepare_schema()
         with database.SessionLocal() as session:
             manager = UserManager(
                 UserRepository(session), SessionRepository(session),

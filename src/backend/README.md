@@ -1,6 +1,6 @@
 # IT Inventory Tracker: backend
 
-FastAPI + SQLAlchemy (SQLite). Run from this folder:
+FastAPI + SQLAlchemy: SQLite locally, PostgreSQL (Supabase) in production. Run from this folder:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -15,7 +15,25 @@ WARNING level (`Initial admin password: ...`), so copy it from the first start-u
 `ITHUB_ADMIN_PASSWORD` it is used instead. Either way the password is temporary and must be changed at the
 first password login (`POST /auth/change-password`). An Admin who only signs in with Google never uses it,
 so keep it secret or reset it later (`POST /users/{id}/reset-password`).
-There are no migrations yet: after a model change, delete the local `ithub.db` and restart.
+
+### Database and migrations
+
+- **Local / tests (SQLite):** tables are built straight from the models at startup. After a model change,
+  delete the local `ithub.db` and restart.
+- **Production (PostgreSQL / Supabase):** the app runs the Alembic migrations in `migrations/` at startup
+  (`alembic upgrade head`; safe on every restart). Set `ITHUB_DATABASE_URL` to the Supabase connection string;
+  setup steps are in [`docs/DEPLOY.md`](../../docs/DEPLOY.md).
+- **Changing a model** therefore also needs a migration, or `tests/test_database.py` fails:
+  ```bash
+  ITHUB_DATABASE_URL=postgresql://... .venv/bin/alembic revision --autogenerate -m "add x to y"
+  ```
+  Review the generated file in `migrations/versions/`. A migration that adds a table must also call
+  `ENABLE ROW LEVEL SECURITY` on it (see `lock_down_data_api` in the first migration).
+- **Run the whole suite on PostgreSQL** (wipes that database's `public` schema before every test):
+  ```bash
+  docker run -d --rm --name ithub-pg -e POSTGRES_PASSWORD=pg -p 54329:5432 postgres:17-alpine
+  ITHUB_TEST_DATABASE_URL=postgresql://postgres:pg@127.0.0.1:54329/postgres .venv/bin/pytest
+  ```
 
 ## Enabling Google sign-in
 

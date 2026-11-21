@@ -181,7 +181,9 @@ class Loan(Base):
             "ast_one_open_loan",
             "item_id",
             unique=True,
+            # Partial index: at most one OPEN loan per item; returned loans stay as history.
             sqlite_where=text("status = 'OPEN'"),
+            postgresql_where=text("status = 'OPEN'"),
         ),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
