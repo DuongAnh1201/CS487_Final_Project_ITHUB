@@ -27,5 +27,14 @@ services:
         sync: false
       - key: ITHUB_RESEND_WEBHOOK_SECRET
         sync: false
-      - key: ITHUB_GOOGLE_CLIENT_IDS
+      # Google sign-in through Firebase (public web-app values, see docs/DEPLOY.md).
+      - key: ITHUB_FIREBASE_PROJECT_ID
+        value: it-hub-a7cf9
+      - key: ITHUB_FIREBASE_API_KEY
+        value: AIzaSyBcLbZiRoLhVPhB1xUZO-xSVAt9JUC7S3c
+      - key: ITHUB_FIREBASE_AUTH_DOMAIN
+        value: it-hub-a7cf9.firebaseapp.com
+      - key: ITHUB_FIREBASE_APP_ID
+        value: 1:295459341438:web:c4ff539f0a207accd3442f
+      - key: ITHUB_GOOGLE_HOSTED_DOMAIN # optional: sfbu.edu to allow school emails only
         sync: false

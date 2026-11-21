@@ -1,6 +1,7 @@
 """USR request and response models."""
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -17,18 +18,29 @@ class LoginRequest(BaseModel):
 
 
 class GoogleLoginRequest(BaseModel):
-    """Google ID token from Google Identity Services."""
+    """Google sign-in token: a Google Identity Services or Firebase ID token, per server setup."""
 
     model_config = ConfigDict(json_schema_extra={"examples": [{"id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij..."}]})
 
     id_token: str = Field(min_length=1)
 
 
+class FirebaseWebConfig(BaseModel):
+    """Public Firebase web settings the login page initialises Firebase with."""
+
+    api_key: str
+    auth_domain: str
+    project_id: str
+    app_id: str | None
+
+
 class AuthConfig(BaseModel):
-    """What the frontend needs to decide whether to show the Google button."""
+    """What the frontend needs to decide whether, and how, to show the Google button."""
 
     google_enabled: bool
+    google_provider: Literal["firebase", "google"] | None
     google_client_id: str | None
+    firebase: FirebaseWebConfig | None
 
 
 class ChangePasswordRequest(BaseModel):

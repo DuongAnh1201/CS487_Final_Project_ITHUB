@@ -75,10 +75,12 @@ Rules the UI should know:
 
 Accounts are created by an Admin only (`POST /users`); there is no self-registration.
 
-**Google sign-in:** `POST /auth/google` with `{"id_token": "<Google ID token>"}` returns the same response
-as `/auth/login`. `GET /auth/config` returns `{"google_enabled": bool, "google_client_id": string|null}`: show the
-"Sign in with Google" button only when `google_enabled` is true, and initialise Google Identity Services with
-`google_client_id`. Only existing accounts can sign in this way. Until it is configured, `/auth/google` answers `503`
+**Google sign-in:** `POST /auth/google` with `{"id_token": "<token>"}` returns the same response as
+`/auth/login`. `GET /auth/config` returns `{"google_enabled": bool, "google_provider": "firebase"|"google"|null,
+"google_client_id": string|null, "firebase": {api_key, auth_domain, project_id, app_id}|null}`. Show the
+"Sign in with Google" button only when `google_enabled` is true. With `"firebase"`, initialise Firebase with
+`firebase`, sign in with the Google provider (`signInWithPopup`) and send the Firebase ID token; with `"google"`,
+initialise Google Identity Services with `google_client_id` and send its ID token. Only existing accounts can sign in this way. Until it is configured, `/auth/google` answers `503`
 `"Google sign-in is not configured."`. Setup steps for whoever configures it are in the backend `README.md`.
 
 ## 3. Roles
@@ -141,7 +143,7 @@ All routes need the bearer token except `GET /health`, `POST /auth/login`, `POST
 |---|---|---|
 | `POST /auth/login` | public | Log in with school email and password. |
 | `POST /auth/google` | public | Sign in with a Google ID token `{id_token}`; existing accounts only. `503` until configured. |
-| `GET /auth/config` | public | `{google_enabled, google_client_id}` for the login screen. |
+| `GET /auth/config` | public | `{google_enabled, google_provider, google_client_id, firebase}` for the login screen. |
 | `POST /auth/logout` | any | End the session. |
 | `GET /auth/me` | any | The logged-in user. |
 | `POST /auth/change-password` | any | `{current_password, new_password}`. Clears `must_change_password`. |

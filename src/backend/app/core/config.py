@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     google_client_ids: Annotated[list[str], NoDecode] = []
     google_hosted_domain: str | None = None  # e.g. "sfbu.edu"; None accepts any Google account
 
+    # Google sign-in through Firebase Authentication (replaces the client ids when set).
+    # Values from Firebase console → Project settings → Your apps → Web app (firebaseConfig).
+    # They are public by design: the login page needs them; Authorized domains protect the project.
+    firebase_project_id: str | None = None  # projectId
+    firebase_api_key: str | None = None  # apiKey
+    firebase_auth_domain: str | None = None  # authDomain; defaults to <projectId>.firebaseapp.com
+    firebase_app_id: str | None = None  # appId
+
     # Static frontend served at /app on the same origin as the API (no CORS needed).
     # ITHUB_FRONTEND_DIR overrides it; a folder that does not exist turns the mount off.
     frontend_dir: Path | None = Path(__file__).resolve().parents[3] / "frontend"
@@ -79,7 +87,8 @@ class Settings(BaseSettings):
     def _split_client_ids(cls, value: object) -> object:
         return cls._split_list(value)
 
-    @field_validator("google_hosted_domain", mode="before")
+    @field_validator("google_hosted_domain", "firebase_project_id", "firebase_api_key",
+                     "firebase_auth_domain", "firebase_app_id", mode="before")
     @classmethod
     def _blank_domain_is_none(cls, value: object) -> object:
         return value or None
@@ -95,6 +104,11 @@ class Settings(BaseSettings):
         return bool(self.resend_api_key and self.email_from)
 
     @property
+    def firebase_enabled(self) -> bool:
+        """True when a Firebase project id and web API key are configured."""
+        return bool(self.firebase_project_id and self.firebase_api_key)
+
+    @property
     def google_enabled(self) -> bool:
-        """True when at least one Google client id is configured."""
-        return bool(self.google_client_ids)
+        """True when Google sign-in is configured through Firebase or Google client ids."""
+        return self.firebase_enabled or bool(self.google_client_ids)

@@ -62,12 +62,14 @@ def test_disabled_until_client_ids_are_set():
     with TestClient(app) as client:
         r = sign_in(client, "anything")
         assert (r.status_code, r.json()["detail"]) == (503, "Google sign-in is not configured.")
-        assert client.get("/auth/config").json() == {"google_enabled": False, "google_client_id": None}
+        assert client.get("/auth/config").json() == {
+            "google_enabled": False, "google_provider": None, "google_client_id": None, "firebase": None}
 
 
 def test_config_when_enabled(client):
     assert client.get("/auth/config").json() == {
-        "google_enabled": True, "google_client_id": "client-1.apps.googleusercontent.com"}
+        "google_enabled": True, "google_provider": "google",
+        "google_client_id": "client-1.apps.googleusercontent.com", "firebase": None}
 
 
 def test_existing_active_user_gets_a_working_session(client, sa_headers, google):

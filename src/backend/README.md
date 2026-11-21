@@ -37,9 +37,47 @@ so keep it secret or reset it later (`POST /users/{id}/reset-password`).
 
 ## Enabling Google sign-in
 
-Google sign-in is built in but **disabled** until you set `ITHUB_GOOGLE_CLIENT_IDS`. Until then
+Google sign-in is built in but **disabled** until it is configured, in one of two ways. Until then
 `POST /auth/google` returns `503 "Google sign-in is not configured."` and `GET /auth/config` returns
-`{"google_enabled": false, "google_client_id": null}`.
+`"google_enabled": false`.
+
+- **Firebase Authentication (used for the MVP):** set the `ITHUB_FIREBASE_*` settings below.
+- **Google Identity Services directly:** set `ITHUB_GOOGLE_CLIENT_IDS` (further down).
+
+If both are set, Firebase is used. The sign-in rules at the end of this section apply to both.
+
+### Through Firebase Authentication
+
+The free Spark plan is enough; Blaze is not needed.
+
+1. In the [Firebase console](https://console.firebase.google.com/) create a project (or add Firebase to the
+   Google Cloud project you have).
+2. **Build > Authentication > Get started > Sign-in method > Google > Enable**, pick a support email, save.
+3. **Authentication > Settings > Authorized domains**: add the deployed host, e.g. `ithub.onrender.com`.
+   `localhost` is there already; use `http://localhost:8000/` (not `127.0.0.1`) locally, or add `127.0.0.1`.
+4. **Project settings > General > Your apps > Web (`</>`)**: register the app (no Firebase Hosting) and copy
+   these values from `firebaseConfig`. They are public by design (the login page needs them); the authorized
+   domains protect the project. Analytics is not used.
+
+   ```bash
+   ITHUB_FIREBASE_PROJECT_ID=it-hub-a7cf9                          # projectId
+   ITHUB_FIREBASE_API_KEY=AIza...                                  # apiKey
+   ITHUB_FIREBASE_AUTH_DOMAIN=it-hub-a7cf9.firebaseapp.com         # authDomain (optional, this is the default)
+   ITHUB_FIREBASE_APP_ID=1:295459341438:web:...                    # appId (optional)
+   ITHUB_GOOGLE_HOSTED_DOMAIN=sfbu.edu                             # optional: only @sfbu.edu emails
+   ```
+
+5. Check it: `GET /auth/config` returns `"google_provider": "firebase"` and the `firebase` settings, and the
+   login page shows **Sign in with Google**.
+
+How it works: the login page loads the Firebase JS SDK from Google's CDN, opens the Google popup
+(`signInWithPopup`), sends Firebase's ID token to `POST /auth/google`, and signs out of Firebase again
+(IT-Hub keeps its own session). The backend (`FirebaseIdTokenVerifier`) checks the token's signature,
+expiry, audience and issuer for this project, and accepts only the Google provider. It links the user by
+the Google account id, so accounts linked earlier through Google Identity Services keep matching. Firebase
+tokens have no `hd` claim, so `ITHUB_GOOGLE_HOSTED_DOMAIN` is checked against the verified email's domain.
+
+### Through Google Identity Services
 
 1. Open the [Google Cloud console](https://console.cloud.google.com/), create or pick a project, and go to
    **APIs & Services > OAuth consent screen**. Choose **Internal** if the school uses Google Workspace
@@ -57,13 +95,13 @@ Google sign-in is built in but **disabled** until you set `ITHUB_GOOGLE_CLIENT_I
    ITHUB_GOOGLE_HOSTED_DOMAIN=sfbu.edu                                  # optional: only this Workspace domain
    ```
 
-6. Check it: `GET /auth/config` now returns `"google_enabled": true` and the client ID.
+6. Check it: `GET /auth/config` now returns `"google_provider": "google"` and the client ID.
 
 How the frontend uses it: load Google Identity Services ("Sign in with Google") with the client ID from
 `GET /auth/config`, take the ID token it returns, and send `POST /auth/google` with `{"id_token": "..."}`.
 The response is the same as `POST /auth/login` (`access_token`, `user`), and the token is used as a Bearer token.
 
-Rules:
+### Sign-in rules (both ways)
 
 - Only **existing** accounts can sign in. Accounts are still created by an Admin; Google never creates one.
   The Google email must match the account's email.
