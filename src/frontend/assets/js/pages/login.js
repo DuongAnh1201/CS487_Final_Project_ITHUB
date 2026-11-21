@@ -76,6 +76,21 @@ async function setUpGoogle() {
   else if (config.google_client_id) setUpGoogleIdentity(config.google_client_id);
 }
 
+// Firebase errors an IT supervisor can fix in the Firebase console; the code is always shown.
+const FIREBASE_HINTS = {
+  "auth/popup-blocked": "Allow pop-ups for this site to sign in with Google.",
+  "auth/unauthorized-domain": "This site is not an authorized domain of the Firebase project.",
+  "auth/operation-not-allowed": "Google sign-in is turned off in the Firebase project.",
+  "auth/network-request-failed": "Could not reach Google. Check the connection and try again.",
+};
+
+/** A readable message for a failed Firebase popup, ending with Firebase's error code. */
+function firebaseMessage(error) {
+  const code = error?.code ?? "unknown";
+  const text = FIREBASE_HINTS[code] ?? "Google sign-in failed. Try again or use your password.";
+  return `${text} (${code})`;
+}
+
 /** Firebase Authentication, Google provider: a popup, then Firebase's ID token to the server. */
 async function setUpFirebase(firebase) {
   // Loaded up front so the click opens the popup straight away (browsers block late popups).
@@ -103,9 +118,10 @@ async function setUpFirebase(firebase) {
       await signInWithGoogleToken(idToken);
     } catch (error) {
       const closed = ["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(error?.code);
-      if (!closed) showError(loginError, error?.code === "auth/popup-blocked"
-        ? "Allow pop-ups for this site to sign in with Google."
-        : "Google sign-in failed. Try again or use your password.");
+      if (!closed) {
+        console.error("Google sign-in (Firebase) failed:", error);
+        showError(loginError, firebaseMessage(error));
+      }
     } finally {
       button.disabled = false;
     }
