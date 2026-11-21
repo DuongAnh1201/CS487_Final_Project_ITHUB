@@ -23,7 +23,7 @@ from app.modules.rpt.repository import ReportRepository, ReportTemplateRepositor
 from app.modules.rpt.router import audit_router, reports_router, templates_router as report_templates_router
 from app.modules.rpt.service import ReportManager
 from app.modules.prj.router import projects_router, tasks_router, templates_router
-from app.modules.usr.google import GoogleIdTokenVerifier
+from app.modules.usr.google import GoogleVerifierFactory
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.router import auth_router, users_router
 from app.modules.usr.service import UserManager
@@ -84,9 +84,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.clock = utc_now
     app.state.email_channel = EmailChannelFactory.from_settings(settings)
     app.state.stock_gateway = None  # None: ORD uses the AssetManager (see app.integration)
-    app.state.google_verifier = (
-        GoogleIdTokenVerifier(settings.google_client_ids) if settings.google_enabled else None
-    )
+    app.state.google_verifier = GoogleVerifierFactory.from_settings(settings)
     register_exception_handlers(app)
     for router in ROUTERS:
         app.include_router(router)

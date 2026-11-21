@@ -52,7 +52,8 @@ Environment variables (Render dashboard → Environment; never commit them):
 | `ITHUB_APP_BASE_URL` | yes | `https://<service>.onrender.com/app` (links in emails) |
 | `ITHUB_RESEND_API_KEY`, `ITHUB_EMAIL_FROM` | for email | see `src/backend/README.md` → Enabling email |
 | `ITHUB_RESEND_WEBHOOK_SECRET` | for delivery status | Resend webhook URL: `https://<service>.onrender.com/webhooks/resend` |
-| `ITHUB_GOOGLE_CLIENT_IDS` | for Google sign-in | also add the Render URL as an authorised JavaScript origin in Google Cloud |
+| `ITHUB_FIREBASE_PROJECT_ID`, `ITHUB_FIREBASE_API_KEY`, `ITHUB_FIREBASE_AUTH_DOMAIN`, `ITHUB_FIREBASE_APP_ID` | for Google sign-in | Firebase web-app values (public; preset in `render.yaml`). In Firebase → Authentication → Settings → **Authorized domains**, add `<service>.onrender.com` |
+| `ITHUB_GOOGLE_HOSTED_DOMAIN` | optional | `sfbu.edu` to let only school emails sign in with Google |
 
 Then open `https://<service>.onrender.com/` and sign in as `admin@sfbu.edu`.
 

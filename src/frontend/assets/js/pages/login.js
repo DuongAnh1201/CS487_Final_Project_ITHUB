@@ -50,31 +50,85 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 // ---- Google sign-in (shown only when the server has it configured) -----------------------------
+// The server says how: through Firebase Authentication, or Google Identity Services directly.
+// Either way the token goes to POST /auth/google, which only signs in existing accounts.
+
+const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/13.4.0";
+
+async function signInWithGoogleToken(idToken) {
+  loginError.hidden = true;
+  try {
+    afterSignIn(await api.post("/auth/google", { id_token: idToken }, { redirect: false }));
+  } catch (error) {
+    if (error instanceof ApiError) showError(loginError, error.message); else throw error;
+  }
+}
+
+function revealGoogle() {
+  document.querySelectorAll("[data-google]").forEach((el) => { el.hidden = false; });
+}
 
 async function setUpGoogle() {
   let config;
   try { config = await api.get("/auth/config", undefined, { redirect: false }); } catch { return; }
-  if (!config.google_enabled || !config.google_client_id) return;
+  if (!config.google_enabled) return;
+  if (config.google_provider === "firebase" && config.firebase) await setUpFirebase(config.firebase);
+  else if (config.google_client_id) setUpGoogleIdentity(config.google_client_id);
+}
 
+/** Firebase Authentication, Google provider: a popup, then Firebase's ID token to the server. */
+async function setUpFirebase(firebase) {
+  // Loaded up front so the click opens the popup straight away (browsers block late popups).
+  const [{ initializeApp }, auth] = await Promise.all([
+    import(`${FIREBASE_SDK}/firebase-app.js`),
+    import(`${FIREBASE_SDK}/firebase-auth.js`),
+  ]);
+  const app = initializeApp({
+    apiKey: firebase.api_key, authDomain: firebase.auth_domain,
+    projectId: firebase.project_id, ...(firebase.app_id ? { appId: firebase.app_id } : {}),
+  });
+  const firebaseAuth = auth.getAuth(app);
+  await auth.setPersistence(firebaseAuth, auth.inMemoryPersistence); // IT-Hub keeps its own session
+  const provider = new auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  const button = document.getElementById("firebase-google-btn");
+  button.addEventListener("click", async () => {
+    loginError.hidden = true;
+    button.disabled = true;
+    try {
+      const result = await auth.signInWithPopup(firebaseAuth, provider);
+      const idToken = await result.user.getIdToken();
+      await auth.signOut(firebaseAuth);
+      await signInWithGoogleToken(idToken);
+    } catch (error) {
+      const closed = ["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(error?.code);
+      if (!closed) showError(loginError, error?.code === "auth/popup-blocked"
+        ? "Allow pop-ups for this site to sign in with Google."
+        : "Google sign-in failed. Try again or use your password.");
+    } finally {
+      button.disabled = false;
+    }
+  });
+  button.hidden = false;
+  document.getElementById("google-btn").remove();
+  revealGoogle();
+}
+
+/** Google Identity Services: Google's own button posts its ID token. */
+function setUpGoogleIdentity(clientId) {
   const script = document.createElement("script");
   script.src = "https://accounts.google.com/gsi/client";
   script.async = true;
   script.onload = () => {
     google.accounts.id.initialize({
-      client_id: config.google_client_id,
-      callback: async ({ credential }) => {
-        loginError.hidden = true;
-        try {
-          afterSignIn(await api.post("/auth/google", { id_token: credential }, { redirect: false }));
-        } catch (error) {
-          if (error instanceof ApiError) showError(loginError, error.message); else throw error;
-        }
-      },
+      client_id: clientId,
+      callback: ({ credential }) => signInWithGoogleToken(credential),
     });
     google.accounts.id.renderButton(document.getElementById("google-btn"), {
       theme: "outline", size: "large", width: 360, text: "signin_with",
     });
-    document.querySelectorAll("[data-google]").forEach((el) => { el.hidden = false; });
+    revealGoogle();
   };
   document.head.append(script);
 }

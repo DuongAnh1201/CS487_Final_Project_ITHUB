@@ -22,6 +22,7 @@ from app.modules.usr.models import Role, User, UserStatus
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.schemas import (
     AuthConfig,
+    FirebaseWebConfig,
     ChangePasswordRequest,
     GoogleLoginRequest,
     LoginRequest,
@@ -73,10 +74,20 @@ def login_with_google(body: GoogleLoginRequest,
 
 @auth_router.get("/config", response_model=AuthConfig)
 def auth_config(settings: Settings = Depends(get_settings)) -> AuthConfig:
-    """Tell the frontend whether Google sign-in is available."""
+    """Tell the frontend whether Google sign-in is available, and through Firebase or Google."""
+    firebase = None
+    if settings.firebase_enabled:
+        firebase = FirebaseWebConfig(
+            api_key=settings.firebase_api_key, project_id=settings.firebase_project_id,
+            auth_domain=settings.firebase_auth_domain or f"{settings.firebase_project_id}.firebaseapp.com",
+            app_id=settings.firebase_app_id,
+        )
+    client_id = settings.google_client_ids[0] if settings.google_client_ids else None
     return AuthConfig(
         google_enabled=settings.google_enabled,
-        google_client_id=settings.google_client_ids[0] if settings.google_client_ids else None,
+        google_provider="firebase" if firebase else ("google" if client_id else None),
+        google_client_id=None if firebase else client_id,
+        firebase=firebase,
     )
 
 
