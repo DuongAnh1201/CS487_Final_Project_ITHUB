@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64.0 64.0" width="64" height="64" role="img" aria-label="IT HUB"><title>IT HUB</title><rect x="1" y="1" width="62" height="62" rx="18" fill="#FFF6EA" stroke="#EADBBE" stroke-width="2"/>
+<path d="M7 40C13 32 18 23 23 14M23 14Q32 36 41 14M41 14C46 23 51 32 57 40" stroke="#C9A46A" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M23 13V48M41 13V48" stroke="#2B2F36" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+<path d="M6 43H58" stroke="#2B2F36" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+<circle cx="32" cy="25" r="4.6" fill="#7CC4A0" stroke="#2B2F36" stroke-width="2.2"/></svg>

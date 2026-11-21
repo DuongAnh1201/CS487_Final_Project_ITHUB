@@ -90,7 +90,7 @@ async function loadRoom() {
 
 function renderRoom() {
   const room = state.room;
-  document.title = `IT-Hub · ${roomName(room)}`;
+  document.title = `IT Hub · ${roomName(room)}`;
   $("room-title").textContent = `${roomName(room)} (${room.classroom_id})`;
   $("room-status").innerHTML = badge(room.is_active ? room.status : "INACTIVE");
   $("room-sub").textContent = `Building ${room.building} · ${label(room.room_type)} · Capacity ${room.capacity}`

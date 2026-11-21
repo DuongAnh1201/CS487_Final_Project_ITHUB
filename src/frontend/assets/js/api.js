@@ -1,4 +1,4 @@
-// IT-Hub API client: one place that talks to the backend (see docs/api/README.md).
+// IT Hub API client: one place that talks to the backend (see docs/api/README.md).
 
 // Served by the backend at /app → same origin. Opened from another server → the local backend.
 // Override with window.ITHUB_API_BASE before this module loads.
@@ -74,7 +74,7 @@ export class ApiClient {
     try {
       response = await fetch(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     } catch {
-      throw new ApiError(0, "Cannot reach the IT-Hub server. Check that the backend is running.");
+      throw new ApiError(0, "Cannot reach the IT Hub server. Check that the backend is running.");
     }
     const data = response.status === 204 ? null : await response.json().catch(() => null);
     if (response.ok) return data;
