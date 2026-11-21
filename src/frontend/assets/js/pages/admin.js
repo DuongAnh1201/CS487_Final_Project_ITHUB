@@ -1,5 +1,6 @@
 // Accounts (US-USR-02–05), read-only audit (US-RPT-07/08), and My account.
-import { api, badge, fmtDate, fmtDateTime, html, initials, isAdmin, raw, roleLabel, startPage, toast } from "../app.js";
+import { api, badge, fmtDate, fmtDateTime, html, initials, isAdmin, label, raw, roleLabel, startPage, toast } from "../app.js";
+import { changeRows, fieldPairs, summary } from "./audit-format.js";
 import { actions, compactFilters, pageIcon, plusIcon, attr, forms, fragment, input, personName, quickSearch, read, rows, select, values } from "./page-forms.js";
 
 const user = await startPage();
@@ -9,6 +10,15 @@ root.setAttribute("aria-busy", "true");
 const state = { users: [], directory: [], selected: null, offset: 0, limit: 100, auditFilters: {}, records: [] };
 const roles = values(["STUDENT_ASSISTANT", "ADMIN"]);
 const name = (id) => personName([...state.users, ...state.directory], id);
+const AUDIT_CELL_FIELDS = 3;
+// Up to three "Field: value" lines per cell; the full text is in the tooltip and the entry detail.
+const auditValue = (value) => {
+  const pairs = fieldPairs(value);
+  if (!pairs.length) return raw(html`<span class="muted">—</span>`);
+  const shown = pairs.slice(0, AUDIT_CELL_FIELDS).map(([key, text]) => key === "Value" ? html`<div class="audit-value">${text}</div>` : html`<div class="audit-value"><span class="muted">${key}:</span> ${text}</div>`).join("");
+  const more = pairs.length > AUDIT_CELL_FIELDS ? html`<div class="muted audit-more">+${pairs.length - AUDIT_CELL_FIELDS} more</div>` : "";
+  return raw(html`<div title="${summary(value)}">${raw(shown)}${raw(more)}</div>`);
+};
 
 function shell() {
   root.innerHTML = html`<section class="card"><div class="page-heading">${pageIcon("admin")}<div class="heading-copy"><div class="eyebrow muted">${isAdmin(user) ? "Admin" : "Account"}</div><h1>${isAdmin(user) ? "Users & accounts" : "My account & audit log"}</h1></div>${isAdmin(user) ? raw(html`<button class="btn btn-brand" data-admin-only data-action="new-user">${plusIcon()} Create account</button>`) : ""}</div></section>
@@ -46,7 +56,7 @@ function clearUserEditor() {
 
 async function loadAudit() {
   state.records = await api.get("/audit", { ...state.auditFilters, limit: state.limit, offset: state.offset });
-  document.getElementById("audit-rows").innerHTML = state.records.length ? state.records.map((record) => html`<tr><td><a href="#audit-detail" data-action="audit-detail" data-id="${record.id}">${fmtDateTime(record.timestamp)}</a></td><td>${name(record.actor_id)}</td><td>${record.action}</td><td>${record.entity_type} · ${record.entity_id}</td><td><span class="mono audit-value" title="${JSON.stringify(record.old_value)}">${JSON.stringify(record.old_value) ?? "—"}</span></td><td><span class="mono audit-value" title="${JSON.stringify(record.new_value)}">${JSON.stringify(record.new_value) ?? "—"}</span></td></tr>`).join("") : html`<tr><td colspan="6" class="empty">No audit entries match your filters.</td></tr>`;
+  document.getElementById("audit-rows").innerHTML = state.records.length ? state.records.map((record) => html`<tr><td><a href="#audit-detail" data-action="audit-detail" data-id="${record.id}">${fmtDateTime(record.timestamp)}</a></td><td>${name(record.actor_id)}</td><td>${label(record.action)}</td><td>${record.entity_type} · ${record.entity_id}</td><td>${auditValue(record.old_value)}</td><td>${auditValue(record.new_value)}</td></tr>`).join("") : html`<tr><td colspan="6" class="empty">No audit entries match your filters.</td></tr>`;
   document.getElementById("audit-page").textContent = state.records.length ? `Entries ${state.offset + 1}–${state.offset + state.records.length}` : "No entries on this page";
   root.querySelector('[data-action="previous"]').disabled = state.offset === 0;
   root.querySelector('[data-action="next"]').disabled = state.records.length < state.limit;
@@ -86,7 +96,8 @@ actions(root, {
   next: () => auditPage(state.offset + state.limit),
   "audit-detail": async (button) => {
     const record = await api.get(`/audit/${button.dataset.id}`); const detail = document.getElementById("audit-detail");
-    detail.innerHTML = html`<h3>Audit entry #${record.id}</h3><p>${record.entity_type} · ${record.entity_id} · ${record.action} · ${record.status}</p><pre class="report-content">${JSON.stringify(record, null, 2)}</pre>`;
+    const changes = changeRows(record.old_value, record.new_value);
+    detail.innerHTML = html`<h3>Audit entry #${record.id}</h3><dl class="profile audit-meta"><div><dt>When</dt><dd>${fmtDateTime(record.timestamp)}</dd></div><div><dt>Who</dt><dd>${name(record.actor_id)}</dd></div><div><dt>Action</dt><dd>${label(record.action)}</dd></div><div><dt>Record</dt><dd>${record.entity_type} · ${record.entity_id}</dd></div><div><dt>Result</dt><dd>${badge(record.status)}</dd></div></dl>${raw(changes.length ? html`<div class="table-scroll"><table class="audit-changes"><thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead><tbody>${raw(changes.map((row) => html`<tr class="${row.changed ? "changed" : ""}"><td>${row.field}</td><td>${row.before}</td><td>${row.after}</td></tr>`).join(""))}</tbody></table></div>` : html`<p class="empty">No field values were recorded for this entry.</p>`)}`;
     detail.hidden = false; detail.scrollIntoView({ behavior: "smooth" });
   },
 });
