@@ -21,6 +21,8 @@ from app.modules.usr.models import Role, User, UserSession, UserStatus
 from app.modules.usr.repository import SessionRepository, UserRepository
 from app.modules.usr.schemas import UserCreate
 from app.shared.audit import AuditLog
+from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.formatting import human_date, human_datetime
 
 MSG_INVALID = "Invalid email or password."
 MSG_LOCKED = "Account locked. Try again in 15 minutes."
@@ -203,19 +205,33 @@ class UserManager:
         hasher: PasswordHasher,
         audit: AuditLog,
         clock: Clock,
+        publisher: EventPublisher | None = None,
     ) -> None:
         self.users = users
         self.sessions = sessions
         self.hasher = hasher
         self.audit = audit
         self.clock = clock
+        self.publisher = publisher
 
     def create_user(self, actor: User | None, data: UserCreate) -> User:
-        """Create an active account with a temporary password (BR-USR-04, BR-USR-03)."""
+        """Create an active account with a temporary password (BR-USR-04, BR-USR-03).
+
+        The new user gets a welcome notification and email; the temporary password is never sent.
+        """
         if actor is not None:
             AccessControl.require_role(actor, Role.ADMIN)
-        return self._create(actor, data.full_name, str(data.email), data.school_id,
+        user = self._create(actor, data.full_name, str(data.email), data.school_id,
                             data.role, data.access_end_date, data.temporary_password)
+        if actor is not None:
+            self._tell(user, actor, EventType.ACCOUNT_CREATED,
+                       f"Welcome to IT HUB. {actor.full_name} created your account.", {
+                           "first_name": user.full_name.split()[0], "email": user.email,
+                           "role": "Admin" if user.role == Role.ADMIN else "Student Assistant",
+                           "access_end": human_date(user.access_end_date, "No end date"),
+                           "admin_name": actor.full_name,
+                       })
+        return user
 
     def seed_admin(self, full_name: str, email: str, school_id: str,
                    password: str | None = None) -> User | None:
@@ -281,7 +297,19 @@ class UserManager:
         self.sessions.revoke_for_user(user.id)
         self.users.flush()
         self.audit.record(actor, "RESET_PASSWORD", "User", user.id)
+        self._tell(user, actor, EventType.PASSWORD_RESET,
+                   f"{actor.full_name} reset your IT HUB password. Sign in with the new temporary password.", {
+                       "admin_name": actor.full_name, "reset_at": human_datetime(self.clock()),
+                       "support_contact": f"{actor.full_name} ({actor.email})",
+                   })
         return user
+
+    def _tell(self, user: User, actor: User, event_type: EventType, message: str,
+              details: dict[str, str]) -> None:
+        """Notify the account owner (NTF skips it when owners act on their own account)."""
+        if self.publisher is not None:
+            self.publisher.publish(DomainEvent(event_type, message, actor_id=actor.id,
+                                               recipient_ids=(user.id,), details=details))
 
     def change_own_password(self, user: User, current_password: str, new_password: str) -> None:
         """Change the caller's own password (FR-USR-08)."""

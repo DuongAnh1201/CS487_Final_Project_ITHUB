@@ -3,7 +3,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -42,6 +42,8 @@ class Notification(Base):
     email_message_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     email_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     email_attempts: Mapped[int] = mapped_column(default=0)
+    # Values for the event's email template, kept so a retried email looks the same (#108).
+    details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     @property
     def is_read(self) -> bool:

@@ -99,3 +99,11 @@ class WebhookAck(BaseModel):
     model_config = ConfigDict(json_schema_extra={"examples": [{"received": True}]})
 
     received: bool = True
+
+
+class EmailTemplateRead(BaseModel):
+    """A designed email: its event, template file and a sample subject (#108)."""
+
+    event_type: EventType
+    template: str
+    subject: str

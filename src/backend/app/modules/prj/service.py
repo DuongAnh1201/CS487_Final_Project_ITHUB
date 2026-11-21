@@ -27,6 +27,7 @@ from app.modules.usr.models import User, UserStatus
 from app.modules.usr.repository import UserRepository
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventPublisher, EventType
+from app.shared.formatting import human_date, label
 from app.shared.patch import PatchChanges
 
 MSG_DATES = "Due date cannot be earlier than the start date."
@@ -301,7 +302,13 @@ class TaskManager(_Base):
             self.publisher.publish(DomainEvent(
                 EventType.TASK_ASSIGNED, f"You were assigned task #{task.id}: {task.title}",
                 actor_id=actor.id, recipient_ids=tuple(u.id for u in added),
-                related_type="Task", related_id=task.id, project_id=task.project_id))
+                related_type="Task", related_id=task.id, project_id=task.project_id,
+                details={
+                    "assigner": actor.full_name, "task_title": task.title,
+                    "task_description": task.description.strip(),
+                    "project_name": task.project.name if task.project else "Standalone task",
+                    "priority": label(task.priority), "due_date": human_date(task.due_date, "No due date"),
+                }))
 
     def _ensure_member(self, actor: User, project_id: int, user_id: int) -> None:
         if not self.projects.is_member(project_id, user_id):

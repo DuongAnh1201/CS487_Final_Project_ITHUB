@@ -3,6 +3,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Body, Depends, Request
+from fastapi.responses import HTMLResponse
 
 from app.core.config import Settings
 from app.core.deps import (
@@ -13,10 +14,12 @@ from app.core.deps import (
     require_role,
 )
 from app.modules.ntf.channels import EmailChannel
+from app.modules.ntf.emails import TEMPLATES, EmailComposer
 from app.modules.ntf.models import EmailStatus, Notification
 from app.modules.ntf.schemas import (
     EmailConfigRead,
     EmailDeliveryRead,
+    EmailTemplateRead,
     EmailTestRequest,
     EmailTestResult,
     NotificationRead,
@@ -28,6 +31,7 @@ from app.core.exceptions import ServiceUnavailableError
 from app.modules.ntf.service import NotificationService
 from app.modules.ntf.webhooks import SvixWebhookVerifier
 from app.modules.usr.models import Role, User
+from app.shared.events import EventType
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 webhooks_router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -51,7 +55,7 @@ def send_shift_summary(
     service: NotificationService = Depends(get_notification_service),
 ) -> list[Notification]:
     """Send each rostered user their shift work summary (FR-NTF-03)."""
-    return service.send_shift_summary(body.shift, body.shift_date, body.user_ids)
+    return service.send_shift_summary(body.shift, body.shift_date, body.user_ids, sender=user)
 
 
 @router.get("/email/config", response_model=EmailConfigRead)
@@ -76,6 +80,30 @@ def send_test_email(
     """Admin: send a test email (default: to me) to check the provider setup."""
     status, message_id = service.send_test_email(admin, body.to or admin.email)
     return EmailTestResult(status=status, message_id=message_id)
+
+
+@router.get("/email/templates", response_model=list[EmailTemplateRead])
+def list_email_templates(
+    admin: User = Depends(require_role(Role.ADMIN)),
+    settings: Settings = Depends(get_settings),
+) -> list[EmailTemplateRead]:
+    """The designed emails and a sample subject for each (Admin only, #108)."""
+    composer = EmailComposer(settings.app_base_url)
+    return [EmailTemplateRead(event_type=event, template=template.file, subject=composer.preview(event).subject)
+            for event, template in TEMPLATES.items()]
+
+
+@router.get("/email/templates/{event_type}/preview", response_class=HTMLResponse)
+def preview_email_template(
+    event_type: EventType,
+    admin: User = Depends(require_role(Role.ADMIN)),
+    settings: Settings = Depends(get_settings),
+) -> HTMLResponse:
+    """One email rendered with sample values, to check the design in a browser (Admin only)."""
+    composer = EmailComposer(settings.app_base_url)
+    if event_type not in TEMPLATES:
+        return HTMLResponse(composer.compose(event_type, f"{event_type.value} sample message.").html)
+    return HTMLResponse(composer.preview(event_type).html)
 
 
 @router.get("/email/deliveries", response_model=list[EmailDeliveryRead])

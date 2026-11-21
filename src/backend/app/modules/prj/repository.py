@@ -14,6 +14,7 @@ from app.modules.prj.models import (
     TaskAssignment,
     TaskStatus,
 )
+from app.shared.formatting import label
 from app.shared.repository import BaseRepository
 
 
@@ -120,5 +121,5 @@ class TaskWorkSource:
 
     def open_work_for_user(self, user_id: int, due_on_or_before: date) -> list[ScheduledWork]:
         """Unfinished assigned tasks due on or before the date."""
-        return [ScheduledWork(t.id, t.title, t.due_date)
+        return [ScheduledWork(t.id, t.title, t.due_date, t.project.name if t.project else "", label(t.priority))
                 for t in self.tasks.open_tasks_for_user(user_id, due_on_or_before)]

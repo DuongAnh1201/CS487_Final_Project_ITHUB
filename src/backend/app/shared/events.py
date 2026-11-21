@@ -6,9 +6,9 @@ Pages never import the notification code. They build a ``DomainEvent`` and call
 
 import logging
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Protocol
+from typing import Any, Protocol
 
 from sqlalchemy.orm import Session
 
@@ -31,6 +31,8 @@ class EventType(str, Enum):
     LOW_STOCK = "LOW_STOCK"
     SHIFT_SUMMARY = "SHIFT_SUMMARY"
     GENERAL = "GENERAL"
+    ACCOUNT_CREATED = "ACCOUNT_CREATED"
+    PASSWORD_RESET = "PASSWORD_RESET"
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,8 @@ class DomainEvent:
     related_type: str | None = None  # e.g. "Task", "Issue", "Project", "Order"
     related_id: int | None = None
     project_id: int | None = None
+    # Values the event's email template shows (see app/modules/ntf/emails.py), JSON-safe.
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 class EventObserver(Protocol):

@@ -182,7 +182,7 @@ def test_handoff_unfinished_task_keeps_status_and_history(client, admin_headers,
     assert (r.json()["status"], r.json()["assignee_ids"]) == ("IN_PROGRESS", [ids["sa"]])
     assert db.query(TaskAssignment).filter_by(task_id=task["id"]).count() == 2
     assert db.query(AuditRecord).filter_by(action="HANDOFF").count() == 1
-    assert db.query(Notification).filter_by(recipient_id=ids["sa"]).count() == 1
+    assert db.query(Notification).filter_by(recipient_id=ids["sa"], event_type=EventType.TASK_ASSIGNED).count() == 1
     same = client.post(f"/tasks/{task['id']}/handoff", headers=admin_headers, json={"to_user_id": ids["sa"]})
     assert (same.status_code, same.json()["detail"]) == (409, "Task is already assigned to this user.")
 

@@ -12,6 +12,7 @@ from app.core.deps import (
     get_clock,
     get_current_user,
     get_current_user_allow_temp,
+    get_event_publisher,
     get_hasher,
     get_settings,
     get_token,
@@ -36,6 +37,7 @@ from app.modules.usr.schemas import (
 )
 from app.modules.usr.service import AuthService, LoginResult, UserManager
 from app.shared.audit import AuditLog
+from app.shared.events import EventPublisher
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
@@ -46,9 +48,10 @@ def get_user_manager(
     hasher: PasswordHasher = Depends(get_hasher),
     audit: AuditLog = Depends(get_audit_log),
     clock: Clock = Depends(get_clock),
+    publisher: EventPublisher = Depends(get_event_publisher),
 ) -> UserManager:
-    """UserManager for the request."""
-    return UserManager(UserRepository(db), SessionRepository(db), hasher, audit, clock)
+    """UserManager for the request; it publishes the welcome and password-reset emails."""
+    return UserManager(UserRepository(db), SessionRepository(db), hasher, audit, clock, publisher)
 
 
 def _login_response(result: LoginResult) -> LoginResponse:

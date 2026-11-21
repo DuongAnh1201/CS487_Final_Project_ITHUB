@@ -135,3 +135,31 @@ Until then each notification is saved with `email_status` `SKIPPED` (the message
 The API key is never logged or returned. Sending is synchronous (10-second timeout); a provider error marks the
 email `FAILED` and keeps the in-app notification. A `FAILED` or `BOUNCED` email can be retried up to 3 attempts in
 total. Notification columns changed (email message id, sent time, attempts): delete the local `ithub.db` once.
+
+### Email design (templates)
+
+Emails use the designer's IT HUB templates in `app/modules/ntf/email_templates/` (Jinja2, tables and inline
+styles for Gmail, Outlook and Apple Mail). `app/modules/ntf/emails.py` (`EmailComposer`) picks one per event:
+
+| Event | Template | Subject |
+|---|---|---|
+| Account created (Admin creates a user) | `welcome.html` | Welcome to IT HUB |
+| Password reset by an Admin | `password-reset.html` | Your IT HUB password was reset |
+| Task assigned | `task-assigned.html` | {assigner} assigned you: {task} |
+| Issue reported (Admins) | `issue-reported.html` | {severity} issue in {room}: {issue no.} |
+| Low stock (Admins) | `low-stock.html` | Stock low: {item} · order #{n} created |
+| Order arrived (requester or Admins) | `order-arrived.html` | Order #{n} has arrived / Part of order #{n} has arrived |
+| Report reviewed (author) | `report-reviewed.html` | {reviewer} reviewed #{n}: {outcome} |
+| Shift summary | `shift-summary.html` | Your open tasks for the {shift} shift, {date} |
+| Anything else (project updates, monthly summary, test email…) | `general.html` | IT HUB: {first line} |
+
+- Each publisher puts the template's values in `DomainEvent.details`; they are stored on the notification
+  (`details` column, migration `0002`), so a retried email looks the same. A notification without them
+  (older rows) uses `general.html`.
+- The welcome and reset emails never contain the temporary password.
+- The logo is `ITHUB_APP_BASE_URL` + `/assets/brand/it-hub-logo-email.png` (PNG: mail apps block SVG), so set
+  `ITHUB_APP_BASE_URL` to the public `https://…/app` address or the logo will not load in real inboxes.
+- **Preview:** as an Admin, `GET /notifications/email/templates` lists the designs and
+  `GET /notifications/email/templates/{EVENT_TYPE}/preview` shows one with sample values in the browser.
+- **Changing a design:** edit the HTML file; `tests/ntf/test_email_templates.py` checks that every template still
+  renders and that each real flow fills all of its values.

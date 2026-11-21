@@ -12,6 +12,7 @@ from app.core.database import get_db
 from app.core.exceptions import PermissionDeniedError
 from app.core.security import PasswordHasher, TokenService
 from app.modules.ntf.channels import EmailChannel
+from app.modules.ntf.ports import LowStockDetails
 from app.modules.ntf.repository import NotificationRepository
 from app.modules.ntf.service import NotificationService
 from app.modules.prj.repository import ProjectRepository, TaskRepository, TaskWorkSource
@@ -55,18 +56,24 @@ def get_email_channel(request: Request) -> EmailChannel:
     return request.app.state.email_channel
 
 
+def get_low_stock_details() -> LowStockDetails | None:
+    """Item and order values for low-stock emails; ``app.integration`` supplies the real one."""
+    return None
+
+
 def get_notification_service(
     db: Session = Depends(get_db),
     audit: AuditLog = Depends(get_audit_log),
     clock: Clock = Depends(get_clock),
     email: EmailChannel = Depends(get_email_channel),
     settings: Settings = Depends(get_settings),
+    low_stock: LowStockDetails | None = Depends(get_low_stock_details),
 ) -> NotificationService:
     """NotificationService for the request."""
     return NotificationService(
         NotificationRepository(db), UserRepository(db), email, audit, clock,
         membership=ProjectRepository(db), work=TaskWorkSource(TaskRepository(db)),
-        app_base_url=settings.app_base_url,
+        app_base_url=settings.app_base_url, low_stock=low_stock,
     )
 
 

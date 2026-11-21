@@ -12,9 +12,12 @@ from app.core.exceptions import (
     ServiceUnavailableError,
     ValidationRuleError,
 )
-from app.modules.ntf.channels import EmailChannel, render_html
+from app.modules.ntf.channels import EmailChannel
+from app.modules.ntf.emails import EmailComposer, RecordLinks
 from app.modules.ntf.models import EmailStatus, EmailWebhookEvent, Notification
 from app.modules.ntf.ports import (
+    LowStockDetails,
+    NoLowStockDetails,
     NoProjectMembership,
     NoScheduledWork,
     ProjectMembership,
@@ -26,6 +29,7 @@ from app.modules.usr.models import Role, User, UserStatus
 from app.modules.usr.repository import UserRepository
 from app.shared.audit import AuditLog
 from app.shared.events import DomainEvent, EventType
+from app.shared.formatting import human_date, long_date
 
 PROJECT_EVENTS = {EventType.PROJECT_CREATED, EventType.PROJECT_UPDATED, EventType.PROJECT_MEMBER_ADDED}
 ADMIN_EVENTS = {EventType.ISSUE_REPORTED, EventType.REPEAT_PROBLEM, EventType.LOW_STOCK,
@@ -35,12 +39,6 @@ MSG_EMAIL_OFF = "Email sending is not configured."
 MSG_PROVIDER_ERROR = "The email provider could not send the message."
 MSG_NOT_RETRYABLE = "Only a failed or bounced email can be retried."
 MSG_RETRY_LIMIT = "The email has already been tried the maximum number of times."
-# Frontend page and query parameter that open each kind of record (src/frontend, served at ITHUB_APP_BASE_URL).
-RECORD_PAGES = {
-    "Order": "orders.html?id=", "Report": "reports.html?id=", "Issue": "issues.html?id=",
-    "Project": "projects.html?id=", "Task": "projects.html?task=", "Asset": "inventory.html?id=",
-    "Item": "inventory.html?id=", "Classroom": "classrooms.html?id=",
-}
 MAX_EMAIL_ATTEMPTS = 3
 WEBHOOK_STATUS = {
     "email.delivered": EmailStatus.DELIVERED,
@@ -64,7 +62,8 @@ class NotificationService:
     def __init__(self, notifications: NotificationRepository, users: UserRepository,
                  email: EmailChannel, audit: AuditLog, clock: Clock,
                  membership: ProjectMembership | None = None,
-                 work: ScheduledWorkSource | None = None, app_base_url: str = "") -> None:
+                 work: ScheduledWorkSource | None = None, app_base_url: str = "",
+                 low_stock: LowStockDetails | None = None) -> None:
         self.notifications = notifications
         self.users = users
         self.email = email
@@ -73,6 +72,8 @@ class NotificationService:
         self.membership = membership or NoProjectMembership()
         self.work = work or NoScheduledWork()
         self.app_base_url = app_base_url.rstrip("/")
+        self.low_stock = low_stock or NoLowStockDetails()
+        self.composer = EmailComposer(self.app_base_url)
 
     # ---- Observer entry points -------------------------------------------
 
@@ -80,27 +81,29 @@ class NotificationService:
         """EventObserver: one notification per resolved recipient (NTF-FR-01/02)."""
         return [
             self._create(user, event.event_type, event.message, event.related_type,
-                         event.related_id, event.project_id, event.actor_id)
+                         event.related_id, event.project_id, event.actor_id, event.details)
             for user in self._resolve_recipients(event)
         ]
 
     def on_low_stock(self, asset_id: int, available_quantity: int) -> list[Notification]:
         """StockObserver: tell the Admins an item is low (SP5)."""
+        details = self.low_stock.low_stock_details(asset_id)
+        name = details.get("item_name") or f"item {asset_id}"
         return self.handle(DomainEvent(
-            EventType.LOW_STOCK,
-            f"Low stock: item {asset_id} has {available_quantity} left.",
+            EventType.LOW_STOCK, f"Low stock: {name} has {available_quantity} left.",
             related_type="Asset", related_id=asset_id,
+            details={**details, "on_hand": available_quantity} if details else {},
         ))
 
     def notify(self, recipient: User, message: str, event_type: EventType = EventType.GENERAL,
                related_type: str | None = None, related_id: int | None = None) -> Notification:
         """Direct entry point (SP5 ``notify``): one notification for one user."""
-        return self._create(recipient, event_type, message, related_type, related_id, None, None)
+        return self._create(recipient, event_type, message, related_type, related_id, None, None, None)
 
     # ---- Shift summary (FR-NTF-03) ---------------------------------------
 
     def send_shift_summary(self, shift: ShiftName, shift_date: date,
-                           roster_user_ids: list[int]) -> list[Notification]:
+                           roster_user_ids: list[int], sender: User | None = None) -> list[Notification]:
         """Notify each rostered user of their unfinished work due on/before the shift date."""
         if not roster_user_ids:
             raise ValidationRuleError(MSG_NO_RECIPIENTS)
@@ -109,8 +112,25 @@ class NotificationService:
             tasks = self.work.open_work_for_user(user.id, shift_date)
             created.append(self._create(
                 user, EventType.SHIFT_SUMMARY, self._summary_text(shift, shift_date, tasks),
-                "Shift", None, None, None))
+                "Shift", None, None, sender.id if sender else None,
+                self._summary_details(shift, shift_date, tasks, sender)))
         return created
+
+    @staticmethod
+    def _summary_details(shift: ShiftName, shift_date: date, tasks: list[ScheduledWork],
+                         sender: User | None) -> dict[str, Any]:
+        """Values for the shift-summary email (FR-NTF-03)."""
+        def due(work: ScheduledWork) -> str:
+            when = human_date(work.due_date)
+            return f"Overdue since {when}" if work.due_date < shift_date else f"Due {when}"
+
+        return {
+            "sender": sender.full_name if sender else "IT HUB", "shift": shift.value.title(),
+            "shift_date": human_date(shift_date), "shift_date_long": long_date(shift_date),
+            "task_count": len(tasks),
+            "tasks": [{"title": t.title, "project": t.project or "Standalone task", "due": due(t),
+                       "priority": t.priority or "—"} for t in tasks],
+        }
 
     @staticmethod
     def _summary_text(shift: ShiftName, shift_date: date, tasks: list[ScheduledWork]) -> str:
@@ -166,11 +186,11 @@ class NotificationService:
 
     def _create(self, recipient: User, event_type: EventType, message: str,
                 related_type: str | None, related_id: int | None, project_id: int | None,
-                actor_id: int | None) -> Notification:
+                actor_id: int | None, details: dict[str, Any] | None) -> Notification:
         notification = self.notifications.add(Notification(
             recipient_id=recipient.id, event_type=event_type, message=message,
             related_type=related_type, related_id=related_id, project_id=project_id,
-            triggered_by=actor_id, created_at=self.clock(),
+            triggered_by=actor_id, created_at=self.clock(), details=details or None,
         ))
         self._deliver_email(notification, recipient)
         self.audit.record(actor_id, "CREATE", "Notification", notification.id, None, {
@@ -184,9 +204,9 @@ class NotificationService:
         """Send the email copy; a failure is recorded, never raised (FR-NTF-07)."""
         notification.email_attempts += 1
         try:
-            message_id = self.email.send(
-                recipient.email, f"IT Inventory Tracker: {notification.event_type.value}",
-                notification.message, render_html(notification.message, self._link(notification)))
+            email = self.composer.compose(notification.event_type, notification.message,
+                                          notification.details, self._link(notification))
+            message_id = self.email.send(recipient.email, email.subject, email.text, email.html)
             notification.email_message_id = message_id
             notification.email_sent_at = self.clock()
             notification.email_error = None
@@ -198,10 +218,7 @@ class NotificationService:
 
     def _link(self, notification: Notification) -> str | None:
         """Frontend URL of the record the notification is about."""
-        if not self.app_base_url or not notification.related_type or notification.related_id is None:
-            return None
-        page = RECORD_PAGES.get(notification.related_type, "notifications.html?id=")
-        return f"{self.app_base_url}/{page}{notification.related_id}"
+        return RecordLinks(self.app_base_url).record(notification.related_type, notification.related_id)
 
     # ---- Email administration (NTF-FR-08) ---------------------------------
 
@@ -209,10 +226,10 @@ class NotificationService:
         """Send a test message through the configured channel and audit it."""
         if not self.email.real:
             raise ServiceUnavailableError(MSG_EMAIL_OFF)
-        body = "This is a test email from IT Inventory Tracker."
+        body = "This is a test email from IT HUB.\nIf you can read this, email sending works."
+        email = self.composer.compose(EventType.GENERAL, body)
         try:
-            message_id = self.email.send(to_address, "IT Inventory Tracker: test email", body,
-                                         render_html(body))
+            message_id = self.email.send(to_address, "IT HUB: test email", email.text, email.html)
         except Exception as exc:  # noqa: BLE001 - never expose provider details
             self.audit.record(admin, "EMAIL_TEST", "Email", 0, None, {"to": to_address}, status="FAILED")
             raise BadGatewayError(MSG_PROVIDER_ERROR) from exc

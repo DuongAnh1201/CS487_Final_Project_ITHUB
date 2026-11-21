@@ -15,10 +15,11 @@ from app.modules.ntf.channels import (
     EmailChannelFactory,
     LoggingEmailChannel,
     ResendEmailChannel,
-    render_html,
 )
 from app.modules.ntf.models import EmailStatus, EmailWebhookEvent, Notification
 from app.shared.audit import AuditRecord
+from app.modules.ntf.emails import EmailComposer
+from app.shared.events import EventType
 
 SECRET = "whsec_" + base64.b64encode(b"test-webhook-secret-bytes").decode()
 API_KEY = "re_test_key_do_not_leak"
@@ -64,7 +65,10 @@ def no_email(app) -> None:
 
 
 @pytest.fixture
-def sa_id(client, admin_headers, sa_headers) -> int:
+def sa_id(client, admin_headers, sa_headers, db) -> int:
+    """The SA's id; the welcome notification from creating the account is cleared first."""
+    db.query(Notification).filter_by(event_type=EventType.ACCOUNT_CREATED).delete()
+    db.commit()
     return client.get("/auth/me", headers=sa_headers).json()["id"]
 
 
@@ -117,16 +121,18 @@ def test_factory_picks_resend_only_when_key_and_sender_are_set(settings):
 
 
 def test_html_escapes_the_message_and_links_to_the_record():
-    html = render_html("<script>x</script>\nline two", "https://app.example.edu/orders/7")
-    assert "<script>" not in html and "&lt;script&gt;" in html
-    assert 'href="https://app.example.edu/orders/7"' in html and "Open in IT Inventory Tracker" in html
+    email = EmailComposer().compose(EventType.GENERAL, "<script>x</script>\nline two",
+                                    record_url="https://app.example.edu/orders/7")
+    assert "<script>x" not in email.html and "&lt;script&gt;" in email.html
+    assert 'href="https://app.example.edu/orders/7"' in email.html and "Open in IT HUB" in email.html
 
 
 def test_notification_email_has_text_html_and_link(client, admin_headers, sa_id, resend, db):
     client.post("/notifications/shift-summary", headers=admin_headers,
                 json={"shift": "MORNING", "shift_date": "2026-01-05", "user_ids": [sa_id]})
     call = resend.calls[0]
-    assert call["to"] == ["sa@sfbu.edu"] and "shift summary" in call["text"] and "<p>" in call["html"]
+    assert call["to"] == ["sa@sfbu.edu"] and "shift summary" in call["text"]
+    assert call["subject"] == "Your open tasks for the Morning shift, Jan 5, 2026" and "Shift summary" in call["html"]
 
 
 def test_success_stores_message_id_and_sent(client, admin_headers, sa_id, resend, db):
