@@ -120,6 +120,9 @@ def test_register_edit_search_audit(client, sa_headers, item_factory, inventory,
         params={"model": "T14", "category_id": inventory["category_id"]},
     )
     assert [x["id"] for x in query.json()] == [item["id"]]
+    # Text filters ignore case on SQLite and PostgreSQL alike (#100).
+    lower = client.get("/ast/items", headers=sa_headers, params={"model": "t14", "asset_tag": "tag-1"})
+    assert [x["id"] for x in lower.json()] == [item["id"]]
     assert (
         client.get(
             "/ast/items",
